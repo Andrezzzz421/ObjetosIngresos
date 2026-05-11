@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Configurar Seguridad";
+    var documento = ViewBag.Documento;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-lg mt-5">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="bi bi-shield-lock-fill fs-2"></i>
+                        </div>
+                        <h2 class="fw-bold">¡Cuenta Creada!</h2>
+                        <p class="text-muted">Por seguridad, ahora debes crear una contraseña personal.</p>
+                    </div>
+
+                    <div id="registroForm">
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="newPass" placeholder="Nueva Clave" required>
+                            <label>Nueva Contraseña</label>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input type="password" class="form-control" id="confirmPass" placeholder="Repetir Clave" required>
+                            <label>Confirmar Contraseña</label>
+                        </div>
+
+                        <div class="alert alert-info small py-2">
+                            <i class="bi bi-info-circle-fill me-2"></i> Usa al menos 6 caracteres.
+                        </div>
+
+                        <button type="button" id="btnActualizar" class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="finalizarRegistro('@documento')">
+                            <span id="btnText">Guardar y Finalizar</span>
+                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </div>
+
+                    <div id="mensajeError" class="alert alert-danger mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/auth-registro.js"></script>
+}
