@@ -1,53 +1,80 @@
 ﻿@{
     ViewData["Title"] = "Iniciar Sesión";
-    Layout = "_Layout"; 
+    Layout = "_Layout";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="card border-0 shadow-lg mt-5">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
-                            <i class="bi bi-person-fill fs-2"></i>
-                        </div>
-                        <h2 class="fw-bold">Bienvenido</h2>
-                        <p class="text-muted">Ingresa tus datos para continuar</p>
-                    </div>
+<div class="min-h-[calc(100vh-130px)] flex items-center justify-center p-4 lg:p-8">
+    <div class="flex w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
 
-                    <div id="loginForm">
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="documento" placeholder="123456789" required>
-                            <label for="documento">Número de Documento</label>
-                        </div>
+        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-500 p-12 text-white flex-col justify-between relative">
+            <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
 
-                        <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="password" placeholder="Contraseña" required>
-                            <label for="password">Contraseña</label>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label small" for="rememberMe">Recordarme en este equipo</label>
-                        </div>
-
-                        <button type="button" id="btnLogin" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="procesarLogin()">
-                            <span id="btnText">Entrar al Sistema</span>
-                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
-                        </button>
-                    </div>
-
-                    <div id="mensajeError" class="alert alert-danger mt-3 d-none" role="alert">
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <p class="small text-muted">¿Primera vez aquí? <br> Usa tu documento como contraseña inicial.</p>
-                    </div>
+            <div class="relative z-10">
+                <div class="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-md mb-8">
+                    <span class="text-2xl font-black tracking-tighter italic">SGI</span>
                 </div>
+                <h2 class="text-5xl font-bold leading-tight">
+                    Hola, <br> <span class="text-indigo-200">Bienvenido de nuevo!</span>
+                </h2>
+                <p class="mt-6 text-lg text-indigo-100/80 font-light max-w-sm">
+                    Gestiona los ingresos y mantén el control total de los objetos de manera eficiente y segura.
+                </p>
             </div>
 
-            <p class="text-center text-muted mt-4 small">&copy; 2026 Sistema de Gestión de Ingresos</p>
+            <div class="relative z-10">
+                <p class="text-sm text-indigo-200/60 font-medium tracking-widest uppercase">
+                    &copy; 2026 Sistema de Gestión
+                </p>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-1/2 p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+            <div class="mb-10 text-center lg:text-left">
+                <h3 class="text-3xl font-bold text-slate-800">Iniciar Sesión</h3>
+                <p class="text-slate-500 mt-2">¿No tienes cuenta? <a href="#" class="text-indigo-600 font-semibold hover:underline">Solicita acceso aquí</a>.</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="documento" class="block text-sm font-semibold text-slate-700 mb-2">Número de Documento</label>
+                    <input type="text" id="documento" required placeholder="123456789"
+                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label for="password" class="text-sm font-semibold text-slate-700">Contraseña</label>
+                        <a href="#" class="text-xs font-semibold text-indigo-600 hover:underline">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <input type="password" id="password" required placeholder="••••••••"
+                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300">
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="rememberMe"
+                           class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                    <label for="rememberMe" class="ml-2 text-sm text-slate-600">Recordarme en este equipo</label>
+                </div>
+
+                <button type="button" id="btnLogin" onclick="procesarLogin()"
+                        class="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
+                    <span id="btnText">Entrar al Sistema</span>
+                    <span id="btnSpinner" class="hidden animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></span>
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <div id="mensajeError" class="hidden mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-lg">
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-slate-100">
+                <p class="text-center text-xs text-slate-400 font-medium">
+                    ¿Primera vez aquí? <br> Usa tu documento como contraseña inicial.
+                </p>
+            </div>
         </div>
     </div>
 </div>

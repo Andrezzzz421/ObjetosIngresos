@@ -63,12 +63,10 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 // <<<<<<< feat/Vistas
- 
-// app.UseHttpsRedirection();
-// =======
 
+app.UseHttpsRedirection(); 
 
-// app.UseStaticFiles();
+app.UseStaticFiles();
 // >>>>>>> master
 app.UseRouting();
 
@@ -77,6 +75,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] | SGI</title>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true">
+
 </head>
 <body class="h-full bg-slate-50 text-slate-900 flex flex-col">
 
@@ -28,7 +29,7 @@
                             <a href="#" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Servicios</a>
                         </li>
                         <li>
-                            <a asp-controller="Home" asp-action="Privacy"
+                            <a asp-controller="Home" asp-action="SaberMas"
                                class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Ayuda</a>
                         </li>
                     </ul>
@@ -51,15 +52,16 @@
             </div>
             <div class="text-sm space-y-1">
                 <p class="hover:text-indigo-400 transition-colors">
-                    <span class="font-bold text-slate-400">Contacto:</span> 3005597834
+                    <span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814
                 </p>
-                <p class="hover:text-indigo-400 transition-colors lowercase">Luisangelcorreaacsota@gmail.com</p>
+                <p class="hover:text-indigo-400 transition-colors lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
                 <a asp-controller="Home" asp-action="Privacy" class="text-indigo-500 hover:underline text-xs">Política de Privacidad</a>
             </div>
         </div>
     </footer>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

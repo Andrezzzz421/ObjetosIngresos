@@ -4,73 +4,95 @@
     ViewData["Title"] = "Mi Perfil";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <span class="fs-1 fw-bold">
-                                    @(string.IsNullOrEmpty(Model?.Nombres) ? "U" : Model.Nombres.Substring(0, 1))
-                                </span>
-                            </div>
-                        </div>
-                        <div class="ms-4">
-                            <h2 class="mb-0 fw-bold">@(Model?.Nombres ?? "Usuario") @(Model?.Apellidos ?? "")</h2>
-                            <span class="badge bg-info text-dark">@Model.IdTipoUsuarioNavigation?.Descripcion</span>
-                            <p class="text-muted mb-0 mt-1"><i class="bi bi-geo-alt-fill"></i> @Model.IdSedePrincipalNavigation?.NombreSede</p>
-                        </div>
-                    </div>
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
+        <div class="flex flex-col md:flex-row items-center gap-6">
+            <div class="relative">
+                <div class="w-24 h-24 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-200 ring-4 ring-white">
+                    @(string.IsNullOrEmpty(Model?.Nombres) ? "U" : Model.Nombres.Substring(0, 1))
+                </div>
+                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+            </div>
+
+            <div class="text-center md:text-left flex-grow">
+                <h2 class="text-3xl font-bold text-slate-800">
+                    @(Model?.Nombres ?? "Usuario") @(Model?.Apellidos ?? "")
+                </h2>
+                <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                        @Model.IdTipoUsuarioNavigation?.Descripcion
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-50 text-slate-600 border border-slate-100">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        @Model.IdSedePrincipalNavigation?.NombreSede
+                    </span>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white fw-bold">Datos Personales</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="text-muted small d-block">Número de Documento</label>
-                                <span class="fw-bold">@Model.Documento</span>
-                            </div>
-                            <div class="mb-3">
-                                <label class="text-muted small d-block">Ficha / Dependencia</label>
-                                <span class="fw-bold">@Model.Ficha</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white fw-bold">Seguridad del Sistema</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="text-muted small d-block">ID de Vinculación (Firebase)</label>
-                                <code class="small text-break">@Model.FirebaseUid</code>
-                            </div>
-                            <div class="d-grid mt-3">
-                                <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">
-                                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4 text-center">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-link text-decoration-none">
-                    <i class="bi bi-arrow-left"></i> Ir al Panel Principal
-                </a>
-            </div>
+            <button onclick="cerrarSesion()" class="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors group">
+                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Cerrar Sesión
+            </button>
         </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-lg font-bold text-slate-800 uppercase tracking-wider">Información Detallada</h3>
+        </div>
+
+        <table class="w-full text-left border-collapse">
+            <tbody class="divide-y divide-slate-100">
+                <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5 text-sm font-semibold text-slate-500 w-1/3">Nombre Completo</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@(Model?.Nombres) @(Model?.Apellidos)</td>
+                </tr>
+                <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Documento de Identidad</td>
+                    <td class="px-8 py-5 text-sm font-mono font-bold text-indigo-600">@Model.Documento</td>
+                </tr>
+                <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Ficha o Dependencia</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">
+                        <span class="px-2 py-1 bg-slate-100 rounded text-slate-600">@Model.Ficha</span>
+                    </td>
+                </tr>
+                <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Sede Principal</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@Model.IdSedePrincipalNavigation?.NombreSede</td>
+                </tr>
+                <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Rol del Usuario</td>
+                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@Model.IdTipoUsuarioNavigation?.Descripcion</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-8 text-center">
+        <a asp-controller="Home" asp-action="Index" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors group">
+            <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Panel Principal
+        </a>
+    </div>
+</div>
+<div id="toastError" class="fixed bottom-5 right-5 z-[110] hidden transform transition-all duration-300 translate-y-10 opacity-0">
+    <div class="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 max-w-sm">
+        <div class="bg-red-500 p-2 rounded-lg">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+        <div>
+            <p class="font-bold text-sm">¡Ups! Algo salió mal</p>
+            <p id="toastMessage" class="text-xs text-slate-400">No se pudo cerrar la sesión.</p>
+        </div>
+        <button onclick="hideToast()" class="text-slate-500 hover:text-white transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
     </div>
 </div>
 
 @section Scripts {
     <script type="module" src="~/js/auth-login.js"></script>
-
 }
