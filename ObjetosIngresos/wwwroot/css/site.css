@@ -1,31 +1,51 @@
-html {
-  font-size: 14px;
+/*:root {
+    --bg-crema: #FDF0D5;
+    --deep-blue: #003049;
+    --brick-red: #C1121F;
+    --steel-blue: #669BBC;
+    --molten-lava: #780000;
+    --white: #ffffff;
+}*/
+
+/* Ajustes base para ASP.NET */
+/*html {
+    position: relative;
+    min-height: 100%;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}*/
+/* Asegura que el footer se quede abajo sin usar Bootstrap */
+/*body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.content-wrapper {
+    flex: 1;*/ /* Esto empuja el footer al fondo */
+    /*padding: 20px 8%;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.main-footer {
+    background-color: var(--deep-blue);
+    color: var(--bg-crema);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
 }
 
-body {
-  margin-bottom: 60px;
-}
+    .main-footer a {
+        color: var(--steel-blue);
+        text-decoration: none;
+    }*/
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
-}
+/* Si quieres que el Hero ocupe todo el ancho ignora el padding en esa sección */
+/*.hero-section {
+    width: 100%;*/
+    /* El alto ya lo tienes en calc(100vh - 80px) */
+/*}*/

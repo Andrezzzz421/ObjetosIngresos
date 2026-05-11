@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using ObjetosIngresos.Models;
+using System;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 namespace ObjetosIngresos.Models;
 
@@ -13,7 +14,9 @@ public partial class SistemaIngresoContext : DbContext
     public SistemaIngresoContext(DbContextOptions<SistemaIngresoContext> options)
         : base(options)
     {
+    
     }
+     
 
     public virtual DbSet<CentrosFormacion> CentrosFormacions { get; set; }
 
