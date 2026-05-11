@@ -18,6 +18,11 @@ namespace ObjetosIngresos.Controllers
             return View();
         }
 
+        public ActionResult SaberMas()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();

@@ -1,0 +1,242 @@
+﻿/* --- VARIABLES --- */
+/*:root {
+    --bg-crema: #FFFFFF;
+    --deep-blue: #003049;
+    --brick-red: #C1121F;
+    --steel-blue: #669BBC;
+    --molten-lava: #780000;
+    --white: #ffffff;
+}*/
+
+/* --- RESET & BASE --- */
+/** {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    background-color: var(--bg-crema);
+    color: var(--deep-blue);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}*/
+
+/* --- HEADER (El menú de arriba) --- */
+/*.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 8%;
+    background-color: var(--deep-blue);
+    color: var(--bg-crema);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: var(--brick-red);
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+    .nav-links a {
+        text-decoration: none;
+        color: var(--bg-crema);
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+        .nav-links a:hover {
+            color: var(--steel-blue);
+        }*/
+
+/* --- CONTENEDOR PRINCIPAL --- */
+/*.content-wrapper {
+    flex: 1;*/ /* Esto empuja el footer al final */
+    /*display: flex;
+    flex-direction: column;
+}*/
+
+/* --- HERO SECTION (Contenido de Index) --- */
+/*.hero-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.badge {
+    display: inline-block;
+    background-color: var(--steel-blue);
+    color: var(--white);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.hero-content h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);*/ /* Tamaño fluido */
+    /*margin: 20px 0;
+    line-height: 1.1;
+    color: var(--deep-blue);
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    color: #444;
+}*/
+
+/* --- BOTONES --- */
+/*.hero-btns {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    background-color: var(--brick-red);
+    color: var(--white);
+    padding: 15px 35px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: transform 0.2s, background 0.3s;
+}
+
+    .btn-primary:hover {
+        background-color: var(--molten-lava);
+        transform: translateY(-2px);
+    }
+
+.btn-secondary {
+    color: var(--deep-blue);
+    text-decoration: none;
+    font-weight: bold;
+    padding: 15px 35px;
+    border: 2px solid var(--deep-blue);
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+    .btn-secondary:hover {
+        background-color: var(--deep-blue);
+        color: var(--bg-crema);
+    }
+
+.btn-outline {
+    text-decoration: none;
+    color: var(--bg-crema);
+    border: 1px solid var(--bg-crema);
+    padding: 8px 20px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+    .btn-outline:hover {
+        background-color: var(--bg-crema);
+        color: var(--deep-blue);
+    }*/
+     
+
+/* --- FOOTER --- */
+/*.main-footer {
+    background-color: var(--deep-blue);
+    color: var(--bg-crema);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+    .main-footer a {
+        color: var(--steel-blue);
+        text-decoration: none;
+        font-weight: bold;
+    }*/
+
+/* --- SECCIÓN DE SOPORTE (FIGMA) --- */
+/*.support-section {
+    padding: 60px 8%;
+    background-color: var(--bg-crema);*/ /* Mantiene el color crema del diseño */
+/*}
+
+.support-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 50px;
+    flex-wrap: wrap;*/ /* Para que sea responsive en móviles */
+/*}
+
+.support-text {
+    flex: 1;
+    min-width: 300px;
+}
+
+    .support-text p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--deep-blue);
+        margin-bottom: 25px;
+        font-style: italic;*/ /* El texto en tu imagen parece ser un poco estilizado */
+        /*max-width: 500px;
+    }
+
+.support-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 300px;
+}
+
+    .support-image img {
+        max-width: 100%;
+        height: auto;
+    }*/
+
+/* Ajuste específico para el botón "Saber Mas" del diseño */
+/*.btn-saber-mas {
+    display: inline-block;
+    background-color: #FFFFFF;*/ /* Un tono crema más oscuro similar al botón del Figma */
+    /*color: #000;
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 10px 40px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+    .btn-saber-mas:hover {
+        background-color: var(--deep-blue);
+        color: var(--white);
+    }*/
+
