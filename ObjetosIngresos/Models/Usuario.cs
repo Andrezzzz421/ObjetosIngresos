@@ -13,6 +13,8 @@ public partial class Usuario
 
     public string Apellidos { get; set; } = null!;
 
+    public string Correo { get; set; }
+
     public string? Ficha { get; set; }
 
     public string FirebaseUid { get; set; } = null!;
