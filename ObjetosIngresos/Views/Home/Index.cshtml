@@ -1,8 +1,66 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Bienvenido";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<main class="relative overflow-hidden bg-white py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
+                Bienvenido al Sistema de Gestión de Ingreso
+            </h1>
+            <p class="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto">
+                Optimiza tus procesos, gestiona tus usuarios y mantén el control total de tu información en un solo lugar con nuestra interfaz intuitiva y segura.
+            </p>
+            <div class="mt-10 flex items-center justify-center gap-x-6">
+                <a asp-controller="Auth" asp-action="Login"
+                   class="rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all transform hover:scale-105">
+                    Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="absolute top-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#6366f1_100%)] opacity-20"></div>
+</main>
+
+<section class="bg-slate-50 py-20">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="grid grid-cols-1 items-center gap-x-12 gap-y-16 lg:grid-cols-2">
+
+            <div class="order-2 lg:order-1">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl mb-6">
+                    Soporte diseñado para acompañarte
+                </h2>
+                <div class="space-y-4 text-base leading-7 text-slate-600">
+                    <p>
+                        ¿Necesitas asistencia con el sistema? Nuestro centro de soporte está diseñado para acompañarte en cada paso de tu gestión.
+                    </p>
+                    <p>
+                        Ya sea que tengas dificultades para acceder a tu cuenta, dudas sobre el registro de datos o necesites orientación técnica, estamos aquí para resolverlo.
+                    </p>
+                    <p class="font-medium text-slate-800">
+                        Tu flujo de trabajo es nuestra prioridad.
+                    </p>
+                </div>
+                <div class="mt-8">
+                    <a asp-controller="Home" asp-action="SaberMas"
+                       class="inline-flex items-center gap-2 font-semibold text-indigo-600 hover:text-indigo-500 group">
+                        Saber Más
+                        <span class="group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="order-1 lg:order-2 flex justify-center">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+
+                    <div class="relative bg-white p-4 rounded-2xl shadow-xl">
+                        <img src="~/Soporte.svg" alt="Soporte Técnico"
+                             class="w-full h-auto max-w-sm lg:max-w-md rounded-lg transform transition duration-500 hover:rotate-1" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

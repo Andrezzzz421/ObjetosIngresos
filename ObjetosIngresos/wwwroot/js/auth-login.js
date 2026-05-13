@@ -79,23 +79,63 @@ async function vincularUsuario(doc) {
     }
 }
 
+//async function cerrarSesion() {
+//    if (!confirm("¿Estás seguro de que quieres salir?")) return;
+
+//    try {
+//        await signOut(auth);
+
+//        const response = await fetch('/Auth/LogoutServidor', {
+//            method: 'POST'
+//        });
+
+//        if (response.ok) {
+//            window.location.replace("/Auth/Login");
+//        } else {
+//            alert("Error al limpiar la sesión en el servidor.");
+//        }
+//    } catch (error) {
+//        console.error("Error al salir:", error);
+//    }
+//}
+
 async function cerrarSesion() {
-    if (!confirm("¿Estás seguro de que quieres salir?")) return;
-
-    try {
-        await signOut(auth);
-
-        const response = await fetch('/Auth/LogoutServidor', {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            window.location.replace("/Auth/Login");  
-        } else {
-            alert("Error al limpiar la sesión en el servidor.");
+    const result = await Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: "Tendrás que ingresar tus credenciales nuevamente.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5', // Indigo-600 de Tailwind
+        cancelButtonColor: '#64748b',  // Slate-500 de Tailwind
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar',
+        background: '#ffffff',
+        borderRadius: '1.5rem', // rounded-3xl
+        customClass: {
+            popup: 'rounded-3xl shadow-2xl border border-slate-100',
+            title: 'text-slate-800 font-bold',
+            confirmButton: 'rounded-xl px-6 py-3 font-bold',
+            cancelButton: 'rounded-xl px-6 py-3 font-bold'
         }
-    } catch (error) {
-        console.error("Error al salir:", error);
+    });
+
+    if (result.isConfirmed) {
+        try {
+            // Mostrar un spinner de carga opcional
+            Swal.showLoading();
+
+            await signOut(auth);
+            const response = await fetch('/Auth/LogoutServidor', { method: 'POST' });
+
+            if (response.ok) {
+                window.location.replace("/Auth/Login");
+            } else {
+                Swal.fire('Error', 'No se pudo cerrar la sesión en el servidor.', 'error');
+            }
+        } catch (error) {
+            console.error("Error al salir:", error);
+            Swal.fire('Error', 'Ocurrió un error inesperado.', 'error');
+        }
     }
 }
 

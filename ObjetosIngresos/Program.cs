@@ -62,14 +62,11 @@ if (FirebaseApp.DefaultInstance == null)
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-//<<<<<<< feat/Vistas
- 
- app.UseHttpsRedirection();
-// =======
 
+app.UseHttpsRedirection(); 
 
- app.UseStaticFiles();
-// >>>>>>> master
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -77,6 +74,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
