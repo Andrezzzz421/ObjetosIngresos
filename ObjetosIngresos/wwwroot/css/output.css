@@ -270,6 +270,9 @@
   .-inset-1 {
     inset: calc(var(--spacing) * -1);
   }
+  .inset-y-0 {
+    inset-block: calc(var(--spacing) * 0);
+  }
   .start-0 {
     inset-inline-start: calc(var(--spacing) * 0);
   }
@@ -1454,9 +1457,6 @@
   }
   .pr-10 {
     padding-right: calc(var(--spacing) * 10);
-  }
-  .pr-12 {
-    padding-right: calc(var(--spacing) * 12);
   }
   .pb-0 {
     padding-bottom: calc(var(--spacing) * 0);
