@@ -62,12 +62,11 @@ if (FirebaseApp.DefaultInstance == null)
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-// <<<<<<< feat/Vistas
 
 app.UseHttpsRedirection(); 
 
 app.UseStaticFiles();
-// >>>>>>> master
+
 app.UseRouting();
 
 app.UseAuthentication();

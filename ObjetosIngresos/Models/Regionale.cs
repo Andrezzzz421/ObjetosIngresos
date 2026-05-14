@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
 
-public partial class Regionale
+public  class Regionale
 {
     public int IdRegional { get; set; }
 

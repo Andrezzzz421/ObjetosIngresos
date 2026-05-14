@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
 
-public partial class Marca
+public  class Marca
 {
     public int IdMarca { get; set; }
 
