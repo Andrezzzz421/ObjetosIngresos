@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class UsuariosController : Controller
     {
 
