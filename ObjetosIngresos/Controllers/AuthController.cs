@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
 using ObjetosIngresos.Services;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
@@ -14,11 +16,12 @@ namespace ObjetosIngresos.Controllers
     {
         private readonly SistemaIngresoContext db;
         private readonly AuthServices ser;
-
-        public AuthController(SistemaIngresoContext db, AuthServices authService)
+        private readonly IConfiguration config;
+        public AuthController(SistemaIngresoContext db, AuthServices authService, IConfiguration config)
         {
             this.db = db;
             this.ser = authService;
+            this.config = config;
         }
 
         [AllowAnonymous]
@@ -153,6 +156,127 @@ namespace ObjetosIngresos.Controllers
             }
 
             return Ok();
+        }
+
+
+
+        [HttpGet]
+        public IActionResult OlvidePassword()
+        { return View("~/Views/Usuarios/OlvidePassword.cshtml"); }
+
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> ActualizarPassword(string email, string password, string confirmarPassword)
+        {
+            if (password != confirmarPassword)
+            {
+                ViewBag.Error = "Las contraseñas no coinciden.";
+                return View("NuevaPassword", model: email);
+            }
+
+            var usuarioLocal = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == email);
+
+            if (usuarioLocal == null || string.IsNullOrEmpty(usuarioLocal.FirebaseUid))
+            {
+                ViewBag.Error = "No se encontró el registro de autenticación para este usuario.";
+                return View("NuevaPassword", model: email);
+            }
+
+            try
+            {
+                var args = new UserRecordArgs
+                {
+                    Uid = usuarioLocal.FirebaseUid,
+                    Password = password 
+                };
+
+                await FirebaseAuth.DefaultInstance.UpdateUserAsync(args);
+
+                usuarioLocal.codigo_recuperacion = null;
+                usuarioLocal.codigo_expiracion = null;
+
+                await db.SaveChangesAsync();
+
+                TempData["Mensaje"] = "Contraseña actualizada correctamente. Ya puedes iniciar sesión.";
+                return RedirectToAction("Login");
+            }
+            catch (FirebaseAuthException ex)
+            {
+                ViewBag.Error = "Error en Firebase: " + ex;
+                return View("NuevaPassword", model: email);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Ocurrió un error inesperado: " + ex.Message;
+                return View("NuevaPassword", model: email);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EnviarCodigo(string correo)
+        {
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);
+
+            if (usuario != null)
+            {
+                string codigoGenerado = new Random().Next(100000, 999999).ToString();
+
+                usuario.codigo_recuperacion = codigoGenerado;
+                usuario.codigo_expiracion = DateTime.Now.AddMinutes(15);
+                await db.SaveChangesAsync();
+
+                try
+                {
+                    using (var client = new SmtpClient(config["Mailtrap:Host"], int.Parse(config["Mailtrap:Port"])))
+                    {
+                        client.Credentials = new NetworkCredential(config["Mailtrap:User"], config["Mailtrap:Pass"]);
+                        client.EnableSsl = true;
+
+                        var asunto = "Tu Código de Seguridad";
+                        var cuerpo = $"Hola {usuario.Nombres}, tu código es: {codigoGenerado}";
+
+                        client.Send("soporte@tuapp.com", correo, asunto, cuerpo);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Error = "Error al enviar correo: " + ex.Message;
+                    return View("~/Views/Usuarios/OlvidePassword.cshtml");
+                }
+
+                return RedirectToAction("VerificarCodigo", new { email = correo });
+            }
+
+            ViewBag.Error = "El correo no está registrado.";
+            return View("~/Views/Usuarios/OlvidePassword.cshtml");
+        }
+
+        [HttpGet]
+        public IActionResult VerificarCodigo(string email)
+        {
+            return View("~/Views/Usuarios/VerificarCodigo.cshtml", email);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ValidarCodigo(string email, string codigo)
+        {
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == email && u.codigo_recuperacion == codigo);
+
+            if (usuario == null || usuario.codigo_expiracion < DateTime.Now)
+            {
+                ViewBag.Error = "El código es incorrecto o ya expiró.";
+                return View("VerificarCodigo", model: email);
+            }
+
+            return RedirectToAction("NuevaPassword", new { email = email });
+        }
+
+        [HttpGet]
+        public IActionResult NuevaPassword(string email)
+        {
+            return View("~/Views/Usuarios/NuevaPassword.cshtml", email);
         }
     }
 }

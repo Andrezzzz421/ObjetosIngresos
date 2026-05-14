@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
 
-public partial class TiposUsuario
+public  class TiposUsuario
 {
     public int IdTipoUsuario { get; set; }
 

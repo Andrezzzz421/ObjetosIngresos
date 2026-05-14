@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
 
-public partial class MovimientoDetalle
+public  class MovimientoDetalle
 {
     public int IdMovimientoDetalle { get; set; }
 

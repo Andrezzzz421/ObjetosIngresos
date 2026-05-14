@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ObjetosIngresos.Models;
 
-public partial class Usuario
+public class Usuario
 {
     public int IdUsuario { get; set; }
 
@@ -14,6 +15,11 @@ public partial class Usuario
     public string Apellidos { get; set; } = null!;
 
     public string Correo { get; set; }
+
+    [MaxLength(6)]
+    public string? codigo_recuperacion { get; set; }
+
+    public DateTime? codigo_expiracion { get; set; }
 
     public string? Ficha { get; set; }
 
