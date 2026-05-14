@@ -1,71 +1,127 @@
 ﻿@model IEnumerable<ObjetosIngresos.Models.Usuario>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Gestión de Usuarios";
+    Layout = "_Layout";
+}
+ 
+@if (TempData["Success"] != null || TempData["Error"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isError = @(TempData["Error"] != null ? "true" : "false");
+            Swal.fire({
+                icon: isError ? 'error' : 'success',
+                title: isError ? 'Ups...' : '¡Hecho!',
+                text: isError ? '@TempData["Error"]' : '@TempData["Success"]',
+                timer: 3000,
+                showConfirmButton: false,
+                borderRadius: '1.5rem',
+                customClass: {
+                    popup: 'rounded-3xl shadow-xl'
+                }
+            });
+        });
+    </script>
 }
 
-<h1>Index</h1>
+<div class="p-4 sm:p-8 bg-slate-50 min-h-screen">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Gestión de Usuarios</h1>
+            <p class="text-slate-500 mt-1">Administra el personal, aprendices y sus accesos al sistema.</p>
+        </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Documento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Nombres)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Apellidos)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Ficha)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirebaseUid)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IdSedePrincipalNavigation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IdTipoUsuarioNavigation)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Documento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nombres)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Apellidos)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Ficha)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FirebaseUid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IdSedePrincipalNavigation.IdSede)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IdTipoUsuarioNavigation.IdTipoUsuario)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.IdUsuario">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.IdUsuario">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdUsuario">Delete</a>
-            </td>
-        </tr>
+        <a asp-action="Create" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Nuevo Usuario
+        </a>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-200">
+                        <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider">Usuario</th>
+                        <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider">Documento</th>
+                        <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider">Ficha</th>
+                        <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider">Sede / Rol</th>
+                        <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm uppercase">
+                                        @(item.Nombres.Substring(0, 1))@(item.Apellidos.Substring(0, 1))
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-800">@item.Nombres @item.Apellidos</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">
+                                    @item.Documento
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 text-sm font-medium">
+                                @(string.IsNullOrEmpty(item.Ficha) ? "N/A" : item.Ficha)
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-sm text-slate-700 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        @item.IdSedePrincipalNavigation.NombreSede
+                                    </span>
+                                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-tighter">
+                                        @item.IdTipoUsuarioNavigation.Descripcion
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.IdUsuario" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Editar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </a>
+
+                                    <button type="button"
+                                            onclick="confirmarEliminacion('@item.IdUsuario', '@item.Nombres @item.Apellidos')"
+                                            class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Eliminar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+
+                                    <form id="form-eliminar-@item.IdUsuario" asp-action="Delete" asp-route-id="@item.IdUsuario" method="post" style="display:none;"></form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-sm text-slate-500 font-medium">Mostrando @Model.Count() usuarios registrados</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/usuario.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
-    </tbody>
-</table>
