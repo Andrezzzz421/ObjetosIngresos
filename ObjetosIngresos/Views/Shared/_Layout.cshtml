@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] | SGI</title>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true">
+<<<<<<< Updated upstream
 
 </head>
 <body>
@@ -16,10 +17,24 @@
                 <div class="flex-shrink-0 flex items-center gap-2">
                     <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
                         <span class="font-black text-xl tracking-tighter">SGI</span>
+=======
+</head>
+<body class="h-full bg-slate-50 text-slate-900 flex flex-col">
+    @if(ViewData["HideNavbar"] == null)
+    {
+        
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
+                            <span class="font-black text-xl tracking-tighter">SGI</span>
+                        </div>
+                        <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
+>>>>>>> Stashed changes
                     </div>
-                    <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
-                </div>
 
+<<<<<<< Updated upstream
                 <nav>
                     <ul class="flex space-x-8">
                         <li>
@@ -35,9 +50,27 @@
                         </li>
                     </ul>
                 </nav>
+=======
+                    <nav>
+                        <ul class="flex space-x-8">
+                            <li>
+                                <a asp-controller="Home" asp-action="Index"
+                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Inicio</a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Servicios</a>
+                            </li>
+                            <li>
+                                <a asp-controller="Home" asp-action="Privacy"
+                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Ayuda</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+>>>>>>> Stashed changes
             </div>
-        </div>
-    </header>
+        </header>   
+    }
 
     }
       <div class="flex-grow container mx-auto px-4 py-8 max-w-7xl">

@@ -7,17 +7,26 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+<<<<<<< Updated upstream
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-600: oklch(57.7% 0.245 27.325);
+=======
+    --color-red-100: oklch(93.6% 0.032 17.717);
+>>>>>>> Stashed changes
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-green-400: oklch(79.2% 0.209 151.711);
     --color-green-500: oklch(72.3% 0.219 149.579);
     --color-green-900: oklch(39.3% 0.095 152.535);
     --color-blue-400: oklch(70.7% 0.165 254.624);
     --color-blue-500: oklch(62.3% 0.214 259.815);
+<<<<<<< Updated upstream
     --color-indigo-50: oklch(96.2% 0.018 272.314);
+=======
+    --color-blue-600: oklch(54.6% 0.245 262.881);
+    --color-blue-700: oklch(48.8% 0.243 264.376);
+>>>>>>> Stashed changes
     --color-indigo-100: oklch(93% 0.034 272.788);
     --color-indigo-200: oklch(87% 0.065 274.039);
     --color-indigo-400: oklch(67.3% 0.182 276.935);
@@ -34,6 +43,12 @@
     --color-slate-700: oklch(37.2% 0.044 257.287);
     --color-slate-800: oklch(27.9% 0.041 260.031);
     --color-slate-900: oklch(20.8% 0.042 265.755);
+    --color-gray-100: oklch(96.7% 0.003 264.542);
+    --color-gray-300: oklch(87.2% 0.01 258.338);
+    --color-gray-500: oklch(55.1% 0.027 264.364);
+    --color-gray-600: oklch(44.6% 0.03 256.802);
+    --color-gray-700: oklch(37.3% 0.034 259.733);
+    --color-gray-900: oklch(21% 0.034 264.665);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -621,6 +636,7 @@
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
   }
+<<<<<<< Updated upstream
   .mb-10 {
     margin-bottom: calc(var(--spacing) * 10);
   }
@@ -630,6 +646,11 @@
   .-ml-20 {
     margin-left: calc(var(--spacing) * -20);
   }
+=======
+  .mb-auto {
+    margin-bottom: auto;
+  }
+>>>>>>> Stashed changes
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
   }
@@ -741,9 +762,12 @@
   .min-h-screen {
     min-height: 100vh;
   }
+<<<<<<< Updated upstream
   .w-1\/3 {
     width: calc(1 / 3 * 100%);
   }
+=======
+>>>>>>> Stashed changes
   .w-3 {
     width: calc(var(--spacing) * 3);
   }
@@ -1085,6 +1109,7 @@
   .border-black {
     border-color: var(--color-black);
   }
+<<<<<<< Updated upstream
   .border-indigo-100 {
     border-color: var(--color-indigo-100);
   }
@@ -1093,6 +1118,10 @@
   }
   .border-red-500 {
     border-color: var(--color-red-500);
+=======
+  .border-gray-300 {
+    border-color: var(--color-gray-300);
+>>>>>>> Stashed changes
   }
   .border-slate-100 {
     border-color: var(--color-slate-100);
@@ -1112,6 +1141,7 @@
   .border-white {
     border-color: var(--color-white);
   }
+<<<<<<< Updated upstream
   .border-white\/10 {
     border-color: color-mix(in srgb, #fff 10%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1126,10 +1156,15 @@
   }
   .border-t-white {
     border-top-color: var(--color-white);
+=======
+  .border-t-transparent {
+    border-top-color: transparent;
+>>>>>>> Stashed changes
   }
   .bg-black {
     background-color: var(--color-black);
   }
+<<<<<<< Updated upstream
   .bg-blue-400\/20 {
     background-color: color-mix(in srgb, oklch(70.7% 0.165 254.624) 20%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1138,6 +1173,13 @@
   }
   .bg-green-500 {
     background-color: var(--color-green-500);
+=======
+  .bg-blue-600 {
+    background-color: var(--color-blue-600);
+  }
+  .bg-gray-100 {
+    background-color: var(--color-gray-100);
+>>>>>>> Stashed changes
   }
   .bg-green-900\/30 {
     background-color: color-mix(in srgb, oklch(39.3% 0.095 152.535) 30%, transparent);
@@ -1154,11 +1196,16 @@
   .bg-indigo-600 {
     background-color: var(--color-indigo-600);
   }
+<<<<<<< Updated upstream
   .bg-red-50 {
     background-color: var(--color-red-50);
   }
   .bg-red-500 {
     background-color: var(--color-red-500);
+=======
+  .bg-red-100 {
+    background-color: var(--color-red-100);
+>>>>>>> Stashed changes
   }
   .bg-slate-50 {
     background-color: var(--color-slate-50);
@@ -1537,6 +1584,21 @@
   .text-black {
     color: var(--color-black);
   }
+  .text-blue-600 {
+    color: var(--color-blue-600);
+  }
+  .text-gray-500 {
+    color: var(--color-gray-500);
+  }
+  .text-gray-600 {
+    color: var(--color-gray-600);
+  }
+  .text-gray-700 {
+    color: var(--color-gray-700);
+  }
+  .text-gray-900 {
+    color: var(--color-gray-900);
+  }
   .text-green-400 {
     color: var(--color-green-400);
   }
@@ -1561,9 +1623,12 @@
   .text-indigo-600 {
     color: var(--color-indigo-600);
   }
+<<<<<<< Updated upstream
   .text-red-600 {
     color: var(--color-red-600);
   }
+=======
+>>>>>>> Stashed changes
   .text-red-700 {
     color: var(--color-red-700);
   }
@@ -1642,6 +1707,10 @@
     --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .shadow-md {
+    --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .shadow-none {
     --tw-shadow: 0 0 #0000;
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -1713,6 +1782,10 @@
     transition-property: transform, translate, scale, rotate;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+  .duration-150 {
+    --tw-duration: 150ms;
+    transition-duration: 150ms;
   }
   .duration-200 {
     --tw-duration: 200ms;
@@ -1803,6 +1876,13 @@
       }
     }
   }
+  .hover\:bg-blue-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-blue-700);
+      }
+    }
+  }
   .hover\:bg-indigo-500 {
     &:hover {
       @media (hover: hover) {
@@ -1878,10 +1958,20 @@
       border-color: var(--color-indigo-500);
     }
   }
+  .focus\:border-transparent {
+    &:focus {
+      border-color: transparent;
+    }
+  }
   .focus\:ring-2 {
     &:focus {
       --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .focus\:ring-blue-500 {
+    &:focus {
+      --tw-ring-color: var(--color-blue-500);
     }
   }
   .focus\:ring-indigo-500 {
@@ -1931,11 +2021,14 @@
       scale: var(--tw-scale-x) var(--tw-scale-y);
     }
   }
+<<<<<<< Updated upstream
   .active\:scale-\[0\.98\] {
     &:active {
       scale: 0.98;
     }
   }
+=======
+>>>>>>> Stashed changes
   .disabled\:opacity-50 {
     &:disabled {
       opacity: 50%;
