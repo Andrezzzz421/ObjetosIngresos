@@ -16,11 +16,14 @@ public class Usuario
 
     public string Correo { get; set; }
 
+<<<<<<< Updated upstream
     [MaxLength(6)]
     public string? codigo_recuperacion { get; set; }
 
     public DateTime? codigo_expiracion { get; set; }
 
+=======
+>>>>>>> Stashed changes
     public string? Ficha { get; set; }
 
     public string FirebaseUid { get; set; } = null!;
