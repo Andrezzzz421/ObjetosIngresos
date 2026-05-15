@@ -9,8 +9,10 @@ using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
 {
+    [Authorize]
     public class UsuariosController : Controller
     {
+
         private readonly SistemaIngresoContext db;
         private readonly UsuarioServices ser;
 
@@ -80,13 +82,19 @@ namespace ObjetosIngresos.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
             bool eliminado = ser.Delete(id);
 
-            if (!eliminado)
+            if (eliminado)
             {
-                TempData["Error"] = "No se puede eliminar el usuario porque tiene registros vinculados.";
+                TempData["Success"] = "El usuario ha sido eliminado correctamente.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo eliminar: el usuario tiene registros vinculados o no existe.";
             }
 
             return RedirectToAction(nameof(Index));

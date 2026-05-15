@@ -165,6 +165,7 @@ function mostrarError(msg) {
         alert(msg);
     }
 }
+ 
 
 window.procesarLogin = procesarLogin;
 window.cerrarSesion = cerrarSesion;
