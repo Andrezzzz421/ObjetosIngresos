@@ -234,25 +234,37 @@ public partial class SistemaIngresoContext : DbContext
         {
             entity.HasKey(e => e.IdUsuario).HasName("PK__Usuarios__4E3E04ADCDE9DC08");
 
-            entity.HasIndex(e => e.FirebaseUid, "UQ__Usuarios__1E65B7F8DA562CF4").IsUnique();
+            entity.HasIndex(e => e.FirebaseUid, "UQ__Usuarios__1E65B7F8DA562CF4")
+                .HasFilter("[firebase_uid] IS NOT NULL");
 
             entity.HasIndex(e => e.Documento, "UQ__Usuarios__A25B3E614D270099").IsUnique();
 
             entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+
             entity.Property(e => e.Apellidos)
                 .HasMaxLength(100)
                 .HasColumnName("apellidos");
+
+            entity.Property(e => e.Correo)
+                .HasMaxLength(150)
+                .HasColumnName("correo");
+
             entity.Property(e => e.Documento)
                 .HasMaxLength(20)
                 .HasColumnName("documento");
+
             entity.Property(e => e.Ficha)
                 .HasMaxLength(20)
                 .HasColumnName("ficha");
+
             entity.Property(e => e.FirebaseUid)
                 .HasMaxLength(128)
-                .HasColumnName("firebase_uid");
+                .HasColumnName("firebase_uid")
+                .IsRequired(false); 
+
             entity.Property(e => e.IdSedePrincipal).HasColumnName("id_sede_principal");
             entity.Property(e => e.IdTipoUsuario).HasColumnName("id_tipo_usuario");
+
             entity.Property(e => e.Nombres)
                 .HasMaxLength(100)
                 .HasColumnName("nombres");

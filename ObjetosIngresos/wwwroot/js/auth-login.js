@@ -14,15 +14,16 @@ const firebaseConfig = {
     appId: "1:266766184234:web:475e50654bb5ad8ed8f853"
 };
 
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 async function procesarLogin() {
-    const doc = document.getElementById("documento").value;
+    const identificador = document.getElementById("documento").value;
     const pass = document.getElementById("password").value;
     const errorDiv = document.getElementById("mensajeError");
 
-    if (!doc || !pass) {
+    if (!identificador || !pass) {
         mostrarError("Por favor, llena todos los campos.");
         return;
     }
@@ -31,30 +32,43 @@ async function procesarLogin() {
     if (errorDiv) errorDiv.classList.add("d-none");
 
     try {
-        const emailSintetico = `${doc}@sistema.com`;
-        await signInWithEmailAndPassword(auth, emailSintetico, pass);
+        const resUser = await fetch(`/Auth/ObtenerDatosUsuario?identificador=${encodeURIComponent(identificador)}`);
+
+        if (!resUser.ok) {
+            throw new Error("El usuario no pertenece a la institución.");
+        }
+
+        const datos = await resUser.json(); 
 
 
-        const resSrv = await fetch(`/Auth/GenerarSesionSrv?documento=${encodeURIComponent(doc)}`, {
+        if (datos.necesitaVinculacion && identificador === pass) {
+            await vincularUsuario(identificador);
+            return;
+        }
+
+
+        await signInWithEmailAndPassword(auth, datos.correo, pass);
+
+        const resSrv = await fetch(`/Auth/GenerarSesionSrv?identificador=${encodeURIComponent(identificador)}`, {
             method: 'POST'
         });
 
         if (resSrv.ok) {
             window.location.replace("/Auth/Perfil");
         } else {
-            const errorSrv = await resSrv.text();
-            mostrarError("Error: " + errorSrv);
+            mostrarError("Error al validar sesión local.");
             setLoading(false);
         }
 
     } catch (error) {
-        console.error("Error Firebase:", error.code);
-        if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && doc === pass) {
-            await vincularUsuario(doc);
-        } else {
-            mostrarError("Credenciales incorrectas o usuario no vinculado.");
-            setLoading(false);
-        }
+        console.error("Error Login:", error);
+        let mensaje = "Credenciales incorrectas o usuario no vinculado.";
+
+        if (error.message.includes("institución")) mensaje = error.message;
+        if (error.code === 'auth/wrong-password') mensaje = "Contraseña incorrecta.";
+
+        mostrarError(mensaje);
+        setLoading(false);
     }
 }
 
@@ -70,34 +84,15 @@ async function vincularUsuario(doc) {
             window.location.href = `/Auth/CompletarRegistro?documento=${doc}`;
         } else {
             const txt = await response.text();
-            mostrarError("Error del servidor: " + txt);
+            console.error("Detalle del error 400:", txt);
+            mostrarError(txt);
             setLoading(false);
         }
     } catch (err) {
-        mostrarError("No se pudo conectar con el servidor.");
+        mostrarError("Error de conexión al vincular.");
         setLoading(false);
     }
 }
-
-//async function cerrarSesion() {
-//    if (!confirm("¿Estás seguro de que quieres salir?")) return;
-
-//    try {
-//        await signOut(auth);
-
-//        const response = await fetch('/Auth/LogoutServidor', {
-//            method: 'POST'
-//        });
-
-//        if (response.ok) {
-//            window.location.replace("/Auth/Login");
-//        } else {
-//            alert("Error al limpiar la sesión en el servidor.");
-//        }
-//    } catch (error) {
-//        console.error("Error al salir:", error);
-//    }
-//}
 
 async function cerrarSesion() {
     const result = await Swal.fire({
@@ -105,12 +100,12 @@ async function cerrarSesion() {
         text: "Tendrás que ingresar tus credenciales nuevamente.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#4f46e5', // Indigo-600 de Tailwind
-        cancelButtonColor: '#64748b',  // Slate-500 de Tailwind
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#64748b',  
         confirmButtonText: 'Sí, salir',
         cancelButtonText: 'Cancelar',
         background: '#ffffff',
-        borderRadius: '1.5rem', // rounded-3xl
+        borderRadius: '1.5rem', 
         customClass: {
             popup: 'rounded-3xl shadow-2xl border border-slate-100',
             title: 'text-slate-800 font-bold',
@@ -121,7 +116,6 @@ async function cerrarSesion() {
 
     if (result.isConfirmed) {
         try {
-            // Mostrar un spinner de carga opcional
             Swal.showLoading();
 
             await signOut(auth);
