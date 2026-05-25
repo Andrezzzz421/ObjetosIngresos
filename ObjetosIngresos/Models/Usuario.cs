@@ -23,7 +23,7 @@ public class Usuario
 
     public string? Ficha { get; set; }
 
-    public string FirebaseUid { get; set; } = null!;
+    public string? FirebaseUid { get; set; }
 
     public int IdTipoUsuario { get; set; }
 
