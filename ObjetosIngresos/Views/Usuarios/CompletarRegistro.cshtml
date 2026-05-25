@@ -4,43 +4,51 @@
 }
 
 x
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card border-0 shadow-lg mt-5">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
-                            <i class="bi bi-shield-lock-fill fs-2"></i>
-                        </div>
-                        <h2 class="fw-bold">¡Cuenta Creada!</h2>
-                        <p class="text-muted">Por seguridad, ahora debes crear una contraseña personal.</p>
-                    </div>
-
-                    <div id="registroForm">
-                        <div class="form-floating mb-3">
-                            <input type="password" class="form-control" id="newPass" placeholder="Nueva Clave" required>
-                            <label>Nueva Contraseña</label>
-                        </div>
-
-                        <div class="form-floating mb-4">
-                            <input type="password" class="form-control" id="confirmPass" placeholder="Repetir Clave" required>
-                            <label>Confirmar Contraseña</label>
-                        </div>
-
-                        <div class="alert alert-info small py-2">
-                            <i class="bi bi-info-circle-fill me-2"></i> Usa al menos 6 caracteres.
-                        </div>
-
-                        <button type="button" id="btnActualizar" class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="finalizarRegistro('@documento')">
-                            <span id="btnText">Guardar y Finalizar</span>
-                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
-                        </button>
-                    </div>
-
-                    <div id="mensajeError" class="alert alert-danger mt-3 d-none"></div>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transform transition-all">
+        <div class="p-8 sm:p-10">
+             
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-emerald-500 text-white rounded-full inline-flex items-center justify-center mb-4 shadow-md shadow-emerald-200">
+                    <i class="bi bi-shield-lock-fill text-2xl"></i>
                 </div>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">¡Cuenta Creada!</h2>
+                <p class="text-sm text-gray-500 mt-2">Por seguridad, ahora debes crear una contraseña personal.</p>
             </div>
+             
+            <div id="registroForm" class="space-y-5">
+                 
+                <div class="relative">
+                    <input type="password" id="newPass" required placeholder=" "
+                           class="block w-full px-4 pt-6 pb-2 text-gray-900 bg-gray-50 rounded-xl border border-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white peer transition-all text-sm" />
+                    <label for="newPass"
+                           class="absolute text-sm text-gray-400 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-emerald-600 pointer-events-none">
+                        Nueva Contraseña
+                    </label>
+                </div>
+                 
+                <div class="relative">
+                    <input type="password" id="confirmPass" required placeholder=" "
+                           class="block w-full px-4 pt-6 pb-2 text-gray-900 bg-gray-50 rounded-xl border border-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:bg-white peer transition-all text-sm" />
+                    <label for="confirmPass"
+                           class="absolute text-sm text-gray-400 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-emerald-600 pointer-events-none">
+                        Confirmar Contraseña
+                    </label>
+                </div>
+                 
+                <div class="flex items-center p-3 text-xs text-blue-800 bg-blue-50 rounded-xl border border-blue-100">
+                    <i class="bi bi-info-circle-fill text-sm mr-2 flex-shrink-0"></i>
+                    <span>Usa al menos 6 caracteres.</span>
+                </div>
+                 
+                <button type="button" id="btnActualizar" onclick="finalizarRegistro('@documento')"
+                        class="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                    <span id="btnText">Guardar y Finalizar</span>
+                    <span id="btnSpinner" class="hidden animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" role="status"></span>
+                </button>
+            </div>
+             
+            <div id="mensajeError" class="hidden mt-4 p-3 text-sm text-red-800 bg-red-50 rounded-xl border border-red-100"></div>
         </div>
     </div>
 </div>

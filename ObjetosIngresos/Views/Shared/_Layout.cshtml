@@ -5,60 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] | SGI</title>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true">
-
 </head>
-<body>
-    @if(ViewData["HideNavbar"] == null)
+<body class="h-full flex flex-col bg-slate-50">
+
+    @if (ViewData["HideNavbar"] == null)
     {
-          <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex-shrink-0 flex items-center gap-2">
-                    <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
-                        <span class="font-black text-xl tracking-tighter">SGI</span>
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
+                            <span class="font-black text-xl tracking-tighter">SGI</span>
+                        </div>
+                        <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
                     </div>
-                    <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
+                    <nav>
+                        <ul class="flex space-x-8">
+                            <li><a asp-controller="Home" asp-action="Index" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Inicio</a></li>
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <li><a asp-controller="Usuarios" asp-action="Index" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Servicios</a></li>
+                                <li><a asp-controller="Auth" asp-action="Perfil" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Perfil</a></li>
+                            }
+                            <li><a asp-controller="Home" asp-action="SaberMas" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Ayuda</a></li>
+                        </ul>
+                    </nav>
                 </div>
-
-                <nav>
-                    <ul class="flex space-x-8">
-                        <li>
-                            <a asp-controller="Home" asp-action="Index"
-                               class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Inicio</a>
-                        </li>
-                        <li>
-                            <a asp-controller="Usuarios" asp-action="Index"
-                               class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Servicios</a>
-                        </li>
-                        <li>
-                            <a asp-controller="Home" asp-action="SaberMas"
-                               class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Ayuda</a>
-                        </li>
-                    </ul>
-                </nav>
             </div>
-        </div>
-    </header>
-
+        </header>
     }
-      <div class="flex-grow container mx-auto px-4 py-8 max-w-7xl">
-        <main role="main" class="animate-fade-in">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="bg-slate-900 text-slate-300 py-10 mt-auto">
+    <main role="main" class="flex-grow animate-fade-in w-full">
+        @RenderBody()
+    </main>
+
+    <footer class="bg-slate-900 text-slate-300 py-10">
         <div class="max-w-7xl mx-auto px-4 text-center sm:text-left sm:flex sm:justify-between sm:items-center">
             <div class="mb-4 sm:mb-0">
                 <p class="font-semibold text-white uppercase tracking-wider text-sm">SGI - Derechos Reservados</p>
                 <p class="text-xs text-slate-500 italic mt-1">&copy; 2026 - Gestión de Objetos e Ingresos</p>
             </div>
-            <div class="text-sm space-y-1">
-                <p class="hover:text-indigo-400 transition-colors">
-                    <span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814
-                </p>
-                <p class="hover:text-indigo-400 transition-colors lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
-                <a asp-controller="Home" asp-action="Privacy" class="text-indigo-500 hover:underline text-xs">Política de Privacidad</a>
+            <div class="text-sm space-y-1 text-right">
+                <p><span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814</p>
+                <p class="lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
             </div>
         </div>
     </footer>

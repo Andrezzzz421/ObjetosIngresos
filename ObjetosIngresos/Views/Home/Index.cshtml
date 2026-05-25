@@ -11,12 +11,19 @@
             <p class="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto">
                 Optimiza tus procesos, gestiona tus usuarios y mantén el control total de tu información en un solo lugar con nuestra interfaz intuitiva y segura.
             </p>
-            <div class="mt-10 flex items-center justify-center gap-x-6">
-                <a asp-controller="Auth" asp-action="Login"
-                   class="rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all transform hover:scale-105">
-                    Iniciar Sesión
-                </a>
-            </div>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+
+            }
+            else
+            {
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    <a asp-controller="Auth" asp-action="Login"
+                       class="rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all transform hover:scale-105">
+                        Iniciar Sesión
+                    </a>
+                </div>
+            }
         </div>
     </div>
     <div class="absolute top-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#6366f1_100%)] opacity-20"></div>

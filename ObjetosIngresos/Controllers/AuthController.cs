@@ -86,7 +86,7 @@ namespace ObjetosIngresos.Controllers
             {
                 return RedirectToAction("Login");
             }
-
+              
             var usuario = await db.Usuarios
                 .Include(u => u.IdSedePrincipalNavigation)
                 .Include(u => u.IdTipoUsuarioNavigation)
@@ -277,6 +277,21 @@ namespace ObjetosIngresos.Controllers
         public IActionResult NuevaPassword(string email)
         {
             return View("~/Views/Usuarios/NuevaPassword.cshtml", email);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> CambiarPasswordLogueado()
+        { 
+            var documento = User.FindFirst("Documento")?.Value;
+
+            if (string.IsNullOrEmpty(documento)) return RedirectToAction("Login");
+             
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Documento.Trim() == documento.Trim());
+
+            if (usuario == null) return RedirectToAction("Login");
+             
+            return View("~/Views/Usuarios/NuevaPassword.cshtml", usuario.Correo);
         }
     }
 }
