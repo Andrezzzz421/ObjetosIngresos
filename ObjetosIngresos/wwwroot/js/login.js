@@ -44,14 +44,14 @@ window.procesarLogin = async () => {
     }
 };
 
-
-
 window.actualizarContrasena = async (documento) => {
+    clearMessage("updateMessage");
+
     const p1 = document.getElementById("pass1").value;
     const p2 = document.getElementById("pass2").value;
 
-    if (p1.length < 6) return alert("Mínimo 6 caracteres.");
-    if (p1 !== p2) return alert("Las contraseñas no coinciden.");
+    if (p1.length < 6) return showMessage("updateMessage", "Mínimo 6 caracteres.");
+    if (p1 !== p2) return showMessage("updateMessage", "Las contraseñas no coinciden.");
 
     try {
         const emailSintetico = `${documento}@sistema.com`;
