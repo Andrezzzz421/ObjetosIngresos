@@ -257,15 +257,33 @@ namespace ObjetosIngresos.Controllers
 
             try
             {
-                using (var client = new SmtpClient(config["Mailtrap:Host"], int.Parse(config["Mailtrap:Port"])))
+                
+                var host = config["SmtpConfig:Host"];
+                var port = int.Parse(config["SmtpConfig:Port"]);
+                var senderEmail = config["SmtpConfig:SenderEmail"];
+                var senderName = config["SmtpConfig:SenderName"];
+                var pass = config["SmtpConfig:Pass"];
+
+                using (var client = new SmtpClient(host, port))
                 {
-                    client.Credentials = new NetworkCredential(config["Mailtrap:User"], config["Mailtrap:Pass"]);
+                    client.Credentials = new NetworkCredential(senderEmail, pass);
                     client.EnableSsl = true;
 
                     var asunto = "Tu Código de Seguridad";
                     var cuerpo = $"Hola {usuario.Nombres}, tu código es: {codigoGenerado}";
 
-                    client.Send("soporte@tuapp.com", limpio, asunto, cuerpo);
+                    // Se usa MailMessage para asegurar el remitente real y evitar bloqueos de Google
+                    using (var mailMessage = new MailMessage())
+                    {
+                        mailMessage.From = new MailAddress(senderEmail, senderName);
+                        mailMessage.To.Add(limpio);
+                        mailMessage.Subject = asunto;
+                        mailMessage.Body = cuerpo;
+                        mailMessage.IsBodyHtml = false; // Cambiar a true si después le meten una plantilla HTML
+                        mailMessage.BodyEncoding = System.Text.Encoding.UTF8;
+
+                        client.Send(mailMessage);
+                    }
                 }
                 return RedirectToAction("VerificarCodigo", new { email = limpio });
             }
