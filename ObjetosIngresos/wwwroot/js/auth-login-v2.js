@@ -1,5 +1,5 @@
 ﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword,updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = window.FirebaseConfigServidor;
 let app;
@@ -33,8 +33,6 @@ async function procesarLogin() {
     if (errorDiv) errorDiv.classList.add("hidden");
 
     let datosServer = null;
-
-    // FASE 1: Obtención de datos del usuario
     try {
         const resUser = await fetch(`/Auth/ObtenerDatosUsuario?identificador=${encodeURIComponent(correoIngresado)}`);
         if (!resUser.ok) throw new Error("El usuario no pertenece a la institución.");
@@ -60,7 +58,7 @@ async function procesarLogin() {
 
         await signInWithEmailAndPassword(auth, datosServer.correo, passIngresada);
 
-        const resSrv = await fetch(`/Auth/GenerarSesionSrv?identificador=${encodeURIComponent(correoIngresado)}`, {
+        const resSrv = await fetch(`/Auth/GenerarSesionSrv?documento=${encodeURIComponent(correoIngresado)}`, {
             method: 'POST'
         });
 
@@ -166,6 +164,102 @@ async function procesarLoginInvitado() {
         if (btn) btn.disabled = false;
     }
 }
+
+window.finalizarRegistro = async (documento) => {
+    const pass1 = document.getElementById("newPass");
+    const pass2 = document.getElementById("confirmPass");
+    const errorDiv = document.getElementById("mensajeError");
+
+    const p1Value = pass1.value.trim();
+    const p2Value = pass2.value.trim();
+
+    if (errorDiv) errorDiv.classList.add("hidden");
+    pass1.classList.remove("border-red-500");
+    pass2.classList.remove("border-red-500");
+
+    if (p1Value.length < 6) {
+        mostrarErrorRegistro("La contraseña debe tener al menos 6 caracteres.");
+        pass1.classList.add("border-red-500");
+        return;
+    }
+
+    if (p1Value !== p2Value) {
+        mostrarErrorRegistro("Las contraseñas no coinciden.");
+        pass2.classList.add("border-red-500");
+        return;
+    }
+
+    setLoadingRegistro(true);
+
+    try {
+        const resUser = await fetch(`/Auth/ObtenerDatosUsuario?identificador=${encodeURIComponent(documento)}`);
+        if (!resUser.ok) throw new Error("No se pudieron recuperar las credenciales del usuario.");
+
+        const datosServer = await resUser.json();
+
+        const userCredential = await signInWithEmailAndPassword(auth, datosServer.correo, documento);
+
+        await updatePassword(userCredential.user, p1Value);
+        const resSrv = await fetch(`/Auth/GenerarSesionSrv?documento=${encodeURIComponent(documento)}`, {
+            method: 'POST'
+        });
+
+        if (!resSrv.ok) throw new Error("Error al inicializar la sesión en el servidor.");
+
+        const modal = document.getElementById("modalExito");
+        if (modal) {
+            modal.classList.remove("hidden");
+            setTimeout(() => {
+                modal.classList.remove("opacity-0");
+                modal.querySelector(".transform").classList.remove("scale-95");
+            }, 10);
+        } else {
+            alert("¡Contraseña configurada con éxito! Bienvenido al sistema.");
+            window.location.replace("/Auth/Perfil");
+        }
+        window.location.replace("/Auth/Perfil");
+
+    } catch (error) {
+        console.error("Error en la finalización del registro:", error);
+        let msg = "No se pudo actualizar la contraseña. Si ya habías hecho este proceso, intenta iniciar sesión normalmente.";
+
+        if (error.code === "auth/requires-recent-login") {
+            msg = "La sesión expiró. Por favor, vuelve al Login e ingresa tu documento.";
+        } else if (error.message) {
+            msg = error.message;
+        }
+
+        mostrarErrorRegistro(msg);
+        setLoadingRegistro(false);
+    }
+};
+
+function setLoadingRegistro(isLoading) {
+    const btn = document.getElementById("btnActualizar");
+    const spinner = document.getElementById("btnSpinner");
+    const text = document.getElementById("btnText");
+    if (!btn) return;
+
+    btn.disabled = isLoading;
+    if (isLoading) {
+        spinner?.classList.remove("hidden");
+        if (text) text.innerText = "Guardando cambios...";
+    } else {
+        spinner?.classList.add("hidden");
+        if (text) text.innerText = "Guardar y Finalizar";
+    }
+}
+
+function mostrarErrorRegistro(msg) {
+    const errorDiv = document.getElementById("mensajeError");
+    if (errorDiv) {
+        errorDiv.innerText = msg;
+        errorDiv.classList.remove("hidden");
+    } else {
+        alert(msg);
+    }
+}
+
 
 window.procesarLoginInvitado = procesarLoginInvitado;
 window.procesarLogin = procesarLogin;

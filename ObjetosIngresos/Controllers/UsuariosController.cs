@@ -28,7 +28,7 @@ namespace ObjetosIngresos.Controllers
             ViewBag.TiposUsuarios = new SelectList(db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
 
-        [Authorize(Roles = "Administrador, Instructor, Aprendiz, Guest")]
+         [Authorize(Roles = "Administrador, Instructor, Aprendiz, Guest")]
         public ActionResult Index()
         {
             return View(ser.GetAll());
