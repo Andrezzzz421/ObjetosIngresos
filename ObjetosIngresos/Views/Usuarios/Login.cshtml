@@ -1,8 +1,8 @@
-﻿@using Newtonsoft.Json
+@using Newtonsoft.Json
 @{
     ViewData["Title"] = "Iniciar Sesión";
-    Layout = "_Layout"; 
-    ViewData["HideNavbar"] = true; 
+    Layout = "_Layout";
+    // ViewData["HideNavbar"] = true;
 }
 <script>
     window.FirebaseConfigServidor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.FirebaseConfig));
@@ -62,14 +62,31 @@
                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300">
                 </div>
 
-
                 <div>
                     <div class="flex justify-between mb-2">
                         <label for="password" class="text-sm font-semibold text-slate-700">Contraseña</label>
                         <a asp-controller="Auth" asp-action="OlvidePassword" class="text-xs font-semibold text-indigo-600 hover:underline">¿Olvidaste tu contraseña?</a>
                     </div>
-                    <input type="password" id="password" required placeholder="********"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300">
+
+                    <!-- Contenedor relativo para posicionar el ojo -->
+                    <div class="relative">
+                        <input type="password" id="password" required placeholder="********"
+                               class="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300">
+
+                        <!-- Botón del Ojo para alternar visibilidad -->
+                        <button type="button" onclick="togglePassword()"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors">
+                            <!-- Icono Ojo Abierto -->
+                            <svg id="eye-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <!-- Icono Ojo Cerrado -->
+                            <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.025 10.025 0 014.132-5.4M9.695 3.015A10.144 10.144 0 0112 3c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.4M9.9 9.9a3 3 0 004.2 4.2M3 3l18 18" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex items-center">
@@ -88,7 +105,7 @@
                 </button>
             </form> 
 
-            <div id="mensajeError" class="hidden mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-lg">
+            <div id="mensajeError" class="hidden mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-lg font-bold animate-shake">
             </div>
 
             <div class="mt-5 pt-4 border-t border-slate-100">

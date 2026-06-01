@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="es" class="h-full">
 <head>
@@ -118,24 +118,19 @@
         </header>
     }
 
-    <div class="flex-grow container mx-auto px-4 py-8 max-w-7xl">
-        <main role="main" class="animate-fade-in">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main" class="flex-grow animate-fade-in w-full">
+        @RenderBody()
+    </main>
 
-    <footer class="bg-slate-900 text-slate-300 py-10 mt-auto">
+    <footer class="bg-slate-900 text-slate-300 py-10">
         <div class="max-w-7xl mx-auto px-4 text-center sm:text-left sm:flex sm:justify-between sm:items-center">
             <div class="mb-4 sm:mb-0">
                 <p class="font-semibold text-white uppercase tracking-wider text-sm">SGI - Derechos Reservados</p>
                 <p class="text-xs text-slate-500 italic mt-1">&copy; 2026 - Gestión de Objetos e Ingresos</p>
             </div>
-            <div class="text-sm space-y-1">
-                <p class="hover:text-indigo-400 transition-colors">
-                    <span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814
-                </p>
-                <p class="hover:text-indigo-400 transition-colors lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
-                <a asp-controller="Home" asp-action="Privacy" class="text-indigo-500 hover:underline text-xs">Política de Privacidad</a>
+            <div class="text-sm space-y-1 text-right">
+                <p><span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814</p>
+                <p class="lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
             </div>
         </div>
     </footer>
