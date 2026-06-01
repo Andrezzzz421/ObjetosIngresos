@@ -1,3 +1,4 @@
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="es" class="h-full">
 <head>
@@ -6,30 +7,112 @@
     <title>@ViewData["Title"] | SGI</title>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true">
 </head>
-<body class="h-full flex flex-col bg-slate-50">
-
+<body class="h-full bg-slate-50 text-slate-900 flex flex-col">
     @if (ViewData["HideNavbar"] == null)
     {
+        bool esInvitado = User.IsInRole("Guest");
+        string nombreUsuario = User.Identity?.Name ?? "Invitado";
+        string correoUsuario = User.FindFirst(ClaimTypes.Email)?.Value ?? "Sesión Temporal";
+
         <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
+
                     <div class="flex-shrink-0 flex items-center gap-2">
                         <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
                             <span class="font-black text-xl tracking-tighter">SGI</span>
                         </div>
                         <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
                     </div>
-                    <nav>
+
+                    <nav class="hidden md:flex flex-grow justify-center">
                         <ul class="flex space-x-8">
-                            <li><a asp-controller="Home" asp-action="Index" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Inicio</a></li>
-                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            <li>
+                                <a asp-controller="Home" asp-action="Index"
+                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Inicio</a>
+                            </li>
+                            @if (!esInvitado)
                             {
-                                <li><a asp-controller="Usuarios" asp-action="Index" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Servicios</a></li>
-                                <li><a asp-controller="Auth" asp-action="Perfil" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Perfil</a></li>
+                                <li>
+                                    <a asp-controller="Usuarios" asp-action="Index"
+                                       class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Servicios</a>
+                                </li>
                             }
-                            <li><a asp-controller="Home" asp-action="SaberMas" class="text-slate-600 hover:text-indigo-600 font-medium transition-colors">Ayuda</a></li>
+                            <li>
+                                <a asp-controller="Home" asp-action="SaberMas"
+                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Ayuda</a>
+                            </li>
                         </ul>
                     </nav>
+
+                    <div class="relative ml-3">
+                        <div>
+                            <button type="button" id="botonMenuPerfil" onclick="alternarMenuPerfil()"
+                                    class="max-w-xs bg-slate-100 flex items-center text-sm rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:bg-slate-200 transition-all border border-slate-200">
+                                <span class="sr-only">Abrir menú de usuario</span>
+
+                                <div class="h-8 w-8 rounded-full bg-gradient-to-tr @(esInvitado ? "from-amber-500 to-orange-400" : "from-indigo-600 to-indigo-500") text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                                    @(esInvitado ? "G" : nombreUsuario.Substring(0, Math.Min(nombreUsuario.Length, 2)))
+                                </div>
+                                <span class="hidden sm:block ml-2 text-xs font-semibold text-slate-700 pr-2">
+                                    @nombreUsuario
+                                </span>
+                                <svg class="w-4 h-4 text-slate-400 mr-1 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div id="menuPerfilContainer" class="hidden origin-top-right absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 border border-slate-100 divide-y divide-slate-100 focus:outline-none animate-fade-in" role="menu">
+
+                            <div class="px-4 py-3">
+                                <p class="text-xs text-slate-400 font-medium">Cuenta activa</p>
+                                <p class="text-sm font-bold text-slate-800 truncate">@nombreUsuario</p>
+                                <p class="text-xs text-slate-500 truncate mt-0.5">@correoUsuario</p>
+
+                                @if (esInvitado)
+                                {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 mt-2 animate-pulse">
+                                        Modo Invitado (30m)
+                                    </span>
+                                }
+                            </div>
+
+                            <div class="py-1">
+                                @if (esInvitado)
+                                {
+                                    <div class="p-3">
+                                        <div class="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 text-center">
+                                            <p class="text-xs text-indigo-700 font-medium mb-2">Acceso limitado del sistema</p>
+                                            <a asp-controller="Auth" asp-action="CerrarSesionSrv"
+                                               class="w-full inline-flex justify-center items-center py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition-colors">
+                                                Identificarme Completo
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Auth" asp-action="Perfil" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors" role="menuitem">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Mi Perfil Profesional
+                                    </a>
+                                }
+                            </div>
+
+                            <div class="py-1">
+                                <a asp-controller="Auth" asp-action="CerrarSesionSrv" class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50/50 transition-colors font-medium" role="menuitem">
+                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    @(esInvitado ? "Salir del Sistema" : "Cerrar Sesión")
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </header>
@@ -54,6 +137,23 @@
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function alternarMenuPerfil() {
+            const menu = document.getElementById("menuPerfilContainer");
+            menu.classList.toggle("hidden");
+        }
+
+        window.addEventListener("click", function(e) {
+            const menu = document.getElementById("menuPerfilContainer");
+            const boton = document.getElementById("botonMenuPerfil");
+
+            if (menu && boton && !boton.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add("hidden");
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
