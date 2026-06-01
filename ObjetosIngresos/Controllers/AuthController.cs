@@ -25,31 +25,40 @@ namespace ObjetosIngresos.Controllers
             this.config = config;
         }
 
+        private async Task<Usuario?> BuscarUsuarioPorIdOEmailAsync(string identificador)
+        {
+            if (string.IsNullOrWhiteSpace(identificador)) return null;
+
+            var limpio = identificador.Trim();
+            return await db.Usuarios
+                .Include(u=>u.IdTipoUsuarioNavigation)
+                .FirstOrDefaultAsync(u => u.Documento == limpio || u.Correo == limpio);
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> CompletarRegistro(string documento)
         {
-            if (string.IsNullOrEmpty(documento))
-            {
-                return RedirectToAction("Login");
-            }
+            if (string.IsNullOrEmpty(documento)) return RedirectToAction("Login");
 
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Documento.Trim() == documento.Trim());
+            var limpio = documento.Trim();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Documento == limpio);
 
-            if (usuario == null)
-            {
-                return RedirectToAction("Login");
-            }
+            if (usuario == null) return RedirectToAction("Login");
 
             ViewBag.Correo = usuario.Correo;
-
             return View("~/Views/Usuarios/CompletarRegistro.cshtml", model: usuario.Correo);
         }
 
+        [HttpGet]
         [AllowAnonymous]
         public ActionResult Login()
         {
-            if (User.Identity.IsAuthenticated) return RedirectToAction("Perfil");
+            if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Guest"))
+            {
+                return RedirectToAction("Perfil");
+            }
+
             ViewBag.FirebaseConfig = new{
                 apiKey = config["FirebaseConfig:ApiKey"],
                 authDomain = config["FirebaseConfig:AuthDomain"],
@@ -65,14 +74,13 @@ namespace ObjetosIngresos.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerDatosUsuario(string identificador)
         {
-            var usuario = await db.Usuarios
-                .FirstOrDefaultAsync(u => u.Documento == identificador || u.Correo == identificador);
-
+            var usuario = await BuscarUsuarioPorIdOEmailAsync(identificador);
             if (usuario == null) return NotFound("Usuario no registrado.");
 
             return Ok(new
             {
-                correo = usuario.Correo,
+                correo = usuario.Correo.Trim(),
+                documento = usuario.Documento.Trim(),
                 necesitaVinculacion = string.IsNullOrEmpty(usuario.FirebaseUid)
             });
         }
@@ -81,20 +89,17 @@ namespace ObjetosIngresos.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GenerarSesionSrv(string identificador)
         {
-            if (string.IsNullOrEmpty(identificador)) return BadRequest("Identificador vacío");
-
-            var usuario = await db.Usuarios
-                .FirstOrDefaultAsync(u => u.Documento.Trim() == identificador.Trim() || u.Correo.Trim() == identificador.Trim());
-
-            if (usuario == null) return BadRequest("Usuario no encontrado");
+            var usuario = await BuscarUsuarioPorIdOEmailAsync(identificador);
+            if (usuario == null) return BadRequest("Usuario no encontrado o inválido.");
 
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, usuario.Nombres),
-            new Claim("Documento", usuario.Documento.Trim()),
-            new Claim(ClaimTypes.Email, usuario.Correo),
-            new Claim(ClaimTypes.NameIdentifier, usuario.FirebaseUid ?? "")
-        };
+            {
+                new Claim(ClaimTypes.Name, usuario.Nombres),
+                new Claim("Documento", usuario.Documento.Trim()),
+                new Claim(ClaimTypes.Email, usuario.Correo),
+                new Claim(ClaimTypes.NameIdentifier, usuario.FirebaseUid ?? ""),
+                new Claim(ClaimTypes.Role,usuario.IdTipoUsuarioNavigation?.Descripcion ?? "Aprendiz")
+            };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -106,42 +111,33 @@ namespace ObjetosIngresos.Controllers
             return Ok();
         }
 
+
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> VincularPrimerIngreso([FromForm] string documento)
         {
-            if (string.IsNullOrEmpty(documento))
-            {
-                return BadRequest("El documento es requerido.");
-            }
+            if (string.IsNullOrEmpty(documento)) return BadRequest("El documento es requerido.");
 
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Documento.Trim() == documento.Trim());
+            var limpio = documento.Trim();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Documento == limpio);
 
-            if (usuario == null)
-            {
-                return BadRequest("El usuario no pertenece a la institución.");
-            }
-
-            if (!string.IsNullOrEmpty(usuario.FirebaseUid))
-            {
-                return BadRequest("Este usuario ya se encuentra vinculado.");
-            }
+            if (usuario == null) return BadRequest("El usuario no pertenece a la institución.");
+            if (!string.IsNullOrEmpty(usuario.FirebaseUid)) return BadRequest("Este usuario ya se encuentra vinculado.");
 
             try
             {
                 var args = new UserRecordArgs
                 {
-                    Email = usuario.Correo,
-                    Password = documento.Trim(), 
+                    Email = usuario.Correo.Trim(),
+                    Password = limpio,
                     DisplayName = $"{usuario.Nombres} {usuario.Apellidos}"
                 };
 
                 UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
-
                 usuario.FirebaseUid = userRecord.Uid;
                 await db.SaveChangesAsync();
 
-                return Ok(); 
+                return Ok();
             }
             catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
             {
@@ -153,16 +149,18 @@ namespace ObjetosIngresos.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error al crear el usuario en Firebase: {ex.Message}");
+                return BadRequest($"Error al crear el registro inicial: {ex.Message}");
             }
         }
 
-
+        [HttpGet]
+        [Authorize(Roles ="Aprendiz,Instructor,Administrador")]
         [Authorize]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Perfil()
         {
             var documentoCookie = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(documentoCookie)) return RedirectToAction("Login");
+            if (string.IsNullOrEmpty(documentoCookie)) return RedirectToAction("Login","Auth");
 
             var usuario = await db.Usuarios
                 .Include(u => u.IdSedePrincipalNavigation)
@@ -175,7 +173,10 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         public async Task<IActionResult> EnviarCodigo(string correo)
         {
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);
+            if (string.IsNullOrEmpty(correo)) return BadRequest("El correo es obligatorio.");
+
+            var limpio = correo.Trim();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == limpio);
             if (usuario == null)
             {
                 ViewBag.Error = "El correo no está registrado.";
@@ -189,12 +190,15 @@ namespace ObjetosIngresos.Controllers
 
             try
             {
-                using var client = new SmtpClient(config["Mailtrap:Host"], int.Parse(config["Mailtrap:Port"]));
-                client.Credentials = new NetworkCredential(config["Mailtrap:User"], config["Mailtrap:Pass"]);
-                client.EnableSsl = true;
-                client.Send("soporte@tuapp.com", correo, "Código de Recuperación", $"Tu código es: {codigoGenerado}");
+                using var client = new SmtpClient(config["Mailtrap:Host"], int.Parse(config["Mailtrap:Port"]))
+                {
+                    Credentials = new NetworkCredential(config["Mailtrap:User"], config["Mailtrap:Pass"]),
+                    EnableSsl = true
+                };
 
-                return RedirectToAction("VerificarCodigo", new { email = correo });
+                client.Send("soporte@tuapp.com", limpio, "Código de Recuperación", $"Tu código es: {codigoGenerado}");
+
+                return RedirectToAction("VerificarCodigo", new { email = limpio });
             }
             catch (Exception ex)
             {
@@ -210,7 +214,6 @@ namespace ObjetosIngresos.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok();
         }
-
 
         [HttpGet]
         public IActionResult OlvidePassword()
@@ -290,6 +293,45 @@ namespace ObjetosIngresos.Controllers
         public IActionResult NuevaPassword(string email)
         {
             return View("~/Views/Usuarios/NuevaPassword.cshtml", email);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginInvitado()
+        {
+            var invitadoGuid = Guid.NewGuid().ToString();
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, $"Invitado_{invitadoGuid.Substring(0, 5)}"),
+        new Claim("Documento", "GUEST"), 
+        new Claim(ClaimTypes.Role, "Guest") 
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = false,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30),
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
+            return Ok(new { success = true, message = "Acceso como invitado concedido." });
+        }
+
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> CerrarSesionSrv()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+
+            return RedirectToAction("Login", "Auth");
         }
     }
 }
