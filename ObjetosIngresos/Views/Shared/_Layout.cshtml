@@ -1,157 +1,134 @@
-@using System.Security.Claims
 <!DOCTYPE html>
-<html lang="es" class="h-full">
+<html lang="es" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] | SGI</title>
     <link rel="stylesheet" href="~/css/output.css" asp-append-version="true">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="h-full bg-slate-50 text-slate-900 flex flex-col">
+<body class="h-full text-slate-800 antialiased flex flex-col md:flex-row overflow-hidden">
+
     @if (ViewData["HideNavbar"] == null)
     {
-        bool esInvitado = User.IsInRole("Guest");
-        string nombreUsuario = User.Identity?.Name ?? "Invitado";
-        string correoUsuario = User.FindFirst(ClaimTypes.Email)?.Value ?? "Sesión Temporal";
+        <div class="md:hidden bg-slate-900 text-white h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0 z-50">
+            <div class="flex items-center gap-2">
+                <div class="bg-indigo-600 text-white p-1.5 rounded-lg">
+                    <span class="font-black text-lg tracking-tighter">SGI</span>
+                </div>
+                <span class="font-bold text-sm tracking-tight">Sistema de Gestión</span>
+            </div>
+            <button id="btn-toggle-sidebar" class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none text-slate-400 hover:text-white transition-colors">
+                <i data-lucide="menu" id="icon-menu" class="w-6 h-6"></i>
+                <i data-lucide="x" id="icon-close" class="w-6 h-6 hidden"></i>
+            </button>
+        </div>
 
-        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg">
-                            <span class="font-black text-xl tracking-tighter">SGI</span>
-                        </div>
-                        <span class="hidden sm:block font-bold text-slate-800 tracking-tight">Sistema de Gestión</span>
-                    </div>
-
-                    <nav class="hidden md:flex flex-grow justify-center">
-                        <ul class="flex space-x-8">
-                            <li>
-                                <a asp-controller="Home" asp-action="Index"
-                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Inicio</a>
-                            </li>
-                            @if (!esInvitado)
-                            {
-                                <li>
-                                    <a asp-controller="Usuarios" asp-action="Index"
-                                       class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Servicios</a>
-                                </li>
-                            }
-                            <li>
-                                <a asp-controller="Home" asp-action="SaberMas"
-                                   class="text-slate-600 hover:text-indigo-600 font-medium transition-colors duration-200">Ayuda</a>
-                            </li>
-                        </ul>
-                    </nav>
-
-                    <div class="relative ml-3">
-                        <div>
-                            <button type="button" id="botonMenuPerfil" onclick="alternarMenuPerfil()"
-                                    class="max-w-xs bg-slate-100 flex items-center text-sm rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:bg-slate-200 transition-all border border-slate-200">
-                                <span class="sr-only">Abrir menú de usuario</span>
-
-                                <div class="h-8 w-8 rounded-full bg-gradient-to-tr @(esInvitado ? "from-amber-500 to-orange-400" : "from-indigo-600 to-indigo-500") text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
-                                    @(esInvitado ? "G" : nombreUsuario.Substring(0, Math.Min(nombreUsuario.Length, 2)))
-                                </div>
-                                <span class="hidden sm:block ml-2 text-xs font-semibold text-slate-700 pr-2">
-                                    @nombreUsuario
-                                </span>
-                                <svg class="w-4 h-4 text-slate-400 mr-1 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div id="menuPerfilContainer" class="hidden origin-top-right absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 border border-slate-100 divide-y divide-slate-100 focus:outline-none animate-fade-in" role="menu">
-
-                            <div class="px-4 py-3">
-                                <p class="text-xs text-slate-400 font-medium">Cuenta activa</p>
-                                <p class="text-sm font-bold text-slate-800 truncate">@nombreUsuario</p>
-                                <p class="text-xs text-slate-500 truncate mt-0.5">@correoUsuario</p>
-
-                                @if (esInvitado)
-                                {
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 mt-2 animate-pulse">
-                                        Modo Invitado (30m)
-                                    </span>
-                                }
-                            </div>
-
-                            <div class="py-1">
-                                @if (esInvitado)
-                                {
-                                    <div class="p-3">
-                                        <div class="bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 text-center">
-                                            <p class="text-xs text-indigo-700 font-medium mb-2">Acceso limitado del sistema</p>
-                                            <a asp-controller="Auth" asp-action="CerrarSesionSrv"
-                                               class="w-full inline-flex justify-center items-center py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition-colors">
-                                                Identificarme Completo
-                                            </a>
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <a asp-controller="Auth" asp-action="Perfil" class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors" role="menuitem">
-                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        Mi Perfil Profesional
-                                    </a>
-                                }
-                            </div>
-
-                            <div class="py-1">
-                                <a asp-controller="Auth" asp-action="CerrarSesionSrv" class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50/50 transition-colors font-medium" role="menuitem">
-                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                    @(esInvitado ? "Salir del Sistema" : "Cerrar Sesión")
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
+        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 z-40 shrink-0 transition-transform duration-300 ease-in-out h-full pt-16 md:pt-0">
+            <div class="hidden md:flex h-16 items-center px-6 border-b border-slate-800 gap-3">
+                <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-md shadow-indigo-600/20">
+                    <span class="font-black text-xl tracking-tighter block leading-none">SGI</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-sm text-white tracking-tight leading-none">Sistema de Gestión</span>
+                    <span class="text-[10px] text-slate-500 italic mt-0.5">Objetos e Ingresos</span>
                 </div>
             </div>
-        </header>
+
+            <nav class="flex-grow p-4 space-y-1 overflow-y-auto">
+                <ul>
+                    <li>
+                        <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">
+                            <i data-lucide="home" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                            Inicio
+                        </a>
+                    </li>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <li>
+                            <a asp-controller="Usuarios" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">
+                                <i data-lucide="layout-grid" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                                Servicios
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-controller="Auth" asp-action="Perfil" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">
+                                <i data-lucide="user" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                                Perfil
+                            </a>
+                        </li>
+                    }
+
+                    <li>
+                        <a asp-controller="Home" asp-action="SaberMas" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">
+                            <i data-lucide="help-circle" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                            Ayuda
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-950/40 text-xs space-y-2">
+                <div class="text-slate-400 font-medium">
+                    <p class="uppercase tracking-wider font-semibold text-[10px] text-slate-500">SGI © 2026</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Contacto del soporte:</p>
+                </div>
+                <div class="text-slate-500 space-y-0.5 leading-relaxed font-mono">
+                    <p>3005597834</p>
+                    <p>3015621814</p>
+                </div>
+            </div>
+        </aside>
+
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
     }
 
-    <main role="main" class="flex-grow animate-fade-in w-full">
-        @RenderBody()
-    </main>
-
-    <footer class="bg-slate-900 text-slate-300 py-10">
-        <div class="max-w-7xl mx-auto px-4 text-center sm:text-left sm:flex sm:justify-between sm:items-center">
-            <div class="mb-4 sm:mb-0">
-                <p class="font-semibold text-white uppercase tracking-wider text-sm">SGI - Derechos Reservados</p>
-                <p class="text-xs text-slate-500 italic mt-1">&copy; 2026 - Gestión de Objetos e Ingresos</p>
+    <div class="flex-grow flex flex-col min-w-0 h-full overflow-hidden">
+        <main role="main" class="flex-grow overflow-y-auto p-4 sm:p-6 md:p-8 animate-fade-in">
+            <div class="max-w-7xl mx-auto">
+                @RenderBody()
             </div>
-            <div class="text-sm space-y-1 text-right">
-                <p><span class="font-bold text-slate-400">Contacto:</span> 3005597834 - 3015621814</p>
-                <p class="lowercase">Luisangelcorreaacsota@gmail.com <br /> andresdavidproxd@gmail.com </p>
-            </div>
-        </div>
-    </footer>
+        </main>
+    </div>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        function alternarMenuPerfil() {
-            const menu = document.getElementById("menuPerfilContainer");
-            menu.classList.toggle("hidden");
-        }
+        // Inicializar iconos de Lucide
+        lucide.createIcons();
 
-        window.addEventListener("click", function(e) {
-            const menu = document.getElementById("menuPerfilContainer");
-            const boton = document.getElementById("botonMenuPerfil");
+        // LÓGICA DEL MENÚ RESPONSIVO INTERACTIVO
+        const btnToggle = document.getElementById('btn-toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        const iconMenu = document.getElementById('icon-menu');
+        const iconClose = document.getElementById('icon-close');
 
-            if (menu && boton && !boton.contains(e.target) && !menu.contains(e.target)) {
-                menu.classList.add("hidden");
+        if (btnToggle && sidebar && backdrop) {
+            function toggleSidebar() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+                if (isOpen) {
+                    // Cerrar Menú
+                    sidebar.classList.add('-translate-x-full');
+                    backdrop.classList.add('hidden');
+                    iconMenu.classList.remove('hidden');
+                    iconClose.classList.add('hidden');
+                } else {
+                    // Abrir Menú
+                    sidebar.classList.remove('-translate-x-full');
+                    backdrop.classList.remove('hidden');
+                    iconMenu.classList.add('hidden');
+                    iconClose.classList.remove('hidden');
+                }
             }
-        });
+
+            // Eventos para abrir/cerrar
+            btnToggle.addEventListener('click', toggleSidebar);
+            backdrop.addEventListener('click', toggleSidebar);
+        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
