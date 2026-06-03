@@ -1,4 +1,4 @@
-﻿async function procesarLogin() {
+async function procesarLogin() {
     const doc = document.getElementById("documento").value;
     const pass = document.getElementById("password").value;
     const errorDiv = document.getElementById("mensajeError");

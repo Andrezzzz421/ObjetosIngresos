@@ -58,12 +58,12 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label asp-for="IdTipoUsuario" class="text-sm font-semibold text-slate-700 ml-1">Rol en el Sistema</label>
-                    <select asp-for="IdTipoUsuario" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-[url('https://cdn-icons-png.flaticon.com/512/60/60995.png')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat transition-all" asp-items="ViewBag.IdTipoUsuario"></select>
+                    <select asp-for="IdTipoUsuario" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-[url('https://cdn-icons-png.flaticon.com/512/60/60995.png')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat transition-all" asp-items="ViewBag.TiposUsuarios"></select>
                 </div>
 
                 <div class="space-y-2">
                     <label asp-for="IdSedePrincipal" class="text-sm font-semibold text-slate-700 ml-1">Sede Asignada</label>
-                    <select asp-for="IdSedePrincipal" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-[url('https://cdn-icons-png.flaticon.com/512/60/60995.png')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat transition-all" asp-items="ViewBag.IdSedePrincipal"></select>
+                    <select asp-for="IdSedePrincipal" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-[url('https://cdn-icons-png.flaticon.com/512/60/60995.png')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat transition-all" asp-items="ViewBag.Sedes"></select>
                 </div>
             </div>
 
@@ -79,9 +79,3 @@
         </form>
     </div>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

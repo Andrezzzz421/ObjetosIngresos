@@ -24,8 +24,8 @@ namespace ObjetosIngresos.Controllers
 
         private void CargarCombos(Usuario u = null)
         {
-            ViewBag.Sedes = new SelectList(db.Sedes, "IdSede", "Nombre", u?.IdSedePrincipal);
-            ViewBag.TipoUsuarios = new SelectList(db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
+            ViewBag.Sedes = new SelectList(db.Sedes, "IdSede", "NombreSede", u?.IdSedePrincipal);
+            ViewBag.TiposUsuarios = new SelectList(db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
         public ActionResult Index()
         {
@@ -56,15 +56,19 @@ namespace ObjetosIngresos.Controllers
 
             if (user == null)
             {
-                NotFound();
+                return Content($"Error: El usuario con ID {id} no existe en la base de datos.");
             }
             CargarCombos();
+
             return View(user);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Usuario us)
         {
+            ModelState.Remove("IdSedePrincipalNavigation");
+            ModelState.Remove("IdTipoUsuarioNavigation");
             try
             {
 
@@ -73,12 +77,13 @@ namespace ObjetosIngresos.Controllers
                     ser.Update(us);
                     return RedirectToAction(nameof(Index));
                 }
-                CargarCombos();
-                return View(ser.GetAll());
+                CargarCombos(us);
+                return View(us);
             }
             catch
             {
-                return View();
+                CargarCombos(us);
+                return View(us);
             }
         }
 
