@@ -23,7 +23,7 @@ public class Usuario
 
     public string? Ficha { get; set; }
 
-    public string? FirebaseUid { get; set; }
+    public string? FirebaseUid { get; set; } = "";
 
     public int IdTipoUsuario { get; set; }
 
@@ -33,5 +33,5 @@ public class Usuario
 
     public virtual Sede? IdSedePrincipalNavigation { get; set; }
 
-    public virtual TiposUsuario IdTipoUsuarioNavigation { get; set; } = null!;
+    public virtual TiposUsuario? IdTipoUsuarioNavigation { get; set; } = null!;
 }
