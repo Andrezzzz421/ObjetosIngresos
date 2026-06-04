@@ -12,28 +12,42 @@ namespace ObjetosIngresos.Controllers
     [Authorize]
     public class UsuariosController : Controller
     {
+        private readonly SistemaIngresoContext _db;
+        private readonly UsuarioServices _ser;
 
-        private readonly SistemaIngresoContext db;
-        private readonly UsuarioServices ser;
-
-        public UsuariosController(SistemaIngresoContext db)
+        public UsuariosController(SistemaIngresoContext db, UsuarioServices ser)
         {
-            this.db = db;
-            ser = new UsuarioServices(db);
+            _db = db;
+            _ser = ser;
         }
 
-        private void CargarCombos(Usuario u = null)
+        private void CargarCombos(Usuario? u = null)
         {
-            ViewBag.Sedes = new SelectList(db.Sedes, "IdSede", "NombreSede", u?.IdSedePrincipal);
-            ViewBag.TiposUsuarios = new SelectList(db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
+            ViewBag.Sedes = new SelectList(_db.Sedes, "IdSede", "NombreSede", u?.IdSedePrincipal);
+            ViewBag.TiposUsuarios = new SelectList(_db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
 
-         [Authorize(Roles = "Administrador, Instructor, Aprendiz, Guest")]
+        /// <summary>
+        /// Vista Principal: Regula qué ve cada rol para evitar fugas de información.
+        /// </summary>
+        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
         public ActionResult Index()
         {
-            return View(ser.GetAll());
+            // 💡 Si es Aprendiz, lo mandamos directo al Perfil de Auth. 
+            // ¡Adiós código duplicado y adiós método PerfilPropio!
+            if (User.IsInRole("Aprendiz"))
+            {
+                return RedirectToAction("Perfil", "Auth");
+            }
+
+            // Administradores e Instructores ven el listado global sin problemas
+            return View(_ser.GetAll());
         }
 
+        /// <summary>
+        /// Crear Usuario: Solo personal administrativo o encargados.
+        /// </summary>
+        [Authorize(Roles = "Administrador,Instructor")]
         public ActionResult Create()
         {
             CargarCombos();
@@ -42,41 +56,77 @@ namespace ObjetosIngresos.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Instructor")]
         public ActionResult Create(Usuario us)
         {
+            ModelState.Remove("IdSedePrincipalNavigation");
+            ModelState.Remove("IdTipoUsuarioNavigation");
+
             if (ModelState.IsValid)
             {
-                ser.Add(us);
+                _ser.Add(us);
                 return RedirectToAction(nameof(Index));
             }
+            CargarCombos(us);
             return View(us);
         }
 
+        /// <summary>
+        /// Editar Usuario: El Administrador/Instructor edita a cualquiera. El Aprendiz solo a sí mismo.
+        /// </summary>
+        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
         public ActionResult Edit(int id)
         {
-            var user = ser.GetById(id);
-
+            var user = _ser.GetById(id);
             if (user == null)
             {
-                return Content($"Error: El usuario con ID {id} no existe en la base de datos.");
+                return Content($"Error: El usuario con ID {id} no existe.");
             }
-            CargarCombos();
 
+            if (User.IsInRole("Aprendiz"))
+            {
+                var documentoLogueado = User.FindFirst("Documento")?.Value;
+                if (user.Documento != documentoLogueado)
+                {
+                    return RedirectToAction("AccessDenied", "Auth"); 
+                }
+            }
+
+            CargarCombos(user);
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
         public ActionResult Edit(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
+
+            if (User.IsInRole("Aprendiz"))
+            {
+                var documentoLogueado = User.FindFirst("Documento")?.Value;
+                var usuarioOriginal = _ser.GetById(us.IdUsuario);
+
+                if (usuarioOriginal == null || usuarioOriginal.Documento != documentoLogueado)
+                {
+                    return Forbid();
+                }
+
+                us.IdTipoUsuario = usuarioOriginal.IdTipoUsuario;
+                us.IdSedePrincipal = usuarioOriginal.IdSedePrincipal;
+            }
+
             try
             {
-
                 if (ModelState.IsValid)
                 {
-                    ser.Update(us);
+                    _ser.Update(us);
+
+                    if (User.IsInRole("Aprendiz"))
+                        return RedirectToAction("Perfil", "Auth");
+
                     return RedirectToAction(nameof(Index));
                 }
                 CargarCombos(us);
@@ -89,11 +139,15 @@ namespace ObjetosIngresos.Controllers
             }
         }
 
+        /// <summary>
+        /// Eliminar Usuario: Operación de máxima criticidad. SÓLO el Administrador puede ejecutarla.
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public ActionResult Delete(int id)
         {
-            bool eliminado = ser.Delete(id);
+            bool eliminado = _ser.Delete(id);
 
             if (eliminado)
             {
@@ -106,7 +160,5 @@ namespace ObjetosIngresos.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
     }
 }
-      
