@@ -43,6 +43,11 @@ namespace ObjetosIngresos.Controllers
                 return RedirectToAction("Perfil");
             }
 
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Guest"))
+            {
+                HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
+            }
+
             CargarConfiguracionFirebase();
             return View("~/Views/Usuarios/Login.cshtml");
         }
@@ -149,26 +154,42 @@ namespace ObjetosIngresos.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Aprendiz,Instructor,Administrador")]
+        [Authorize]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Perfil()
         {
-            var documentoCookie = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(documentoCookie)) return RedirectToAction("Login", "Auth");
+            if (User.IsInRole("Guest"))
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Login", "Auth");
+            }
 
-            var usuario = await _authService.ObtenerPerfilCompletoAsync(documentoCookie);
-            if (usuario == null) return RedirectToAction("Login", "Auth");
+            var documentoCookie = User.FindFirst("Documento")?.Value;
+            if (string.IsNullOrEmpty(documentoCookie))
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var usuario = await _authService.GetByDocumentoAsync(documentoCookie.Trim());
+            if (usuario == null)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Login", "Auth");
+            }
 
             return View("~/Views/Usuarios/Perfil.cshtml", usuario);
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult OlvidePassword()
         {
             return View("~/Views/Usuarios/OlvidePassword.cshtml");
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken] 
         public async Task<IActionResult> EnviarCodigo(string correo)
         {
@@ -199,12 +220,14 @@ namespace ObjetosIngresos.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult VerificarCodigo(string email)
         {
             return View("~/Views/Usuarios/VerificarCodigo.cshtml", email);
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> ValidarCodigo(string email, string codigo)
         {
             bool esValido = await _authService.ValidarCodigoRecuperacionAsync(email, codigo);
@@ -218,6 +241,7 @@ namespace ObjetosIngresos.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult NuevaPassword(string email)
         {
             return View("~/Views/Usuarios/NuevaPassword.cshtml", email);

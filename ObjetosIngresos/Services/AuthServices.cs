@@ -153,5 +153,13 @@ namespace ObjetosIngresos.Services
             usuarioLocal.codigo_expiracion = null;
             await _db.SaveChangesAsync();
         }
+
+        public async Task<Usuario?> GetByDocumentoAsync(string documento)
+        {
+            return await _db.Usuarios
+                .Include(u => u.IdTipoUsuarioNavigation)
+                .Include(u => u.IdSedePrincipalNavigation)
+                .FirstOrDefaultAsync(u => u.Documento == documento);
+        }
     }
 }
