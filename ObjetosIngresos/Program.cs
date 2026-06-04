@@ -15,8 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SistemaIngresoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("con")));
 
+builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
-
 var projectId = builder.Configuration["FirebaseConfig:ProjectId"];
 
 builder.Services.AddAuthentication(options =>
@@ -28,7 +28,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.Cookie.Name = "SistemaIngresoSesion";
     options.LoginPath = "/Auth/Login";
-    options.AccessDeniedPath = "/Auth/Login";
+    options.AccessDeniedPath = "/";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.Path = "/";
