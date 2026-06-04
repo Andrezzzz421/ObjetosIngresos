@@ -89,6 +89,24 @@ namespace ObjetosIngresos.Services
             var senderName = _config["SmtpConfig:SenderName"];
             var pass = _config["SmtpConfig:Pass"];
 
+            var asunto = "Tu Código de Seguridad - SGI";
+            var cuerpoHtml = $@"
+            <div style='font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 30px; border-radius: 16px; max-width: 500px; margin: 0 auto; text-align: center; border: 1px solid #e5e7eb;'>
+                <div style='background-color: #4f46e5; padding: 20px; border-radius: 12px 12px 0 0; margin: -30px -30px 20px -30px;'>
+                    <h2 style='color: white; margin: 0; font-size: 24px;'>Verificación de Seguridad</h2>
+                </div>
+                <p style='color: #374151; font-size: 16px; line-height: 1.5;'>Hola <strong>{usuario.Nombres} {usuario.Apellidos}</strong>,</p>
+                <p style='color: #6b7280; font-size: 14px;'>Has solicitado un código para recuperar tu cuenta en el SGI. Usa el siguiente token de seguridad:</p>
+        
+                <div style='background-color: #eef2ff; border: 2px dashed #4f46e5; border-radius: 12px; padding: 15px; margin: 25px 0; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4f46e5;'>
+                    {codigoGenerado}
+                </div>
+        
+                <p style='color: #9ca3af; font-size: 12px; margin-top: 25px;'>Este código expirará en 15 minutos. Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
+                <hr style='border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;'>
+                <p style='color: #6b7280; font-size: 12px; margin: 0;'>&copy; {DateTime.Now.Year} - Sistema de Gestión de Ingresos</p>
+            </div>";
+
             using var client = new SmtpClient(host, port);
             client.Credentials = new NetworkCredential(senderEmail, pass);
             client.EnableSsl = true;
@@ -96,13 +114,14 @@ namespace ObjetosIngresos.Services
             using var mailMessage = new MailMessage();
             mailMessage.From = new MailAddress(senderEmail, senderName);
             mailMessage.To.Add(limpio);
-            mailMessage.Subject = "Tu Código de Seguridad";
-            mailMessage.Body = $"Hola {usuario.Nombres}, tu código es: {codigoGenerado}";
-            mailMessage.IsBodyHtml = false;
+            mailMessage.Subject = asunto;
+            mailMessage.Body = cuerpoHtml;
+            mailMessage.IsBodyHtml = true; // Activamos el renderizado HTML
             mailMessage.BodyEncoding = System.Text.Encoding.UTF8;
 
             await client.SendMailAsync(mailMessage);
         }
+        
 
         public async Task<bool> ValidarCodigoRecuperacionAsync(string email, string codigo)
         {
