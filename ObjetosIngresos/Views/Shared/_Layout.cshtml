@@ -53,6 +53,13 @@
                             </a>
                         </li>
                         <li>
+                            <a asp-controller="Catalogos" asp-action="Index"
+                               class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group @(ViewContext.RouteData.Values["controller"]?.ToString() == "Catalogos" ? "bg-slate-800 text-white font-semibold" : "")">
+                                <i data-lucide="settings" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Catalogos" ? "text-indigo-400" : "")"></i>
+                                Configuración Catálogos
+                            </a>
+                        </li>
+                        <li>
                             <a asp-controller="Auth" asp-action="Perfil" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">
                                 <i data-lucide="user" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
                                 Perfil
@@ -97,10 +104,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Inicializar iconos de Lucide
         lucide.createIcons();
 
-        // LÓGICA DEL MENÚ RESPONSIVO INTERACTIVO
         const btnToggle = document.getElementById('btn-toggle-sidebar');
         const sidebar = document.getElementById('sidebar');
         const backdrop = document.getElementById('sidebar-backdrop');
@@ -112,13 +117,11 @@
                 const isOpen = !sidebar.classList.contains('-translate-x-full');
 
                 if (isOpen) {
-                    // Cerrar Menú
                     sidebar.classList.add('-translate-x-full');
                     backdrop.classList.add('hidden');
                     iconMenu.classList.remove('hidden');
                     iconClose.classList.add('hidden');
                 } else {
-                    // Abrir Menú
                     sidebar.classList.remove('-translate-x-full');
                     backdrop.classList.remove('hidden');
                     iconMenu.classList.add('hidden');
@@ -126,7 +129,6 @@
                 }
             }
 
-            // Eventos para abrir/cerrar
             btnToggle.addEventListener('click', toggleSidebar);
             backdrop.addEventListener('click', toggleSidebar);
         }

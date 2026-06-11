@@ -27,26 +27,16 @@ namespace ObjetosIngresos.Controllers
             ViewBag.TiposUsuarios = new SelectList(_db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
 
-        /// <summary>
-        /// Vista Principal: Regula qué ve cada rol para evitar fugas de información.
-        /// </summary>
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
         public ActionResult Index()
         {
-            // 💡 Si es Aprendiz, lo mandamos directo al Perfil de Auth. 
-            // ¡Adiós código duplicado y adiós método PerfilPropio!
             if (User.IsInRole("Aprendiz"))
             {
                 return RedirectToAction("Perfil", "Auth");
             }
 
-            // Administradores e Instructores ven el listado global sin problemas
             return View(_ser.GetAll());
         }
-
-        /// <summary>
-        /// Crear Usuario: Solo personal administrativo o encargados.
-        /// </summary>
         [Authorize(Roles = "Administrador,Instructor")]
         public ActionResult Create()
         {
@@ -71,9 +61,6 @@ namespace ObjetosIngresos.Controllers
             return View(us);
         }
 
-        /// <summary>
-        /// Editar Usuario: El Administrador/Instructor edita a cualquiera. El Aprendiz solo a sí mismo.
-        /// </summary>
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
         public ActionResult Edit(int id)
         {
@@ -139,9 +126,6 @@ namespace ObjetosIngresos.Controllers
             }
         }
 
-        /// <summary>
-        /// Eliminar Usuario: Operación de máxima criticidad. SÓLO el Administrador puede ejecutarla.
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador")]
