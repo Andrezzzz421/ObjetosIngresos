@@ -39,7 +39,6 @@ async function procesarLogin() {
 
         datosServer = await resUser.json();
     } catch (error) {
-        console.error("Error en Fase 1:", error);
         mostrarError(error.message || "Error al conectar con el servidor.");
         userInput.classList.add("border-red-500", "is-invalid");
         setLoading(false);
@@ -67,7 +66,6 @@ async function procesarLogin() {
         window.location.replace("/Auth/Perfil");
 
     } catch (error) {
-        console.error("Error en Fase 2/3:", error);
         let mensaje = "Credenciales incorrectas o usuario no vinculado.";
         let esErrorPassword = false;
 

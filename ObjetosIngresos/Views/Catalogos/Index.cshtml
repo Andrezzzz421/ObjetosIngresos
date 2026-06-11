@@ -1,0 +1,126 @@
+﻿@{
+    ViewData["Title"] = "Configuración de Catálogos";
+}
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-8 border-b border-slate-200 pb-5">
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
+             Configuración de Catálogos
+        </h1>
+        <p class="mt-2 text-sm text-slate-600 font-medium">
+            Administra las tablas maestras y los parámetros globales del sistema de ingresos.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Marcas</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                        Gestiona los fabricantes y marcas asociadas a los elementos tecnológicos del inventario.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("Marcas", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-sm">
+                        Administrar Marcas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Tipos de Detalle</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                        Configura los periféricos y accesorios adicionales (Cargadores, ratones, maletines).
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("TiposDetalle", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-sm">
+                        Administrar Detalles
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Sedes</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                        Administra las sedes físicas distribuidas en los diferentes centros de formación.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("Sedes", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-sm">
+                        Administrar Sedes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Centros de Formación</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                        Control de complejos educativos y su correspondiente asociación regional.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("CentrosFormacion", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-sm">
+                        Administrar Centros
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">Regionales</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed font-normal">
+                        Visualiza y añade las divisiones territoriales e institucionales del sistema.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("Regionales", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-600 shadow-sm">
+                        Administrar Regionales
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="group relative rounded-2xl border border-amber-200 bg-amber-50/40 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-amber-500 hover:shadow-md">
+            <div class="flex flex-col h-full justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-amber-800">Roles de Usuario</h3>
+                    </div>
+                    <p class="text-sm text-amber-900/80 leading-relaxed font-normal">
+                        Consulta los niveles de acceso y seguridad estáticos asignados en la plataforma.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <a href="@Url.Action("TiposUsuario", "Catalogos")" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-amber-600 shadow-sm">
+                        Ver Roles Seguros
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
