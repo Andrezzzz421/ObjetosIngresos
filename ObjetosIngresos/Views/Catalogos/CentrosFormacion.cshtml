@@ -1,5 +1,94 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<ObjetosIngresos.Models.CentrosFormacion>
 @{
+    ViewData["Title"] = "Administración de Centros de Formación";
+    var regionales = ViewBag.Regionales as List<ObjetosIngresos.Models.Regionale>;
 }
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Catalogos")" class="text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors">
+            &larr; Volver al Panel de Catálogos
+        </a>
+    </div>
+
+    <div class="mb-8 border-b border-slate-200 pb-5">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Catálogo de Centros de Formación</h1>
+        <p class="text-sm text-slate-600 mt-1">Gestión de complejos educativos y su correspondiente delimitación territorial dentro del sistema.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 h-fit shadow-sm">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                Registrar Centro
+            </h2>
+
+            <form asp-action="CreateCentroFormacion" asp-controller="Catalogos" method="post" class="space-y-4">
+                <div>
+                    <label for="NombreCentro" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Nombre del Centro de Formación
+                    </label>
+                    <input type="text" id="NombreCentro" name="NombreCentro" placeholder="Ej. Centro de Operación y Desarrollo" required
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                </div>
+
+                <div>
+                    <label for="IdRegional" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Regional Asociada
+                    </label>
+                    <select id="IdRegional" name="IdRegional" required
+                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                        <option value="" disabled selected>Seleccione una regional</option>
+                        @if (regionales != null)
+                        {
+                            foreach (var regional in regionales)
+                            {
+                                <option value="@regional.IdRegional">@regional.NombreRegional</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Guardar Centro
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50">
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-24">ID</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Centro de Formación</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Regional</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                    No hay centros de formación registrados en el sistema.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var centro in Model)
+                            {
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-mono text-slate-400">#@centro.IdCentro</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@centro.NombreCentro</td>
+                                    <td class="px-6 py-4 text-sm font-medium text-indigo-600">
+                                        @(centro.IdRegionalNavigation?.NombreRegional ?? "No asignada")
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

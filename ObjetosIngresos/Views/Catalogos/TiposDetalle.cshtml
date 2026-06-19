@@ -1,6 +1,6 @@
-﻿@model List<ObjetosIngresos.Models.Regionale>
+﻿@model List<ObjetosIngresos.Models.TiposDetalle>
 @{
-    ViewData["Title"] = "Administración de Regionales";
+    ViewData["Title"] = "Administración de Tipos de Detalle";
 }
 
 <div class="container mx-auto px-6 py-8">
@@ -11,22 +11,22 @@
     </div>
 
     <div class="mb-8 border-b border-slate-200 pb-5">
-        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Catálogo de Regionales</h1>
-        <p class="text-sm text-slate-600 mt-1">Configuración y registro de las divisiones territoriales e institucionales del sistema.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Catálogo de Tipos de Detalle</h1>
+        <p class="text-sm text-slate-600 mt-1">Configuración y control de periféricos, accesorios y componentes adicionales (Cargadores, ratones, maletines).</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="bg-white border border-slate-200 rounded-2xl p-6 h-fit shadow-sm">
             <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
-                Registrar Regional
+                Registrar Tipo de Detalle
             </h2>
 
-            <form asp-action="CreateRegional" asp-controller="Catalogos" method="post" class="space-y-4">
+            <form asp-action="CreateTipoDetalle" asp-controller="Catalogos" method="post" class="space-y-4">
                 <div>
-                    <label for="NombreRegional" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                        Nombre de la Regional
+                    <label for="Nombre" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Nombre del Periférico o Accesorio
                     </label>
-                    <input type="text" id="NombreRegional" name="NombreRegional" placeholder="Ej. Regional Cesar, Regional Bogotá" required
+                    <input type="text" id="Nombre" name="Nombre" placeholder="Ej. Cargador, Mouse, Maletín" required
                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
                 </div>
 
@@ -42,7 +42,7 @@
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-24">ID</th>
-                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre de la Regional</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Descripción del Accesorio</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-32">Acciones</th>
                         </tr>
                     </thead>
@@ -51,19 +51,19 @@
                         {
                             <tr>
                                 <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
-                                    No hay regionales registradas en el sistema.
+                                    No hay tipos de detalle registrados en el sistema.
                                 </td>
                             </tr>
                         }
                         else
                         {
-                            foreach (var regional in Model)
+                            foreach (var tipo in Model)
                             {
-                                <tr id="fila-regional-@regional.IdRegional" class="hover:bg-slate-50/60 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-mono text-slate-400">#@regional.IdRegional</td>
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@regional.NombreRegional</td>
+                                <tr id="fila-tipo-@tipo.IdTipoDetalle" class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-mono text-slate-400">#@tipo.IdTipoDetalle</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@tipo.Nombre</td>
                                     <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarRegional(@regional.IdRegional)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                        <button onclick="eliminarTipoDetalle(@tipo.IdTipoDetalle)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -79,15 +79,15 @@
 
 @section Scripts {
     <script>
-        function eliminarRegional(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar esta regional? Nota: Si tiene centros de formación asociados, la operación podría fallar.")) {
+        function eliminarTipoDetalle(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar este tipo de detalle?")) {
                 $.ajax({
-                    url: '@Url.Action("DeleteRegional", "Catalogos")',
+                    url: '@Url.Action("DeleteTipoDetalle", "Catalogos")',
                     type: 'POST',
                     data: { id: id },
                     success: function (response) {
                         if (response.success) {
-                            let fila = document.getElementById('fila-regional-' + id);
+                            let fila = document.getElementById('fila-tipo-' + id);
                             if (fila) {
                                 fila.style.opacity = '0';
                                 setTimeout(() => fila.remove(), 300);
@@ -97,7 +97,7 @@
                         }
                     },
                     error: function () {
-                        alert("Ocurrió un error de red al intentar comunicarse con el servidor.");
+                        alert("Ocurrió un error de red al intentar eliminar el registro.");
                     }
                 });
             }
