@@ -386,8 +386,9 @@ namespace ObjetosIngresos.Controllers
         [HttpGet]
         [HttpPost]
         [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<IActionResult> CerrarSesionSrv()
+        public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
