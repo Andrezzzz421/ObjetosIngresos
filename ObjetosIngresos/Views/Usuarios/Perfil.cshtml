@@ -91,16 +91,6 @@
     </div>
 </div>
 
-<script>
-    function hideToast() {
-        const toast = document.getElementById("toastError");
-        if (toast) {
-            toast.classList.add("opacity-0", "translate-y-10");
-            setTimeout(() => toast.classList.add("hidden"), 300);
-        }
-    }
-</script>
-
 @section Scripts {
     <script type="module" src="~/js/auth-login-v2.js?v=@DateTime.Now.Ticks"></script>
 }

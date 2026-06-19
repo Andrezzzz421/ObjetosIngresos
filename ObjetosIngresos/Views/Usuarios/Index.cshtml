@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ObjetosIngresos.Models.Usuario>
+@model IEnumerable<ObjetosIngresos.Models.Usuario>
 
 @{
     ViewData["Title"] = "Gestión de Usuarios";
@@ -10,17 +10,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const isError = @(TempData["Error"] != null ? "true" : "false");
-            Swal.fire({
-                icon: isError ? 'error' : 'success',
-                title: isError ? 'Ups...' : '¡Hecho!',
-                text: isError ? '@TempData["Error"]' : '@TempData["Success"]',
-                timer: 3000,
-                showConfirmButton: false,
-                borderRadius: '1.5rem',
-                customClass: {
-                    popup: 'rounded-3xl shadow-xl'
-                }
-            });
+            if (typeof window.showIndexToast === 'function') {
+                window.showIndexToast(isError, isError ? 'Ups...' : '¡Hecho!', isError ? '@TempData["Error"]' : '@TempData["Success"]');
+            }
         });
     </script>
 }

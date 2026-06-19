@@ -2,30 +2,13 @@
 @{
     ViewData["Title"] = "Iniciar Sesión";
     Layout = "_Layout";
-    ViewData["HideNavbar"] = true;
 }
 
 <script>
     window.FirebaseConfigServidor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.FirebaseConfig));
-
-    function togglePassword() {
-        const passwordInput = document.getElementById('password');
-        const eyeOpen = document.getElementById('eye-open');
-        const eyeClosed = document.getElementById('eye-closed');
-
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            eyeOpen.classList.add('hidden');
-            eyeClosed.classList.remove('hidden');
-        } else {
-            passwordInput.type = 'password';
-            eyeOpen.classList.remove('hidden');
-            eyeClosed.classList.add('hidden');
-        }
-    }
 </script>
 
-<div class="min-h-[calc(100vh-130px)] flex items-center justify-center p-4 lg:p-8">
+<div class="min-h-full flex items-center justify-center py-4 lg:py-8">
     <div class="flex w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
 
         <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-500 p-12 text-white flex-col justify-between relative">
