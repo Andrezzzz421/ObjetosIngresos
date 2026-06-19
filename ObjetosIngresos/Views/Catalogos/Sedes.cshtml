@@ -1,5 +1,136 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<ObjetosIngresos.Models.Sede>
 @{
+    ViewData["Title"] = "Administración de Sedes";
+    var centros = ViewBag.CentrosFormacion as List<ObjetosIngresos.Models.CentrosFormacion>;
+}
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Catalogos")" class="text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors">
+            &larr; Volver al Panel de Catálogos
+        </a>
+    </div>
+
+    <div class="mb-8 border-b border-slate-200 pb-5">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Catálogo de Sedes</h1>
+        <p class="text-sm text-slate-600 mt-1">Administración de complejos físicos e institucionales y su correspondiente vinculación académica.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 h-fit shadow-sm">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                Registrar Nueva Sede
+            </h2>
+
+            <form asp-action="CreateSede" asp-controller="Catalogos" method="post" class="space-y-4">
+                <div>
+                    <label for="NombreSede" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Nombre de la Sede
+                    </label>
+                    <input type="text" id="NombreSede" name="NombreSede" placeholder="Ej. Sede TIC, Sede Central" required
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                </div>
+
+                <div>
+                    <label for="Ciudad" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Ciudad
+                    </label>
+                    <input type="text" id="Ciudad" name="Ciudad" placeholder="Ej. Valledupar" required
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                </div>
+
+                <div>
+                    <label for="IdCentro" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Centro de Formación Vinculado
+                    </label>
+                    <select id="IdCentro" name="IdCentro" required
+                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                        <option value="" disabled selected>Seleccione un centro de formación</option>
+                        @if (centros != null)
+                        {
+                            foreach (var centro in centros)
+                            {
+                                <option value="@centro.IdCentro">@centro.NombreCentro</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Guardar Sede
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50">
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Sede</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Ciudad</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Centro de Formación</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-32">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                    No hay sedes operativas registradas en el sistema.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var sede in Model)
+                            {
+                                <tr id="fila-sede-@sede.IdSede" class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@sede.NombreSede</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">@sede.Ciudad</td>
+                                    <td class="px-6 py-4 text-sm font-medium text-indigo-600">
+                                        @(sede.IdCentroNavigation?.NombreCentro ?? "No asignado")
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-right">
+                                        <button onclick="eliminarSede(@sede.IdSede)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                            Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function eliminarSede(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar esta sede física del sistema?")) {
+                $.ajax({
+                    url: '@Url.Action("DeleteSede", "Catalogos")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            let fila = document.getElementById('fila-sede-' + id);
+                            if (fila) {
+                                fila.style.opacity = '0';
+                                setTimeout(() => fila.remove(), 300);
+                            }
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Error de comunicación con el servidor al intentar eliminar.");
+                    }
+                });
+            }
+        }
+    </script>
 }

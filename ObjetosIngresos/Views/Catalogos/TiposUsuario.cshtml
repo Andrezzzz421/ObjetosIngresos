@@ -1,5 +1,59 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<ObjetosIngresos.Models.TiposUsuario>
 @{
+    ViewData["Title"] = "Consulta de Roles de Usuario";
 }
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Catalogos")" class="text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors">
+            &larr; Volver al Panel de Catálogos
+        </a>
+    </div>
+
+    <div class="mb-8 border-b border-amber-200 pb-5">
+        <h1 class="text-2xl font-bold tracking-tight text-amber-900">Niveles de Acceso y Roles</h1>
+        <p class="text-sm text-amber-800/80 mt-1">Gobernanza de seguridad. Consulta los perfiles estáticos asignados para el control de ingresos a la plataforma.</p>
+    </div>
+
+    <div class="max-w-4xl bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50">
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-32">Identificador</th>
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre del Rol / Tipo de Usuario</th>
+                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-40">Estado de Seguridad</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model == null || !Model.Any())
+                    {
+                        <tr>
+                            <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                No se encontraron roles de usuario definidos en la base de datos.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var rol in Model)
+                        {
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="px-6 py-4 text-sm font-mono text-slate-400">@rol.IdTipoUsuario</td>
+                                <td class="px-6 py-4 text-sm font-semibold text-slate-900 tracking-wide">
+                                    @rol.Descripcion
+                                </td>
+                                <td class="px-6 py-4 text-sm text-right">
+                                    <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+                                        Protegido
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
