@@ -137,8 +137,58 @@ namespace ObjetosIngresos.Services
         // <----------------------------------------------------------------------------->
 
 
-            public List<TiposUsuario> GetAllTiposUsuario() => db.TiposUsuarios.ToList();
-            public TiposUsuario? GetTipoUsuarioById(int id) => db.TiposUsuarios.Find(id);
+        public List<TiposUsuario> GetAllTiposUsuario() => db.TiposUsuarios.ToList();
+
+        public TiposUsuario? GetTipoUsuarioById(int id) => db.TiposUsuarios.Find(id);
+
+        public bool CreateTipoUsuario(TiposUsuario nuevoTipo)
+        {
+            try
+            {
+                db.TiposUsuarios.Add(nuevoTipo);
+                db.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
+
+        public bool UpdateTipoUsuario(TiposUsuario tipoActualizado)
+        {
+            try
+            {
+                var registroExistente = db.TiposUsuarios.Find(tipoActualizado.IdTipoUsuario);
+                if (registroExistente == null) return false;
+
+                registroExistente.Descripcion = tipoActualizado.Descripcion;
+
+                db.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteTipoUsuario(int id)
+        {
+            try
+            {
+                var registro = db.TiposUsuarios.Find(id);
+                if (registro == null) return false;
+
+                db.TiposUsuarios.Remove(registro);
+                db.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
     }
 
