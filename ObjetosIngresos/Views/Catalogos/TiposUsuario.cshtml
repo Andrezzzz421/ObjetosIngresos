@@ -1,6 +1,6 @@
 ﻿@model List<ObjetosIngresos.Models.TiposUsuario>
 @{
-    ViewData["Title"] = "Consulta de Roles de Usuario";
+    ViewData["Title"] = "Administración de Roles";
 }
 
 <div class="container mx-auto px-6 py-8">
@@ -10,50 +10,154 @@
         </a>
     </div>
 
-    <div class="mb-8 border-b border-amber-200 pb-5">
-        <h1 class="text-2xl font-bold tracking-tight text-amber-900">Niveles de Acceso y Roles</h1>
-        <p class="text-sm text-amber-800/80 mt-1">Gobernanza de seguridad. Consulta los perfiles estáticos asignados para el control de ingresos a la plataforma.</p>
+    <div class="mb-8 border-b border-slate-200 pb-5">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Catálogo de Roles / Tipos de Usuario</h1>
+        <p class="text-sm text-slate-600 mt-1">Administración de perfiles institucionales, niveles de acceso y gobernanza del control de ingresos.</p>
     </div>
 
-    <div class="max-w-4xl bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50">
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-32">Identificador</th>
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre del Rol / Tipo de Usuario</th>
-                        <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-40">Estado de Seguridad</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @if (Model == null || !Model.Any())
-                    {
-                        <tr>
-                            <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
-                                No se encontraron roles de usuario definidos en la base de datos.
-                            </td>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 h-fit shadow-sm">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+                Registrar Nuevo Rol
+            </h2>
+
+            <form asp-action="CreateTipoUsuario" asp-controller="Catalogos" method="post" class="space-y-4">
+                <div>
+                    <label for="NombreTipo" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Nombre del Rol
+                    </label>
+                    <input type="text" id="NombreTipo" name="NombreTipo" placeholder="Ej. Guarda, Instructor, Auditor" required
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                </div>
+
+                <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Guardar Registro
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50">
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-24">ID</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre del Rol</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-48">Acciones</th>
                         </tr>
-                    }
-                    else
-                    {
-                        foreach (var rol in Model)
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @if (Model == null || !Model.Any())
                         {
-                            <tr class="hover:bg-slate-50/60 transition-colors">
-                                <td class="px-6 py-4 text-sm font-mono text-slate-400">@rol.IdTipoUsuario</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-slate-900 tracking-wide">
-                                    @rol.Descripcion
-                                </td>
-                                <td class="px-6 py-4 text-sm text-right">
-                                    <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
-                                        Protegido
-                                    </span>
+                            <tr>
+                                <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                    No hay roles registrados en el sistema.
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            foreach (var rol in Model)
+                            {
+                                <tr id="fila-rol-@rol.IdTipoUsuario" class="hover:bg-slate-50/60 transition-all duration-300 row-rol-data">
+                                    <td class="px-6 py-4 text-sm font-mono text-slate-400">#@rol.IdTipoUsuario</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">
+                                        <span id="txt-rol-@rol.IdTipoUsuario">@rol.Descripcion</span>
+                                        <input type="text" id="input-rol-@rol.IdTipoUsuario" value="@rol.Descripcion"
+                                               class="hidden w-full max-w-xs rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <span id="actions-read-@rol.IdTipoUsuario">
+                                            <button onclick="habilitarEdicion(@rol.IdTipoUsuario)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                                Editar
+                                            </button>
+                                            <button onclick="eliminarRol(@rol.IdTipoUsuario)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                                Eliminar
+                                            </button>
+                                        </span>
+                                        <span id="actions-edit-@rol.IdTipoUsuario" class="hidden">
+                                            <button onclick="guardarEdicion(@rol.IdTipoUsuario)" class="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors">
+                                                Guardar
+                                            </button>
+                                            <button onclick="cancelarEdicion(@rol.IdTipoUsuario)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">
+                                                Cancelar
+                                            </button>
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
 </div>
+
+@section Scripts {
+    <script>
+        function habilitarEdicion(id) {
+            document.getElementById('txt-rol-' + id).classList.add('hidden');
+            document.getElementById('input-rol-' + id).classList.remove('hidden');
+            document.getElementById('actions-read-' + id).classList.add('hidden');
+            document.getElementById('actions-edit-' + id).classList.remove('hidden');
+            document.getElementById('input-rol-' + id).focus();
+        }
+
+        function cancelarEdicion(id) {
+            const input = document.getElementById('input-rol-' + id);
+            const spanText = document.getElementById('txt-rol-' + id);
+            input.value = spanText.innerText.trim(); // Restablecer valor previo
+
+            input.classList.add('hidden');
+            spanText.classList.remove('hidden');
+            document.getElementById('actions-edit-' + id).classList.add('hidden');
+            document.getElementById('actions-read-' + id).classList.remove('hidden');
+        }
+
+        function guardarEdicion(id) {
+            const nuevoNombre = document.getElementById('input-rol-' + id).value;
+
+            $.ajax({
+                url: '@Url.Action("UpdateTipoUsuario", "Catalogos")',
+                type: 'POST',
+                data: { IdTipoUsuario: id, NombreTipo: nuevoNombre },
+                success: function (response) {
+                    if (response.success) {
+                        document.getElementById('txt-rol-' + id).innerText = nuevoNombre;
+                        cancelarEdicion(id);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Error de red al intentar actualizar el rol.");
+                }
+            });
+        }
+
+        function eliminarRol(id) {
+            if (confirm("¿Está seguro de que desea remover este rol del sistema?")) {
+                $.ajax({
+                    url: '@Url.Action("DeleteTipoUsuario", "Catalogos")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            let fila = document.getElementById('fila-rol-' + id);
+                            if (fila) {
+                                fila.style.opacity = '0';
+                                setTimeout(() => fila.remove(), 300);
+                            }
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Ocurrió un error de comunicación con el servidor.");
+                    }
+                });
+            }
+        }
+    </script>
+}
