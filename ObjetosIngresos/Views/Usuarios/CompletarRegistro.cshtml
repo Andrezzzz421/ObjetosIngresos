@@ -77,20 +77,4 @@
 
     <script type="module" src="~/js/auth-login-v2.js?v=@DateTime.Now.Ticks"></script>
 
-    <script>
-        function despacharRegistro() {
-            const docValue = document.getElementById("identificadorUsuario").value;
-
-            if (!docValue) {
-                console.error("Error: El documento del usuario llegó vacío a la vista.");
-                return;
-            }
-
-            if (typeof window.finalizarRegistro === "function") {
-                window.finalizarRegistro(docValue);
-            } else {
-                console.error("El script auth-login-v2.js aún no ha expuesto la función finalizarRegistro en 'window'.");
-            }
-        }
-    </script>
 }
