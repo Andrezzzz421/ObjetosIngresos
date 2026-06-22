@@ -23,6 +23,10 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.14" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\Elemento\" />
+  </ItemGroup>
 	<Target Name="Tailwind" BeforeTargets="Build">
 		<Message Importance="high" Text="Compilando Tailwind CSS..." />
 		<Exec Command="npx @tailwindcss/cli -i wwwroot/css/input.css -o wwwroot/css/output.css" />

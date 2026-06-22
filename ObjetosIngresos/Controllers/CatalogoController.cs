@@ -185,13 +185,67 @@ namespace ObjetosIngresos.Controllers
         }
 
         // =================================================================
-        // VISTA DE ROLES / TIPOS DE USUARIO (Solo Lectura)
+        // GESTIÓN DE ROLES / TIPOS DE USUARIO (CRUD)
         // =================================================================
+
         [HttpGet]
         public IActionResult TiposUsuario()
         {
             var roles = srv.GetAllTiposUsuario();
             return View("~/Views/Catalogos/TiposUsuario.cshtml", roles);
+        }
+
+        [HttpPost]
+        public IActionResult CreateTipoUsuario(string NombreTipo)
+        {
+            if (string.IsNullOrWhiteSpace(NombreTipo))
+            {
+                return RedirectToAction("TiposUsuario");
+            }
+
+            var nuevoRol = new TiposUsuario { Descripcion = NombreTipo.Trim() };
+            srv.CreateTipoUsuario(nuevoRol);
+
+            return RedirectToAction("TiposUsuario");
+        }
+
+        [HttpPost]
+        public IActionResult UpdateTipoUsuario(int IdTipoUsuario, string NombreTipo)
+        {
+            if (string.IsNullOrWhiteSpace(NombreTipo))
+            {
+                return Json(new { success = false, message = "El nombre del rol no puede estar vacío." });
+            }
+
+            var rol = new TiposUsuario
+            {
+                IdTipoUsuario = IdTipoUsuario,
+                Descripcion = NombreTipo.Trim()
+            };
+
+            bool resultado = srv.UpdateTipoUsuario(rol);
+            if (resultado)
+            {
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = "No se pudo actualizar el rol en la base de datos." });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteTipoUsuario(int id)
+        {
+            bool resultado = srv.DeleteTipoUsuario(id);
+            if (resultado)
+            {
+                return Json(new { success = true });
+            }
+
+            return Json(new
+            {
+                success = false,
+                message = "No se puede eliminar este rol porque se encuentra asignado a usuarios activos."
+            });
         }
     }
 }
