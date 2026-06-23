@@ -1,4 +1,4 @@
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,8 +12,9 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 🟢 CAMBIO: Reemplazado UseSqlServer por UseNpgsql para conectar a Supabase
 builder.Services.AddDbContext<SistemaIngresoContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("con")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("con")));
 
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
@@ -39,7 +40,7 @@ builder.Services.AddAuthentication(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(1);
     options.SlidingExpiration = true;
 })
-.AddJwtBearer(options => 
+.AddJwtBearer(options =>
 {
     options.Authority = $"https://securetoken.google.com/{projectId}";
     options.TokenValidationParameters = new TokenValidationParameters
@@ -65,16 +66,14 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-
-
-app.UseHttpsRedirection(); 
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthentication();
-app.UseAuthorization();  
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
