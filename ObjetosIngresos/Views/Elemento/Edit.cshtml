@@ -1,0 +1,244 @@
+﻿@model ObjetosIngresos.Models.Elemento
+@using ObjetosIngresos.Helpers
+@using ObjetosIngresos.Services
+@{
+    ViewData["Title"] = "Editar Elemento";
+}
+
+<div class="container mx-auto px-6 py-8">
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Elementos")" class="text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors">
+            &larr; Volver al Inventario
+        </a>
+    </div>
+
+    <div class="mb-8 border-b border-slate-200 pb-5">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950">Modificar Equipo</h1>
+        <p class="text-sm text-slate-600 mt-1">Actualice los datos principales, la imagen o el conjunto de accesorios asignados.</p>
+    </div>
+
+    <form asp-action="Edit" asp-controller="Elementos" method="post" enctype="multipart/form-data" class="space-y-8">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="IdElemento" />
+
+        <div asp-validation-summary="All" class="text-sm text-red-600 font-medium bg-red-50 p-4 rounded-xl border border-red-200 space-y-1"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Datos Principales</h2>
+
+                    <div>
+                        <label asp-for="TipoElemento" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Tipo de Objeto / Descripción</label>
+                        <input type="text" asp-for="TipoElemento" placeholder="Ej. Computador Portátil" required
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                        <span asp-validation-for="TipoElemento" class="text-xs text-red-500 mt-1"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="IdMarca" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Marca</label>
+                        <select asp-for="IdMarca" asp-items="@(new SelectList(ViewBag.Marcas, "IdMarca", "NombreMarca"))" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                            <option value="">-- Seleccione una marca --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label asp-for="Serial" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Número de Serial</label>
+                        <input type="text" asp-for="Serial" placeholder="Ej. SN-X847293"
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Fotografía del Activo</label>
+                        <div class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-300 rounded-xl p-4 hover:bg-slate-50/50 transition-colors">
+
+                            <input type="file" name="foto" id="foto" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(this)" />
+
+                            <div class="text-center">
+                                @{
+                                    string cadenaFoto = Model.FotoArchivo != null && Model.FotoArchivo.Length > 0
+                                    ? APHelpers.ToBase64(Model.FotoArchivo)
+                                    : string.Empty;
+                                }
+
+                                @if (!string.IsNullOrEmpty(cadenaFoto))
+                                {
+                                    <span id="upload-placeholder" class="text-xs text-slate-400 font-medium block mb-2">Haga clic aquí para cambiar la foto actual</span>
+                                    <img id="preview" src="@cadenaFoto" class="w-28 h-28 object-cover rounded-lg border mx-auto shadow-sm" />
+                                }
+                                else
+                                {
+                                    <span id="upload-placeholder" class="text-xs text-slate-500 font-medium block">Sin foto. Haga clic para cargar una</span>
+                                    <img id="preview" class="hidden mt-2 w-28 h-28 object-cover rounded-lg border mx-auto shadow-sm" />
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Accesorios y Periféricos Vinculados</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">Modifique o agregue los periféricos que acompañan a este elemento.</p>
+                            </div>
+                            <button type="button" onclick="agregarFilaDetalle()" class="inline-flex items-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 transition-colors">
+                                + Añadir Accesorio
+                            </button>
+                        </div>
+
+                        @{
+                            int index = 0;
+                        }
+                        <div id="contenedor-detalles" data-index="@(Model.DetalleElementos != null && Model.DetalleElementos.Any() ? Model.DetalleElementos.Count : 1)" class="space-y-3">
+
+                            @if (Model.DetalleElementos != null && Model.DetalleElementos.Any())
+                            {
+                                foreach (var detalle in Model.DetalleElementos)
+                                {
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle">
+                                        <div class="md:col-span-11">
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle / Accesorio</label>
+                                            <select name="detalles[@index].IdTipoDetalle" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                                                <option value="">-- Seleccione --</option>
+                                                @foreach (var tipo in ViewBag.TiposDetalle)
+                                                {
+                                                    if (tipo.IdTipoDetalle == detalle.IdTipoDetalle)
+                                                    {
+                                                        <option value="@tipo.IdTipoDetalle" selected="selected">@tipo.Nombre</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@tipo.IdTipoDetalle">@tipo.Nombre</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="md:col-span-1 flex items-end justify-center">
+                                            <button type="button" onclick="removerFila(this)" class="mb-1 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors opacity-100">
+                                                &times;
+                                            </button>
+                                        </div>
+                                    </div>
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle">
+                                    <div class="md:col-span-11">
+                                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle / Accesorio</label>
+                                        <select name="detalles[0].IdTipoDetalle" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                                            <option value="">-- Seleccione --</option>
+                                            @foreach (var tipo in ViewBag.TiposDetalle)
+                                            {
+                                                <option value="@tipo.IdTipoDetalle">@tipo.Nombre</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-1 flex items-end justify-center">
+                                        <button type="button" onclick="removerFila(this)" class="mb-1 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors opacity-100">
+                                            &times;
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-end gap-3">
+                        <a href="@Url.Action("Index", "Elementos")" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Cancelar</a>
+                        <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<template id="plantilla-detalle">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle">
+        <div class="md:col-span-11">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle / Accesorio</label>
+            <select name="detalles[__INDEX__].IdTipoDetalle" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                <option value="">-- Seleccione --</option>
+                @foreach (var tipo in ViewBag.TiposDetalle)
+                {
+                    <option value="@tipo.IdTipoDetalle">@tipo.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="md:col-span-1 flex items-end justify-center">
+            <button type="button" onclick="removerFila(this)" class="mb-1 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all opacity-100">
+                &times;
+            </button>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script>
+        const contenedorDetalles = document.getElementById('contenedor-detalles');
+        let contadorFilas = parseInt(contenedorDetalles.getAttribute('data-index')) || 1;
+
+        function agregarFilaDetalle() {
+            const plantilla = document.getElementById('plantilla-detalle').content.cloneNode(true);
+            const select = plantilla.querySelector('select');
+
+            select.name = select.name.replace('__INDEX__', contadorFilas);
+
+            contenedorDetalles.appendChild(plantilla);
+            contadorFilas++;
+            contenedorDetalles.setAttribute('data-index', contadorFilas);
+        }
+
+        function removerFila(btn) {
+            const filas = document.querySelectorAll('.fila-detalle');
+            if(filas.length > 1) {
+                btn.closest('.fila-detalle').remove();
+                reordenarIndices();
+            } else {
+                alert("El equipo debe conservar al menos un espacio para detalles o accesorios.");
+            }
+        }
+
+        function reordenarIndices() {
+            const filas = document.querySelectorAll('.fila-detalle');
+            contadorFilas = 0;
+
+            filas.forEach((fila) => {
+                const select = fila.querySelector('select');
+                if (select) {
+                    select.name = 'detalles[' + contadorFilas + '].IdTipoDetalle';
+                }
+                contadorFilas++;
+            });
+
+            contenedorDetalles.setAttribute('data-index', contadorFilas);
+        }
+
+        function previewImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.getElementById('preview');
+                    imgPreview.src = e.target.result;
+                    imgPreview.classList.remove('hidden');
+
+                    const textPlaceholder = document.getElementById('upload-placeholder');
+                    if(textPlaceholder) textPlaceholder.textContent = "Nueva foto cargada con éxito";
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}

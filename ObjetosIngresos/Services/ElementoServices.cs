@@ -43,41 +43,42 @@ namespace ObjetosIngresos.Services
             }
         }
 
-        public void Update(Elemento obj, List<DetalleElemento> nuevosDetalles, IFormFile? f)
+        public void Update(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
         {
             using var transaction = db.Database.BeginTransaction();
             try
             {
-                var x = db.Elementos.Find(obj.IdElemento);
-                if (x != null)
+                var elementoExistente = db.Elementos.Find(obj.IdElemento);
+                if (elementoExistente == null) throw new Exception("El equipo no existe.");
+
+                elementoExistente.TipoElemento = obj.TipoElemento;
+                elementoExistente.IdMarca = obj.IdMarca;
+                elementoExistente.Serial = obj.Serial;
+
+                if (archivoImagen != null && archivoImagen.Length > 0)
                 {
-                    x.TipoElemento = obj.TipoElemento;
-                    x.IdMarca = obj.IdMarca;
-                    x.Serial = obj.Serial;
-                    x.IdUsuario = obj.IdUsuario;
-
-                    if (f != null)
-                        x.FotoArchivo = APHelpers.ToBytes(f);
-
-                    db.Elementos.Update(x);
-
-                    var detallesAnteriores = db.DetalleElementos.Where(d => d.IdElemento == obj.IdElemento);
-                    db.DetalleElementos.RemoveRange(detallesAnteriores);
-
-                    if (nuevosDetalles != null && nuevosDetalles.Any())
-                    {
-                        foreach (var det in nuevosDetalles)
-                        {
-                            det.IdElemento = obj.IdElemento;
-                            db.DetalleElementos.Add(det);
-                        }
-                    }
-
-                    db.SaveChanges();
-                    transaction.Commit();
+                    elementoExistente.FotoArchivo = APHelpers.ToBytes(archivoImagen);
                 }
+
+                var detallesAnteriores = db.DetalleElementos.Where(d => d.IdElemento == obj.IdElemento).ToList();
+                if (detallesAnteriores.Any())
+                {
+                    db.DetalleElementos.RemoveRange(detallesAnteriores);
+                }
+
+                if (detalles != null && detalles.Any())
+                {
+                    foreach (var det in detalles)
+                    {
+                        det.IdElemento = obj.IdElemento; 
+                        det.IdDetalle = 0;               
+                        db.DetalleElementos.Add(det);
+                    }
+                }
+                db.SaveChanges();
+                transaction.Commit();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 transaction.Rollback();
                 throw;

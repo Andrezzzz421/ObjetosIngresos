@@ -17,7 +17,7 @@
         public static string ToBase64(byte[] imageBytes)
         {
             if (imageBytes == null || imageBytes.Length == 0)
-                return null;
+                return string.Empty;
 
             string base64String = Convert.ToBase64String(imageBytes);
 

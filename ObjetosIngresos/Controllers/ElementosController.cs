@@ -19,7 +19,7 @@ namespace ObjetosIngresos.Controllers
         public IActionResult Index()
         {
             var elementos = srvElemento.GetAll();
-            return View("~/Views/Catalogos/ElementosIndex.cshtml", elementos);
+            return View("~/Views/Elemento/Index.cshtml", elementos);
         }
 
         [HttpGet]
@@ -28,13 +28,15 @@ namespace ObjetosIngresos.Controllers
             ViewBag.Marcas = srvCatalogos.GetAllMarcas();
             ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle(); 
 
-            return View("~/Views/Catalogos/CreateElemento.cshtml");
+            return View("~/Views/Elemento/Create.cshtml");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Elemento nuevoElemento, List<DetalleElemento> detalles, IFormFile? foto)
         {
+            ModelState.Remove("detalles");
+
             try
             {
                 if (string.IsNullOrWhiteSpace(nuevoElemento.TipoElemento))
@@ -50,11 +52,12 @@ namespace ObjetosIngresos.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error interno al guardar: {ex.Message}");
+                ModelState.AddModelError("", $"Error en la Base de Datos: {ex.Message} -> {ex.InnerException?.Message}");
             }
+
             ViewBag.Marcas = srvCatalogos.GetAllMarcas();
             ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
-            return View("~/Views/Catalogos/CreateElemento.cshtml", nuevoElemento);
+            return View("~/Views/Elemento/Create.cshtml", nuevoElemento);
         }
 
         [HttpGet]
@@ -68,13 +71,15 @@ namespace ObjetosIngresos.Controllers
 
             ViewBag.Marcas = srvCatalogos.GetAllMarcas();
             ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
-            return View("~/Views/Catalogos/EditElemento.cshtml", elemento);
+            return View("~/Views/Elemento/Edit.cshtml", elemento);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(Elemento elementoActualizado, List<DetalleElemento> detalles, IFormFile? foto)
         {
+            ModelState.Remove("detalles");
+
             try
             {
                 if (ModelState.IsValid)
@@ -85,16 +90,16 @@ namespace ObjetosIngresos.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error al actualizar el registro: {ex.Message}");
+                ModelState.AddModelError("", $"Error al actualizar el registro: {ex.Message} -> {ex.InnerException?.Message}");
             }
 
             ViewBag.Marcas = srvCatalogos.GetAllMarcas();
             ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
-            return View("~/Views/Catalogos/EditElemento.cshtml", elementoActualizado);
+            return View("~/Views/Elemento/Edit.cshtml", elementoActualizado);
         }
 
         [HttpPost]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(int id) 
         {
             try
             {

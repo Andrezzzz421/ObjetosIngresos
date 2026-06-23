@@ -11,7 +11,7 @@ public  class DetalleElemento
 
     public int IdTipoDetalle { get; set; }
 
-    public virtual Elemento IdElementoNavigation { get; set; } = null!;
+    public virtual Elemento? IdElementoNavigation { get; set; } = null!;
 
-    public virtual TiposDetalle IdTipoDetalleNavigation { get; set; } = null!;
+    public virtual TiposDetalle? IdTipoDetalleNavigation { get; set; } = null!;
 }
