@@ -18,6 +18,7 @@ builder.Services.AddDbContext<SistemaIngresoContext>(options =>
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<CatalogoServices>();
+builder.Services.AddScoped<ElementoServices>();
 var projectId = builder.Configuration["FirebaseConfig:ProjectId"];
 
 builder.Services.AddAuthentication(options =>
