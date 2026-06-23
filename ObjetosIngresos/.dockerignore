@@ -3,4 +3,5 @@
 out/
 .git/
 .vs/
-.vscode/
+.vscode/ 
+node_modules/ 
