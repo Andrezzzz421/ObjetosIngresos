@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin;
+using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,7 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 🟢 CAMBIO: Reemplazado UseSqlServer por UseNpgsql para conectar a Supabase
 builder.Services.AddDbContext<SistemaIngresoContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("con")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("con"), npgsqlOptionsAction: npgsqlOptions =>
+    { 
+    }));
 
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
