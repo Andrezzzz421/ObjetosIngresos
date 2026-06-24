@@ -14,9 +14,13 @@ RUN apt-get update && apt-get install -y curl \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar el proyecto y restaurar paquetes de .NET
+# Copiar archivos de configuración de .NET y Node.js primero
 COPY ["ObjetosIngresos.csproj", "./"]
+COPY ["package.json", "package-lock.json*", "./"]
+
+# Restaurar paquetes de .NET e instalar módulos de Node nativos de Linux
 RUN dotnet restore "ObjetosIngresos.csproj"
+RUN npm cache clean --force && npm install --include=optional
 
 # Copiar el resto del código fuente
 COPY . .
