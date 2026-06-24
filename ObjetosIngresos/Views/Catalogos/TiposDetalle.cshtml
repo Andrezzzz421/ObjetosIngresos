@@ -78,29 +78,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarTipoDetalle(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar este tipo de detalle?")) {
-                $.ajax({
-                    url: '@Url.Action("DeleteTipoDetalle", "Catalogos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (response) {
-                        if (response.success) {
-                            let fila = document.getElementById('fila-tipo-' + id);
-                            if (fila) {
-                                fila.style.opacity = '0';
-                                setTimeout(() => fila.remove(), 300);
-                            }
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Ocurrió un error de red al intentar eliminar el registro.");
-                    }
-                });
-            }
-        }
-    </script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }
