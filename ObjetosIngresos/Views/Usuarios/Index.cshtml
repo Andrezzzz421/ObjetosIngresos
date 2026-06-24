@@ -4,7 +4,7 @@
     ViewData["Title"] = "Gestión de Usuarios";
     Layout = "_Layout";
 }
- 
+
 @if (TempData["Success"] != null || TempData["Error"] != null)
 {
     <script>
@@ -32,6 +32,19 @@
         </a>
     </div>
 
+    <div class="mb-6 max-w-md relative">
+        <label for="buscarDocumento" class="sr-only">Buscar por documento</label>
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+        <input type="text"
+               id="buscarDocumento"
+               placeholder="Buscar por número de documento..."
+               class="block w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all text-sm" />
+    </div>
+
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -44,10 +57,10 @@
                         <th class="px-6 py-4 text-sm font-semibold text-slate-600 uppercase tracking-wider text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody id="tablaUsuarios" class="divide-y divide-slate-100">
                     @foreach (var item in Model)
                     {
-                        <tr class="hover:bg-slate-50 transition-colors group">
+                        <tr class="hover:bg-slate-50 transition-colors group fila-usuario" data-documento="@item.Documento.ToString().Trim()">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm uppercase">
@@ -91,7 +104,7 @@
                                             class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                             title="Eliminar">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.895-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
 
@@ -100,12 +113,17 @@
                             </td>
                         </tr>
                     }
+                    <tr id="sinResultados" class="hidden">
+                        <td colspan="5" class="px-6 py-10 text-center text-slate-500">
+                            No se encontraron usuarios con ese número de documento.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <span class="text-sm text-slate-500 font-medium">Mostrando @Model.Count() usuarios registrados</span>
+            <span id="contadorUsuarios" class="text-sm text-slate-500 font-medium">Mostrando @Model.Count() usuarios registrados</span>
         </div>
     </div>
 </div>
@@ -116,4 +134,41 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputBuscar = document.getElementById('buscarDocumento');
+            const filas = document.querySelectorAll('.fila-usuario');
+            const sinResultados = document.getElementById('sinResultados');
+            const contador = document.getElementById('contadorUsuarios');
+
+            inputBuscar.addEventListener('input', function () {
+                const valorBusqueda = this.value.trim();
+                let visibles = 0;
+
+                filas.forEach(fila => {
+                    // Extrae el documento guardado en el atributo data-documento
+                    const documento = fila.getAttribute('data-documento');
+
+                    // Si el documento incluye lo escrito en el input, se muestra
+                    if (documento.includes(valorBusqueda)) {
+                        fila.style.display = '';
+                        visibles++;
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+
+                // Mostrar/ocultar mensaje de "no hay resultados"
+                if (visibles === 0 && valorBusqueda !== '') {
+                    sinResultados.classList.remove('hidden');
+                } else {
+                    sinResultados.classList.add('hidden');
+                }
+
+                // Actualizar el contador dinámicamente
+                contador.textContent = `Mostrando ${visibles} usuarios filtrados`;
+            });
+        });
+    </script>
 }

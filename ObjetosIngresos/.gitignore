@@ -1,0 +1,3 @@
+# Ignorar configuraciones que contienen credenciales o cadenas de conexión
+appsettings.json
+appsettings.Development.json
