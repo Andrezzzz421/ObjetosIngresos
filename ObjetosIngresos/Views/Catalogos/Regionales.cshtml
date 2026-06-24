@@ -78,29 +78,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarRegional(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar esta regional? Nota: Si tiene centros de formación asociados, la operación podría fallar.")) {
-                $.ajax({
-                    url: '@Url.Action("DeleteRegional", "Catalogos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (response) {
-                        if (response.success) {
-                            let fila = document.getElementById('fila-regional-' + id);
-                            if (fila) {
-                                fila.style.opacity = '0';
-                                setTimeout(() => fila.remove(), 300);
-                            }
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Ocurrió un error de red al intentar comunicarse con el servidor.");
-                    }
-                });
-            }
-        }
-    </script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }

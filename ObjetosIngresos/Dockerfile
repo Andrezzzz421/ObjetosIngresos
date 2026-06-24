@@ -1,10 +1,10 @@
-# 1. Capa de ejecuci髇 (Base usando .NET 9)
+# 1. Capa de ejecuci贸n (Base usando .NET 9)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-# 2. Capa de compilaci髇 (SDK usando .NET 9)
+# 2. Capa de compilaci贸n (SDK usando .NET 9)
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
@@ -12,18 +12,18 @@ WORKDIR /src
 COPY ["ObjetosIngresos.csproj", "./"]
 RUN dotnet restore "ObjetosIngresos.csproj"
 
-# Copiar todo el c骴igo y compilar
+# Copiar todo el c贸digo y compilar
 COPY . .
 WORKDIR "/src/."
 
-# Compilamos deshabilitando cualquier intento autom醫ico de ejecutar Node/Tailwind en el servidor
+# Compilamos deshabilitando cualquier intento autom谩tico de ejecutar Node/Tailwind en el servidor
 RUN dotnet build "ObjetosIngresos.csproj" -c Release -o /app/build /p:BuildNodeBundles=false
 
-# 3. Capa de publicaci髇
+# 3. Capa de publicaci贸n
 FROM build AS publish
 RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# 4. Configuraci髇 final del contenedor
+# 4. Configuraci贸n final del contenedor
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

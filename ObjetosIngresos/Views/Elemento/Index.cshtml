@@ -104,30 +104,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarElemento(id) {
-            if (confirm("¿Está seguro de que desea remover este equipo y todos sus accesorios en cascada?")) {
-                $.ajax({
-                    url: '@Url.Action("Delete", "Elementos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (response) {
-                        if (response.success) {
-                            let fila = document.getElementById('fila-elemento-' + id);
-                            if (fila) {
-                                fila.style.transition = 'opacity 0.3s ease';
-                                fila.style.opacity = '0';
-                                setTimeout(() => fila.remove(), 300);
-                            }
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Error de comunicación al procesar la baja del activo.");
-                    }
-                });
-            }
-        }
-    </script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }

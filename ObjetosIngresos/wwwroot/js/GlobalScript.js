@@ -1,5 +1,7 @@
-// Perfil.cshtml
-window.hideToast = function() {
+// ==========================================
+// 1. PERFIL & AUTENTICACIÓN
+// ==========================================
+window.hideToast = function () {
     const toast = document.getElementById("toastError");
     if (toast) {
         toast.classList.add("opacity-0", "translate-y-10");
@@ -7,8 +9,7 @@ window.hideToast = function() {
     }
 };
 
-// NuevaPassword.cshtml
-window.confirmarCambio = function() {
+window.confirmarCambio = function () {
     const pass = document.getElementById('password').value;
     const confirmPass = document.getElementById('confirmarPassword').value;
 
@@ -33,7 +34,7 @@ window.confirmarCambio = function() {
         });
         return;
     }
-     
+
     Swal.fire({
         title: '¿Estás seguro?',
         text: "Se cerrará tu sesión actual para aplicar los cambios.",
@@ -50,21 +51,19 @@ window.confirmarCambio = function() {
             cancelButton: 'rounded-xl px-6 py-3 font-bold'
         }
     }).then((result) => {
-        if (result.isConfirmed) { 
+        if (result.isConfirmed) {
             Swal.fire({
                 title: 'Procesando...',
                 html: 'Actualizando credenciales en Firebase',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading() }
             });
-
             document.getElementById('formCambioPass').submit();
         }
     });
 };
 
-// Login.cshtml
-window.togglePassword = function() {
+window.togglePassword = function () {
     const passwordInput = document.getElementById('password');
     const eyeOpen = document.getElementById('eye-open');
     const eyeClosed = document.getElementById('eye-closed');
@@ -80,8 +79,7 @@ window.togglePassword = function() {
     }
 };
 
-// CompletarRegistro.cshtml
-window.despacharRegistro = function() {
+window.despacharRegistro = function () {
     const docValue = document.getElementById("identificadorUsuario").value;
 
     if (!docValue) {
@@ -96,8 +94,10 @@ window.despacharRegistro = function() {
     }
 };
 
-// Index.cshtml
-window.showIndexToast = function(isError, title, text) {
+// ==========================================
+// 2. VISTAS GENERALES (INDEX & SABER MÁS)
+// ==========================================
+window.showIndexToast = function (isError, title, text) {
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             icon: isError ? 'error' : 'success',
@@ -105,7 +105,6 @@ window.showIndexToast = function(isError, title, text) {
             text: text,
             timer: 3000,
             showConfirmButton: false,
-            borderRadius: '1.5rem',
             customClass: {
                 popup: 'rounded-3xl shadow-xl'
             }
@@ -113,8 +112,7 @@ window.showIndexToast = function(isError, title, text) {
     }
 };
 
-// SaberMas.cshtml
-window.initSaberMasForm = function() {
+window.initSaberMasForm = function () {
     const form = document.getElementById("contact-form");
     const toast = document.getElementById("toast-success");
     const btnSubmit = document.getElementById("btn-submit");
@@ -123,19 +121,16 @@ window.initSaberMasForm = function() {
 
     async function handleSubmit(event) {
         event.preventDefault();
-        
         btnSubmit.disabled = true;
         btnSubmit.innerText = "Enviando...";
 
         const data = new FormData(event.target);
-        
+
         try {
             const response = await fetch("https://formspree.io/f/xrejpdrz", {
                 method: "POST",
                 body: data,
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
             if (response.ok) {
@@ -152,33 +147,28 @@ window.initSaberMasForm = function() {
         }
     }
 
-    // Only add listener if it hasn't been added yet to avoid duplicates
     if (!form.dataset.listenerAdded) {
         form.addEventListener("submit", handleSubmit);
         form.dataset.listenerAdded = 'true';
     }
 
-    window.showSaberMasToast = function() {
+    window.showSaberMasToast = function () {
         if (!toast) return;
-        toast.classList.remove('hidden');
-        toast.classList.remove('opacity-0', 'translate-y-[-20px]');
-        
-        setTimeout(() => {
-            window.closeSaberMasToast();
-        }, 5000);
+        toast.classList.remove('hidden', 'opacity-0', 'translate-y-[-20px]');
+        setTimeout(() => { window.closeSaberMasToast(); }, 5000);
     };
 
-    window.closeSaberMasToast = function() {
+    window.closeSaberMasToast = function () {
         if (!toast) return;
         toast.classList.add('opacity-0', 'translate-y-[-20px]');
-        setTimeout(() => {
-            toast.classList.add('hidden');
-        }, 300);
+        setTimeout(() => { toast.classList.add('hidden'); }, 300);
     };
 };
 
-// _Layout.cshtml
-window.initLayoutScripts = function() {
+// ==========================================
+// 3. LAYOUT & MENÚS NAVIGATION
+// ==========================================
+window.initLayoutScripts = function () {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
@@ -192,7 +182,6 @@ window.initLayoutScripts = function() {
     if (btnToggle && sidebar && backdrop) {
         function toggleSidebar() {
             const isOpen = !sidebar.classList.contains('-translate-x-full');
-
             if (isOpen) {
                 sidebar.classList.add('-translate-x-full');
                 backdrop.classList.add('hidden');
@@ -210,7 +199,6 @@ window.initLayoutScripts = function() {
             }
         }
 
-        // Avoid multiple listeners if called multiple times
         if (!btnToggle.dataset.listenerAdded) {
             btnToggle.addEventListener('click', toggleSidebar);
             backdrop.addEventListener('click', toggleSidebar);
@@ -251,12 +239,8 @@ window.initLayoutScripts = function() {
                             color: '#f8fafc',
                             showConfirmButton: false,
                             heightAuto: false,
-                            customClass: {
-                                popup: 'rounded-2xl border border-slate-800 shadow-xl'
-                            },
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
+                            customClass: { popup: 'rounded-2xl border border-slate-800 shadow-xl' },
+                            didOpen: () => { Swal.showLoading(); }
                         });
                         logoutForm.submit();
                     }
@@ -269,7 +253,234 @@ window.initLayoutScripts = function() {
     }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+// ==========================================
+// 4. OPERACIONES DE CATÁLOGOS (AJAX)
+// ==========================================
+function ejecutarEliminacionAjax(url, id, elementoFilaId) {
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: { id: id },
+        success: function (response) {
+            if (response.success) {
+                let fila = document.getElementById(elementoFilaId);
+                if (fila) {
+                    fila.style.transition = 'opacity 0.3s ease';
+                    fila.style.opacity = '0';
+                    setTimeout(() => fila.remove(), 300);
+                }
+            } else {
+                alert(response.message);
+            }
+        },
+        error: function () {
+            alert("Ocurrió un error de comunicación con el servidor.");
+        }
+    });
+}
+
+function eliminarRegistro(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar esta marca?")) {
+        ejecutarEliminacionAjax('@Url.Action("DeleteMarca", "Catalogos")', id, 'fila-marca-' + id);
+    }
+}
+
+function eliminarRegional(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar esta regional? Nota: Si tiene centros de formación asociados, la operación podría fallar.")) {
+        ejecutarEliminacionAjax('@Url.Action("DeleteRegional", "Catalogos")', id, 'fila-regional-' + id);
+    }
+}
+
+function eliminarSede(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar esta sede física del sistema?")) {
+        ejecutarEliminacionAjax('@Url.Action("DeleteSede", "Catalogos")', id, 'fila-sede-' + id);
+    }
+}
+
+function eliminarTipoDetalle(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar este tipo de detalle?")) {
+        ejecutarEliminacionAjax('@Url.Action("DeleteTipoDetalle", "Catalogos")', id, 'fila-tipo-' + id);
+    }
+}
+
+function eliminarElemento(id) {
+    if (confirm("¿Está seguro de que desea remover este equipo y todos sus accesorios en cascada?")) {
+        ejecutarEliminacionAjax('@Url.Action("Delete", "Elementos")', id, 'fila-elemento-' + id);
+    }
+}
+
+// ==========================================
+// 5. GESTIÓN INLINE DE ROL / TIPO USUARIO
+// ==========================================
+function habilitarEdicion(id) {
+    document.getElementById('txt-rol-' + id).classList.add('hidden');
+    document.getElementById('input-rol-' + id).classList.remove('hidden');
+    document.getElementById('actions-read-' + id).classList.add('hidden');
+    document.getElementById('actions-edit-' + id).classList.remove('hidden');
+    document.getElementById('input-rol-' + id).focus();
+}
+
+function cancelarEdicion(id) {
+    const input = document.getElementById('input-rol-' + id);
+    const spanText = document.getElementById('txt-rol-' + id);
+    input.value = spanText.innerText.trim();
+
+    input.classList.add('hidden');
+    spanText.classList.remove('hidden');
+    document.getElementById('actions-edit-' + id).classList.add('hidden');
+    document.getElementById('actions-read-' + id).classList.remove('hidden');
+}
+
+function guardarEdicion(id) {
+    const nuevoNombre = document.getElementById('input-rol-' + id).value;
+
+    $.ajax({
+        url: '@Url.Action("UpdateTipoUsuario", "Catalogos")',
+        type: 'POST',
+        data: { IdTipoUsuario: id, NombreTipo: nuevoNombre },
+        success: function (response) {
+            if (response.success) {
+                document.getElementById('txt-rol-' + id).innerText = nuevoNombre;
+                cancelarEdicion(id);
+            } else {
+                alert(response.message);
+            }
+        },
+        error: function () {
+            alert("Error de red al intentar actualizar el rol.");
+        }
+    });
+}
+
+function eliminarRol(id) {
+    if (confirm("¿Está seguro de que desea remover este rol del sistema?")) {
+        ejecutarEliminacionAjax('@Url.Action("DeleteTipoUsuario", "Catalogos")', id, 'fila-rol-' + id);
+    }
+}
+
+// ==========================================
+// 6. FORMULARIOS DE ELEMENTOS (CREATE & EDIT)
+// ==========================================
+let globalContadorFilas = 1;
+
+document.addEventListener("DOMContentLoaded", function () {
+    const contenedor = document.getElementById('contenedor-detalles');
+    if (contenedor && contenedor.getAttribute('data-index')) {
+        globalContadorFilas = parseInt(contenedor.getAttribute('data-index')) || 1;
+    }
+});
+
+function agregarFilaDetalle() {
+    const contenedor = document.getElementById('contenedor-detalles');
+    if (!contenedor) return;
+
+    const plantilla = document.getElementById('plantilla-detalle');
+
+    if (plantilla) {
+        const clon = plantilla.content.cloneNode(true);
+        const select = clon.querySelector('select');
+        const input = clon.querySelector('input');
+
+        if (select) select.name = `detalles[${globalContadorFilas}].IdTipoDetalle`;
+        if (input) input.name = `detalles[${globalContadorFilas}].Nota`;
+
+        contenedor.appendChild(clon);
+    } else {
+        const nuevaFila = document.createElement('div');
+        nuevaFila.className = "grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle";
+        nuevaFila.innerHTML = `
+        <div class="md:col-span-4">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle</label>
+            <select name="detalles[${globalContadorFilas}].IdTipoDetalle" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                <option value="">-- Seleccione --</option>
+                @if (ViewBag.TiposDetalle != null) {
+                    foreach (var tipo in ViewBag.TiposDetalle) {
+                        <option value="@tipo.IdTipoDetalle">@tipo.Nombre</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="md:col-span-7">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notas / Especificaciones</label>
+            <input type="text" name="detalles[${globalContadorFilas}].Nota" placeholder="Ej. Especificaciones adicionales" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div class="md:col-span-1 flex items-end justify-center">
+            <button type="button" onclick="removerFila(this)" class="mb-1 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all opacity-100 md:opacity-0 group-hover:opacity-100">
+                &times;
+            </button>
+        </div>`;
+        contenedor.appendChild(nuevaFila);
+    }
+
+    globalContadorFilas++;
+    contenedor.setAttribute('data-index', globalContadorFilas);
+}
+
+function removerFila(btn) {
+    const contenedor = document.getElementById('contenedor-detalles');
+    const filas = document.querySelectorAll('.fila-detalle');
+
+    if (filas.length > 1) {
+        btn.closest('.fila-detalle').remove();
+        reordenarIndices();
+    } else {
+        alert("El equipo debe conservar al menos un espacio para detalles o accesorios.");
+    }
+}
+
+function reordenarIndices() {
+    const contenedor = document.getElementById('contenedor-detalles');
+    const filas = document.querySelectorAll('.fila-detalle');
+    globalContadorFilas = 0;
+
+    filas.forEach((fila) => {
+        const select = fila.querySelector('select');
+        const input = fila.querySelector('input');
+
+        if (select) select.name = `detalles[${globalContadorFilas}].IdTipoDetalle`;
+        if (input) input.name = `detalles[${globalContadorFilas}].Nota`;
+
+        globalContadorFilas++;
+    });
+
+    if (contenedor) contenedor.setAttribute('data-index', globalContadorFilas);
+}
+
+function previewImage(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const imgPreview = document.getElementById('preview');
+            if (imgPreview) {
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove('hidden');
+            }
+            const textPlaceholder = document.getElementById('upload-placeholder');
+            if (textPlaceholder) {
+                textPlaceholder.textContent = "Nueva foto cargada con éxito";
+                textPlaceholder.classList.add('hidden');
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+// ==========================================
+// 7. LISTENERS GENERALES DOM
+// ==========================================
+document.addEventListener('DOMContentLoaded', function () {
     initLayoutScripts();
     initSaberMasForm();
+
+    const btnToggle = document.getElementById("btn-toggle-catalogos");
+    const menuCatalogos = document.getElementById("menu-catalogos");
+    const iconChevron = document.getElementById("icon-chevron-catalogos");
+
+    if (btnToggle && menuCatalogos && iconChevron) {
+        btnToggle.addEventListener("click", function () {
+            menuCatalogos.classList.toggle("hidden");
+            iconChevron.classList.toggle("rotate-180");
+        });
+    }
 });

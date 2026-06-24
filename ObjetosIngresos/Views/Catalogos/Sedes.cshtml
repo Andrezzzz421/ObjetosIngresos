@@ -108,29 +108,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarSede(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar esta sede física del sistema?")) {
-                $.ajax({
-                    url: '@Url.Action("DeleteSede", "Catalogos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (response) {
-                        if (response.success) {
-                            let fila = document.getElementById('fila-sede-' + id);
-                            if (fila) {
-                                fila.style.opacity = '0';
-                                setTimeout(() => fila.remove(), 300);
-                            }
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Error de comunicación con el servidor al intentar eliminar.");
-                    }
-                });
-            }
-        }
-    </script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }
