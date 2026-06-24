@@ -78,29 +78,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarRegistro(id) {
-            if (confirm("¿Estás seguro de que deseas eliminar esta marca?")) {
-                $.ajax({
-                    url: '@Url.Action("DeleteMarca", "Catalogos")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (response) {
-                        if (response.success) {
-                            let fila = document.getElementById('fila-marca-' + id);
-                            if (fila) {
-                                fila.style.opacity = '0';
-                                setTimeout(() => fila.remove(), 300);
-                            }
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Ocurrió un error de red al intentar eliminar el registro.");
-                    }
-                });
-            }
-        }
-    </script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }
