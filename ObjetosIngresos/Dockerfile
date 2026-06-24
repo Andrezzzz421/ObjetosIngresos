@@ -21,7 +21,7 @@ RUN dotnet build "ObjetosIngresos.csproj" -c Release -o /app/build /p:BuildNodeB
 
 # 3. Capa de publicación
 FROM build AS publish
-RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:BuildNodeBundles=false
 
 # 4. Configuración final del contenedor
 FROM base AS final
