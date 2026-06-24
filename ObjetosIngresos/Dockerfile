@@ -1,10 +1,10 @@
-# 1. Capa de ejecuciÛn base (Entorno liviano para correr la app)
+# 1. Capa de ejecuci√≥n base (Entorno liviano para correr la app)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-# 2. Capa de compilaciÛn (SDK de .NET 9)
+# 2. Capa de compilaci√≥n (SDK de .NET 9)
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
@@ -14,22 +14,26 @@ RUN apt-get update && apt-get install -y curl \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar el proyecto y restaurar paquetes de .NET
+# Copiar archivos de configuraci√≥n de .NET y Node.js primero
 COPY ["ObjetosIngresos.csproj", "./"]
-RUN dotnet restore "ObjetosIngresos.csproj"
+COPY ["package.json", "package-lock.json*", "./"]
 
-# Copiar el resto del cÛdigo fuente
+# Restaurar paquetes de .NET e instalar m√≥dulos de Node nativos de Linux
+RUN dotnet restore "ObjetosIngresos.csproj"
+RUN npm cache clean --force && npm install --include=optional
+
+# Copiar el resto del c√≥digo fuente
 COPY . .
 WORKDIR "/src/."
 
-# Render ejecutar· esto. Como su entorno es Linux nativo, Tailwind compilar· el CSS sin errores
+# Render ejecutar√° esto. Como su entorno es Linux nativo, Tailwind compilar√° el CSS sin errores
 RUN dotnet build "ObjetosIngresos.csproj" -c Release -o /app/build
 
-# 3. Capa de publicaciÛn
+# 3. Capa de publicaci√≥n
 FROM build AS publish
 RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# 4. ConfiguraciÛn final
+# 4. Configuraci√≥n final
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
