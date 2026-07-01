@@ -147,7 +147,6 @@ public partial class SistemaIngresoContext : DbContext
         {
             entity.HasKey(e => e.IdUsuario).HasName("PK_Usuarios");
 
-            // 🛠️ ADAPTACIÓN POSTGRES: Filtro simplificado de índice parcial para Postgres
             entity.HasIndex(e => e.FirebaseUid, "UQ_Usuarios_FirebaseUid").HasFilter("firebase_uid IS NOT NULL");
             entity.HasIndex(e => e.Documento, "UQ_Usuarios_Documento").IsUnique();
 
