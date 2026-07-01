@@ -1,40 +1,34 @@
-# 1. Capa de ejecuciÛn base (Entorno liviano para correr la app)
+# 1. Capa de ejecuci√≥n (Base usando .NET 9)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-# 2. Capa de compilaciÛn (SDK de .NET 9)
+# 2. Capa de compilaci√≥n (SDK usando .NET 9)
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Instalar Node.js dentro de la nube de Render para que Tailwind pueda compilar sus estilos
-RUN apt-get update && apt-get install -y curl \
-    && curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiar el proyecto y restaurar paquetes de .NET
+# Copiar el archivo de proyecto y restaurar dependencias
 COPY ["ObjetosIngresos.csproj", "./"]
 RUN dotnet restore "ObjetosIngresos.csproj"
 
-# Copiar el resto del cÛdigo fuente
+# Copiar todo el c√≥digo y compilar
 COPY . .
 WORKDIR "/src/."
 
-# Render ejecutar· esto. Como su entorno es Linux nativo, Tailwind compilar· el CSS sin errores
-RUN dotnet build "ObjetosIngresos.csproj" -c Release -o /app/build
+# Compilamos deshabilitando cualquier intento autom√°tico de ejecutar Node/Tailwind en el servidor
+RUN dotnet build "ObjetosIngresos.csproj" -c Release -o /app/build /p:BuildNodeBundles=false
 
-# 3. Capa de publicaciÛn
+# 3. Capa de publicaci√≥n
 FROM build AS publish
-RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ObjetosIngresos.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:BuildNodeBundles=false
 
-# 4. ConfiguraciÛn final
+# 4. Configuraci√≥n final del contenedor
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Asegurar el puerto que Render espera escuchar
+# Asegurar que ASP.NET Core escuche en el puerto que Render espera
 ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "ObjetosIngresos.dll"]
