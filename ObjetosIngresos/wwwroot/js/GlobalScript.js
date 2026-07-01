@@ -484,3 +484,69 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// ==========================================
+// 8. CAPTURA Y NOTIFICACIÓN DE ERRORES DESDE EL BACKEND
+// ==========================================
+document.addEventListener("DOMContentLoaded", function () {
+    const carrier = document.getElementById("validation-errors-carrier");
+
+    if (carrier) {
+        const rawErrors = carrier.getAttribute("data-errors");
+
+        if (rawErrors) {
+            try {
+                const listaErrores = JSON.parse(rawErrors);
+
+                if (listaErrores && listaErrores.length > 0) {
+                    let mensajeHtml = '<ul class="text-left text-sm space-y-1.5 mt-2">';
+                    listaErrores.forEach(function (error) {
+                        mensajeHtml += `<li class="flex items-start gap-2 text-slate-600"><span class="text-red-500 mt-0.5">•</span> <span>${error}</span></li>`;
+                    });
+                    mensajeHtml += '</ul>';
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Revisa los campos requeridos',
+                            html: mensajeHtml,
+                            confirmButtonColor: '#4f46e5',
+                            customClass: {
+                                popup: 'rounded-3xl border border-slate-100 shadow-xl p-6'
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Error al procesar los errores del ModelState:", e);
+            }
+        }
+    }
+});
+
+
+// ==========================================
+// 9. Validaciones
+// ==========================================
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const camposNumericos = document.querySelectorAll('input[type="number"], .input-solo-numeros');
+
+    camposNumericos.forEach(function (input) {
+        input.addEventListener("keypress", function (e) {
+            if (e.key < '0' || e.key > '9') {
+                e.preventDefault();
+            }
+        });
+
+        input.addEventListener("paste", function (e) {
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const dataPegada = clipboardData.getData('Text');
+
+            if (!/^\d+$/.test(dataPegada)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
