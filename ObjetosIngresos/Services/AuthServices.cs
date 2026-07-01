@@ -66,7 +66,7 @@ namespace ObjetosIngresos.Services
             }
             catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
             {
-                var userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(usuario.Correo);
+                var userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(usuario.Correo.Trim());
                 usuario.FirebaseUid = userRecord.Uid;
                 await _db.SaveChangesAsync();
             }
