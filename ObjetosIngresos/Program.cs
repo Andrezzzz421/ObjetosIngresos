@@ -23,6 +23,7 @@ builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<CatalogoServices>();
 builder.Services.AddScoped<ElementoServices>();
+builder.Services.AddScoped<MovimientoServices>();
 var projectId = builder.Configuration["FirebaseConfig:ProjectId"];
 
 builder.Services.AddAuthentication(options =>

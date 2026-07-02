@@ -1,0 +1,229 @@
+@model ObjetosIngresos.Models.Usuario
+@using ObjetosIngresos.Helpers
+@{
+    ViewData["Title"] = "Mi Panel";
+    int limite = ViewBag.LimiteElementos ?? 2;
+    int cuposUsados = Model.Elementos.Count;
+    int cuposRestantes = limite - cuposUsados;
+    bool puedeAgregar = cuposUsados < limite;
+}
+
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+    <!-- ── Encabezado de bienvenida ── -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Hola, @Model.Nombres 👋</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Gestiona tus activos registrados en el sistema.</p>
+        </div>
+
+        <!-- Indicador de cupos -->
+        <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+            <div class="flex gap-1.5">
+                @for (int i = 0; i < limite; i++)
+                {
+                    <div class="w-3 h-3 rounded-full @(i < cuposUsados ? "bg-indigo-500" : "bg-slate-200")"></div>
+                }
+            </div>
+            <div class="text-sm">
+                <span class="font-bold text-slate-800">@cuposUsados</span>
+                <span class="text-slate-400"> / @limite cupos usados</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Alertas de TempData ── -->
+    @if (TempData["Exito"] != null)
+    {
+        <div id="alert-exito" class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-2xl px-5 py-4 text-sm font-medium shadow-sm">
+            <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            @TempData["Exito"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div id="alert-error" class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4 text-sm font-medium shadow-sm">
+            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- ── Tarjetas de equipos ── -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        @foreach (var eq in Model.Elementos)
+        {
+            string foto = eq.FotoArchivo != null && eq.FotoArchivo.Length > 0
+                ? APHelpers.ToBase64(eq.FotoArchivo)
+                : string.Empty;
+
+            bool tieneIngresoActivo = eq.RegistrosMovimientos.Any(m => m.FechaSalida == null);
+
+            <div id="card-equipo-@eq.IdElemento"
+                 class="group bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
+
+                <!-- Foto del equipo -->
+                <div class="relative h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
+                    @if (!string.IsNullOrEmpty(foto))
+                    {
+                        <img src="@foto" alt="@eq.TipoElemento"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                    }
+                    else
+                    {
+                        <div class="flex flex-col items-center gap-2 text-slate-400">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-xs font-medium">Sin foto</span>
+                        </div>
+                    }
+
+                    <!-- Badge de estado -->
+                    @if (tieneIngresoActivo)
+                    {
+                        <span class="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md">
+                            <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                            INGRESADO
+                        </span>
+                    }
+                </div>
+
+                <!-- Datos del equipo -->
+                <div class="p-5">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base leading-tight">@eq.TipoElemento</h3>
+                            <p class="text-sm text-slate-500 mt-0.5">@(eq.IdMarcaNavigation?.NombreMarca ?? "Sin marca")</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2 mb-4">
+                        <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                        </svg>
+                        <span class="text-xs font-mono text-slate-600">@(string.IsNullOrEmpty(eq.Serial) ? "Sin serial registrado" : eq.Serial)</span>
+                    </div>
+
+                    <!-- Botón eliminar -->
+                    @if (tieneIngresoActivo)
+                    {
+                        <button disabled title="No puedes eliminar un equipo mientras esté ingresado."
+                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-slate-400 bg-slate-100 cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Equipo actualmente ingresado
+                        </button>
+                    }
+                    else
+                    {
+                        <button onclick="confirmarEliminar(@eq.IdElemento, '@eq.TipoElemento')"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-600 hover:text-white transition-all duration-200 group/btn">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Eliminar equipo
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Tarjeta "Agregar nuevo" -->
+        @if (puedeAgregar)
+        {
+            <a href="@Url.Action("RegistrarEquipo", "MiPanel")"
+               class="group flex flex-col items-center justify-center h-full min-h-[280px] bg-white border-2 border-dashed border-slate-300 rounded-3xl hover:border-indigo-400 hover:bg-indigo-50/30 transition-all duration-300 cursor-pointer p-8">
+                <div class="w-14 h-14 bg-indigo-100 group-hover:bg-indigo-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
+                    <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </div>
+                <p class="font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">Registrar nuevo equipo</p>
+                <p class="text-sm text-slate-400 mt-1">@cuposRestantes cupo@(cuposRestantes > 1 ? "s" : "") disponible@(cuposRestantes > 1 ? "s" : "")</p>
+            </a>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center min-h-[280px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 opacity-60 cursor-not-allowed">
+                <div class="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center mb-4">
+                    <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <p class="font-semibold text-slate-500">Límite de equipos alcanzado</p>
+                <p class="text-sm text-slate-400 mt-1 text-center">Elimina un equipo para liberar un cupo</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Token anti-falsificación para peticiones AJAX -->
+@Html.AntiForgeryToken()
+
+@section Scripts {
+<script>
+    async function confirmarEliminar(id, nombre) {
+        const result = await Swal.fire({
+            title: '¿Eliminar equipo?',
+            html: `Estás a punto de eliminar <strong>${nombre}</strong> de tu panel. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            iconColor: '#ef4444',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-semibold px-5 py-2.5',
+                cancelButton: 'rounded-xl font-semibold px-5 py-2.5'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const resp = await fetch('/MiPanel/EliminarEquipo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}&__RequestVerificationToken=${encodeURIComponent(token)}`
+        });
+
+        const json = await resp.json();
+        if (json.success) {
+            const card = document.getElementById(`card-equipo-${id}`);
+            card?.remove();
+            await Swal.fire({
+                title: '¡Eliminado!',
+                text: 'El equipo ha sido eliminado correctamente.',
+                icon: 'success',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+            });
+            // Recargar para actualizar el indicador de cupos
+            location.reload();
+        } else {
+            Swal.fire({
+                title: 'No se pudo eliminar',
+                text: json.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+            });
+        }
+    }
+
+    // Auto-ocultar alertas después de 5 segundos
+    setTimeout(() => {
+        ['alert-exito', 'alert-error'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.opacity = '0', el.style.transition = 'opacity 0.5s', setTimeout(() => el.remove(), 500);
+        });
+    }, 5000);
+</script>
+}

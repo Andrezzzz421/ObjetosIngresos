@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword,updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = window.FirebaseConfigServidor;
@@ -63,7 +63,8 @@ async function procesarLogin() {
 
         if (!resSrv.ok) throw new Error("Error al validar sesión local.");
 
-        window.location.replace("/Auth/Perfil");
+        const datosRedir = await resSrv.json();
+        window.location.replace(datosRedir.redirectUrl ?? "/MiPanel");
 
     } catch (error) {
         let mensaje = "Credenciales incorrectas o usuario no vinculado.";
@@ -203,6 +204,8 @@ window.finalizarRegistro = async (documento) => {
         });
 
         if (!resSrv.ok) throw new Error("Error al inicializar la sesión en el servidor.");
+
+        const datosRedir2 = await resSrv.json();
 
         const modal = document.getElementById("modalExito");
         if (modal) {
