@@ -167,7 +167,7 @@ namespace ObjetosIngresos.Controllers
             };
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-            return Ok();
+            return Ok(new { redirectUrl = "/Auth/Perfil" });
         }
 
         [HttpGet]
