@@ -55,9 +55,8 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string identificador, string password) // Reemplaza por tu ViewModel si usas uno
+        public async Task<IActionResult> Login(string identificador, string password) 
         {
-            // 1. Validación básica de campos vacíos
             if (string.IsNullOrEmpty(identificador) || string.IsNullOrEmpty(password))
             {
                 ModelState.AddModelError(string.Empty, "El usuario y la contraseña son obligatorios.");
@@ -67,7 +66,6 @@ namespace ObjetosIngresos.Controllers
 
             try
             {
-                // 2. Intentar buscar al usuario en la base de datos usando tu servicio
                 var usuario = await _authService.BuscarUsuarioPorIdOEmailAsync(identificador);
 
                 if (usuario == null)
@@ -77,23 +75,17 @@ namespace ObjetosIngresos.Controllers
                     return View("~/Views/Usuarios/Login.cshtml");
                 }
 
-                // ... Aquí va tu lógica actual para verificar la contraseña con Firebase ...
-                // ... (por ejemplo: Firebase Auth, creación de la cookie de sesión, etc.) ...
-
-                return RedirectToAction("Index", "Home"); // O a tu vista de inicio
+                return RedirectToAction("Index", "Home"); 
             }
-            // 3. Captura específica para fallos de conexión / Timeout de la base de datos
             catch (Exception ex) when (ex.InnerException is System.TimeoutException ||
                                       ex.Message.Contains("transient failure") ||
                                       ex.Message.Contains("Timeout"))
             {
-                // Añadimos el mensaje amigable al ModelState
                 ModelState.AddModelError(string.Empty, "No se pudo conectar con el servidor en este momento. Por favor, intente más tarde.");
 
-                CargarConfiguracionFirebase(); // Recargamos configuración necesaria para la vista
+                CargarConfiguracionFirebase(); 
                 return View("~/Views/Usuarios/Login.cshtml");
             }
-            // 4. Captura cualquier otro error inesperado
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado. Inténtelo de nuevo.");

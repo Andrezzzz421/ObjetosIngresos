@@ -18,8 +18,6 @@
     <form asp-action="Create" asp-controller="Elementos" method="post" enctype="multipart/form-data" class="space-y-8">
         @Html.AntiForgeryToken()
 
-        <div asp-validation-summary="All" class="text-sm text-red-600 font-medium bg-red-50 p-4 rounded-xl border border-red-200"></div>
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-1 space-y-6">
@@ -112,4 +110,14 @@
 
 @section Scripts {
     <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        var errores = ViewData.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+
+        <div id="validation-errors-carrier" data-errors="@Json.Serialize(errores)" class="hidden"></div>
+    }
 }
