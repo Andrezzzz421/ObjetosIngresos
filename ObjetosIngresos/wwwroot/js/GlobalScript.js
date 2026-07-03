@@ -361,7 +361,7 @@ function eliminarRol(id) {
 // ==========================================
 // 6. FORMULARIOS DE ELEMENTOS (CREATE & EDIT)
 // ==========================================
-let globalContadorFilas = 1;
+var globalContadorFilas = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
     const contenedor = document.getElementById('contenedor-detalles');

@@ -1,4 +1,4 @@
-﻿@model ObjetosIngresos.Models.Elemento
+@model ObjetosIngresos.Models.Elemento
 @{
     ViewData["Title"] = "Registrar Elemento";
 }
@@ -74,7 +74,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle">
                                 <div class="md:col-span-4">
                                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle</label>
-                                    <select name="detalles[0].IdTipoDetalle" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                                    <select name="detalles[0].IdTipoDetalle" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
                                         <option value="">-- Seleccione --</option>
                                         @foreach (var tipo in ViewBag.TiposDetalle)
                                         {

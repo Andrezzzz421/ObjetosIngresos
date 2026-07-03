@@ -25,6 +25,7 @@ namespace ObjetosIngresos.Services
                     .Include(e => e.RegistrosMovimientos)
                     .OrderByDescending(e => e.IdElemento)
                     .Take(100)
+                    .AsNoTracking()
                     .ToListAsync();
             }
 
@@ -37,6 +38,7 @@ namespace ObjetosIngresos.Services
                 .Where(e =>
                     (e.IdUsuarioNavigation != null && e.IdUsuarioNavigation.Documento != null && e.IdUsuarioNavigation.Documento.ToLower().Contains(q)) ||
                     (e.Serial != null && e.Serial.ToLower().Contains(q)))
+                .AsNoTracking()
                 .ToListAsync();
         }
          
@@ -98,6 +100,7 @@ namespace ObjetosIngresos.Services
                 .Include(m => m.IdSedeNavigation)
                 .Where(m => m.IdElemento == idElemento)
                 .OrderByDescending(m => m.FechaEntrada)
+                .AsNoTracking()
                 .ToListAsync();
         }
     }

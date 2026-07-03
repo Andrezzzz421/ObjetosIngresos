@@ -57,7 +57,7 @@
         @foreach (var eq in Model.Elementos)
         {
             string foto = eq.FotoArchivo != null && eq.FotoArchivo.Length > 0
-                ? APHelpers.ToBase64(eq.FotoArchivo)
+                ? Url.Action("ObtenerImagen", "Elementos", new { id = eq.IdElemento })
                 : string.Empty;
 
             bool tieneIngresoActivo = eq.RegistrosMovimientos.Any(m => m.FechaSalida == null);
