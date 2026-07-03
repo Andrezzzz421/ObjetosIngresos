@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using ObjetosIngresos.Models;
 using ObjetosIngresos.Services;
 
@@ -16,26 +16,30 @@ namespace ObjetosIngresos.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var elementos = srvElemento.GetAll();
+            var elementos = await srvElemento.GetAllAsync();
             return View("~/Views/Elemento/Index.cshtml", elementos);
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewBag.Marcas = srvCatalogos.GetAllMarcas();
-            ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle(); 
+            ViewBag.Marcas = await srvCatalogos.GetAllMarcasAsync();
+            ViewBag.TiposDetalle = await srvCatalogos.GetAllTiposDetalleAsync(); 
 
             return View("~/Views/Elemento/Create.cshtml");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Elemento nuevoElemento, List<DetalleElemento> detalles, IFormFile? foto)
+        public async Task<IActionResult> Create(Elemento nuevoElemento, List<DetalleElemento> detalles, IFormFile? foto)
         {
-            ModelState.Remove("detalles");
+            var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("detalles")).ToList();
+            foreach (var key in keysToRemove)
+            {
+                ModelState.Remove(key);
+            }
 
             try
             {
@@ -46,7 +50,7 @@ namespace ObjetosIngresos.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    srvElemento.Add(nuevoElemento, detalles, foto);
+                    await srvElemento.AddAsync(nuevoElemento, detalles, foto);
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -55,36 +59,40 @@ namespace ObjetosIngresos.Controllers
                 ModelState.AddModelError("", $"Error en la Base de Datos: {ex.Message} -> {ex.InnerException?.Message}");
             }
 
-            ViewBag.Marcas = srvCatalogos.GetAllMarcas();
-            ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
+            ViewBag.Marcas = await srvCatalogos.GetAllMarcasAsync();
+            ViewBag.TiposDetalle = await srvCatalogos.GetAllTiposDetalleAsync();
             return View("~/Views/Elemento/Create.cshtml", nuevoElemento);
         }
 
         [HttpGet]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var elemento = srvElemento.GetById(id);
+            var elemento = await srvElemento.GetByIdAsync(id);
             if (elemento == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Marcas = srvCatalogos.GetAllMarcas();
-            ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
+            ViewBag.Marcas = await srvCatalogos.GetAllMarcasAsync();
+            ViewBag.TiposDetalle = await srvCatalogos.GetAllTiposDetalleAsync();
             return View("~/Views/Elemento/Edit.cshtml", elemento);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(Elemento elementoActualizado, List<DetalleElemento> detalles, IFormFile? foto)
+        public async Task<IActionResult> Edit(Elemento elementoActualizado, List<DetalleElemento> detalles, IFormFile? foto)
         {
-            ModelState.Remove("detalles");
+            var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("detalles")).ToList();
+            foreach (var key in keysToRemove)
+            {
+                ModelState.Remove(key);
+            }
 
             try
             {
                 if (ModelState.IsValid)
                 {
-                    srvElemento.Update(elementoActualizado, detalles, foto);
+                    await srvElemento.UpdateAsync(elementoActualizado, detalles, foto);
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -93,17 +101,17 @@ namespace ObjetosIngresos.Controllers
                 ModelState.AddModelError("", $"Error al actualizar el registro: {ex.Message} -> {ex.InnerException?.Message}");
             }
 
-            ViewBag.Marcas = srvCatalogos.GetAllMarcas();
-            ViewBag.TiposDetalle = srvCatalogos.GetAllTiposDetalle();
+            ViewBag.Marcas = await srvCatalogos.GetAllMarcasAsync();
+            ViewBag.TiposDetalle = await srvCatalogos.GetAllTiposDetalleAsync();
             return View("~/Views/Elemento/Edit.cshtml", elementoActualizado);
         }
 
         [HttpPost]
-        public IActionResult Delete(int id) 
+        public async Task<IActionResult> Delete(int id) 
         {
             try
             {
-                srvElemento.Delete(id);
+                await srvElemento.DeleteAsync(id);
                 return Json(new { success = true });
             }
             catch (Exception)
@@ -114,6 +122,19 @@ namespace ObjetosIngresos.Controllers
                     message = "No se puede eliminar el equipo. Verifique si está asociado a un registro de movimientos/ingresos activo."
                 });
             }
+        }
+
+        [HttpGet]
+        [Route("Elementos/ObtenerImagen/{id}")]
+        [ResponseCache(Duration = 86400)] // Caché de 24 horas
+        public async Task<IActionResult> ObtenerImagen(int id)
+        {
+            var elemento = await srvElemento.GetByIdAsync(id);
+            if (elemento?.FotoArchivo != null && elemento.FotoArchivo.Length > 0)
+            {
+                return File(elemento.FotoArchivo, "image/jpeg");
+            }
+            return NotFound();
         }
     }
 }

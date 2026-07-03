@@ -48,7 +48,7 @@
                                 <td class="px-6 py-4">
                                     @{
                                         string cadenaFoto = item.FotoArchivo != null && item.FotoArchivo.Length > 0
-                                        ? APHelpers.ToBase64(item.FotoArchivo)
+                                        ? Url.Action("ObtenerImagen", "Elementos", new { id = item.IdElemento })
                                         : string.Empty;
                                     }
 

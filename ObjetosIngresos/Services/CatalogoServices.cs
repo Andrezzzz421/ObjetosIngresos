@@ -1,152 +1,214 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ObjetosIngresos.Models;
 
 namespace ObjetosIngresos.Services
 {
     public class CatalogoServices
     {
-            private readonly SistemaIngresoContext db;
+        private readonly SistemaIngresoContext db;
+        private readonly IMemoryCache _cache;
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
 
-            public CatalogoServices(SistemaIngresoContext db)
-            {
-                this.db = db;
-            }
-            public void AddMarca(Marca m)
-            {
-                db.Marcas.Add(m);
-                db.SaveChanges();
-            }
+        public CatalogoServices(SistemaIngresoContext db, IMemoryCache cache)
+        {
+            this.db = db;
+            this._cache = cache;
+        }
 
-            public void UpdateMarca(Marca m)
-            {
-                db.Marcas.Update(m);
-                db.SaveChanges();
-            }
+        public async Task AddMarcaAsync(Marca m)
+        {
+            db.Marcas.Add(m);
+            await db.SaveChangesAsync();
+            _cache.Remove("MarcasCache");
+        }
 
-            public bool DeleteMarca(int id)
-            {
-                var marca = db.Marcas.Find(id);
-                if (marca == null) return false;
-                try
-                {
-                    db.Marcas.Remove(marca);
-                    db.SaveChanges();
-                    return true;
-                }
-                catch { return false; } 
-            }
+        public async Task UpdateMarcaAsync(Marca m)
+        {
+            db.Marcas.Update(m);
+            await db.SaveChangesAsync();
+            _cache.Remove("MarcasCache");
+        }
 
-            public Marca? GetMarcaById(int id) => db.Marcas.Find(id);
-            public List<Marca> GetAllMarcas() => db.Marcas.ToList();
+        public async Task<bool> DeleteMarcaAsync(int id)
+        {
+            var marca = await db.Marcas.FindAsync(id);
+            if (marca == null) return false;
+            try
+            {
+                db.Marcas.Remove(marca);
+                await db.SaveChangesAsync();
+                _cache.Remove("MarcasCache");
+                return true;
+            }
+            catch { return false; } 
+        }
+
+        public async Task<Marca?> GetMarcaByIdAsync(int id) => await db.Marcas.FindAsync(id);
+
+        public async Task<List<Marca>> GetAllMarcasAsync()
+        {
+            if (!_cache.TryGetValue("MarcasCache", out List<Marca>? marcas))
+            {
+                marcas = await db.Marcas.AsNoTracking().ToListAsync();
+                _cache.Set("MarcasCache", marcas, CacheDuration);
+            }
+            return marcas!;
+        }
 
         // <----------------------------------------------------------------------------->
 
-            public void AddTipoDetalle(TiposDetalle t)
-            {
-                db.TiposDetalles.Add(t);
-                db.SaveChanges();
-            }
+        public async Task AddTipoDetalleAsync(TiposDetalle t)
+        {
+            db.TiposDetalles.Add(t);
+            await db.SaveChangesAsync();
+            _cache.Remove("TiposDetalleCache");
+        }
 
-            public void UpdateTipoDetalle(TiposDetalle t)
-            {
-                db.TiposDetalles.Update(t);
-                db.SaveChanges();
-            }
+        public async Task UpdateTipoDetalleAsync(TiposDetalle t)
+        {
+            db.TiposDetalles.Update(t);
+            await db.SaveChangesAsync();
+            _cache.Remove("TiposDetalleCache");
+        }
 
-            public bool DeleteTipoDetalle(int id)
+        public async Task<bool> DeleteTipoDetalleAsync(int id)
+        {
+            var tipo = await db.TiposDetalles.FindAsync(id);
+            if (tipo == null) return false;
+            try
             {
-                var tipo = db.TiposDetalles.Find(id);
-                if (tipo == null) return false;
-                try
-                {
-                    db.TiposDetalles.Remove(tipo);
-                    db.SaveChanges();
-                    return true;
-                }
-                catch { return false; }
+                db.TiposDetalles.Remove(tipo);
+                await db.SaveChangesAsync();
+                _cache.Remove("TiposDetalleCache");
+                return true;
             }
+            catch { return false; }
+        }
 
-            public TiposDetalle? GetTipoDetalleById(int id) => db.TiposDetalles.Find(id);
-            public List<TiposDetalle> GetAllTiposDetalle() => db.TiposDetalles.ToList();
-            public void AddRegional(Regionale r)
+        public async Task<TiposDetalle?> GetTipoDetalleByIdAsync(int id) => await db.TiposDetalles.FindAsync(id);
+
+        public async Task<List<TiposDetalle>> GetAllTiposDetalleAsync()
+        {
+            if (!_cache.TryGetValue("TiposDetalleCache", out List<TiposDetalle>? tipos))
             {
-                db.Regionales.Add(r);
-                db.SaveChanges();
+                tipos = await db.TiposDetalles.AsNoTracking().ToListAsync();
+                _cache.Set("TiposDetalleCache", tipos, CacheDuration);
             }
+            return tipos!;
+        }
+
+        public async Task AddRegionalAsync(Regionale r)
+        {
+            db.Regionales.Add(r);
+            await db.SaveChangesAsync();
+            _cache.Remove("RegionalesCache");
+        }
 
         // <----------------------------------------------------------------------------->
 
-            public Regionale? GetRegionalById(int id) => db.Regionales.Find(id);
-            public List<Regionale> GetAllRegionales() => db.Regionales.ToList();
+        public async Task<Regionale?> GetRegionalByIdAsync(int id) => await db.Regionales.FindAsync(id);
+
+        public async Task<List<Regionale>> GetAllRegionalesAsync()
+        {
+            if (!_cache.TryGetValue("RegionalesCache", out List<Regionale>? regionales))
+            {
+                regionales = await db.Regionales.AsNoTracking().ToListAsync();
+                _cache.Set("RegionalesCache", regionales, CacheDuration);
+            }
+            return regionales!;
+        }
 
         // <----------------------------------------------------------------------------->
 
-            public void AddCentroFormacion(CentrosFormacion c)
+        public async Task AddCentroFormacionAsync(CentrosFormacion c)
+        {
+            db.CentrosFormacions.Add(c);
+            await db.SaveChangesAsync();
+            _cache.Remove("CentrosCache");
+        }
+
+        public async Task<CentrosFormacion?> GetCentroByIdAsync(int id) => await db.CentrosFormacions.FindAsync(id);
+
+        public async Task<List<CentrosFormacion>> GetAllCentrosAsync()
+        {
+            if (!_cache.TryGetValue("CentrosCache", out List<CentrosFormacion>? centros))
             {
-                db.CentrosFormacions.Add(c);
-                db.SaveChanges();
-            }
-
-
-            public CentrosFormacion? GetCentroById(int id) => db.CentrosFormacions.Find(id);
-
-            public List<CentrosFormacion> GetAllCentros()
-            {
-                return db.CentrosFormacions
+                centros = await db.CentrosFormacions
                     .Include(c => c.IdRegionalNavigation)
-                    .ToList();
+                    .AsNoTracking()
+                    .ToListAsync();
+                _cache.Set("CentrosCache", centros, CacheDuration);
             }
+            return centros!;
+        }
 
         // <----------------------------------------------------------------------------->
 
+        public async Task AddSedeAsync(Sede s)
+        {
+            db.Sedes.Add(s);
+            await db.SaveChangesAsync();
+            _cache.Remove("SedesCache");
+        }
 
-            public void AddSede(Sede s)
+        public async Task UpdateSedeAsync(Sede s)
+        {
+            db.Sedes.Update(s);
+            await db.SaveChangesAsync();
+            _cache.Remove("SedesCache");
+        }
+
+        public async Task<bool> DeleteSedeAsync(int id)
+        {
+            var sede = await db.Sedes.FindAsync(id);
+            if (sede == null) return false;
+            try
             {
-                db.Sedes.Add(s);
-                db.SaveChanges();
+                db.Sedes.Remove(sede);
+                await db.SaveChangesAsync();
+                _cache.Remove("SedesCache");
+                return true;
             }
+            catch { return false; }
+        }
 
-            public void UpdateSede(Sede s)
+        public async Task<Sede?> GetSedeByIdAsync(int id) => await db.Sedes.FindAsync(id);
+
+        public async Task<List<Sede>> GetAllSedesAsync()
+        {
+            if (!_cache.TryGetValue("SedesCache", out List<Sede>? sedes))
             {
-                db.Sedes.Update(s);
-                db.SaveChanges();
-            }
-
-            public bool DeleteSede(int id)
-            {
-                var sede = db.Sedes.Find(id);
-                if (sede == null) return false;
-                try
-                {
-                    db.Sedes.Remove(sede);
-                    db.SaveChanges();
-                    return true;
-                }
-                catch { return false; }
-            }
-
-            public Sede? GetSedeById(int id) => db.Sedes.Find(id);
-
-            public List<Sede> GetAllSedes()
-            {
-                return db.Sedes
+                sedes = await db.Sedes
                     .Include(s => s.IdCentroNavigation)
-                    .ToList();
+                    .AsNoTracking()
+                    .ToListAsync();
+                _cache.Set("SedesCache", sedes, CacheDuration);
             }
+            return sedes!;
+        }
 
         // <----------------------------------------------------------------------------->
 
+        public async Task<List<TiposUsuario>> GetAllTiposUsuarioAsync()
+        {
+            if (!_cache.TryGetValue("TiposUsuarioCache", out List<TiposUsuario>? tipos))
+            {
+                tipos = await db.TiposUsuarios.AsNoTracking().ToListAsync();
+                _cache.Set("TiposUsuarioCache", tipos, CacheDuration);
+            }
+            return tipos!;
+        }
 
-        public List<TiposUsuario> GetAllTiposUsuario() => db.TiposUsuarios.ToList();
+        public async Task<TiposUsuario?> GetTipoUsuarioByIdAsync(int id) => await db.TiposUsuarios.FindAsync(id);
 
-        public TiposUsuario? GetTipoUsuarioById(int id) => db.TiposUsuarios.Find(id);
-
-        public bool CreateTipoUsuario(TiposUsuario nuevoTipo)
+        public async Task<bool> CreateTipoUsuarioAsync(TiposUsuario nuevoTipo)
         {
             try
             {
                 db.TiposUsuarios.Add(nuevoTipo);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
+                _cache.Remove("TiposUsuarioCache");
                 return true;
             }
             catch
@@ -155,16 +217,17 @@ namespace ObjetosIngresos.Services
             }
         }
 
-        public bool UpdateTipoUsuario(TiposUsuario tipoActualizado)
+        public async Task<bool> UpdateTipoUsuarioAsync(TiposUsuario tipoActualizado)
         {
             try
             {
-                var registroExistente = db.TiposUsuarios.Find(tipoActualizado.IdTipoUsuario);
+                var registroExistente = await db.TiposUsuarios.FindAsync(tipoActualizado.IdTipoUsuario);
                 if (registroExistente == null) return false;
 
                 registroExistente.Descripcion = tipoActualizado.Descripcion;
 
-                db.SaveChanges();
+                await db.SaveChangesAsync();
+                _cache.Remove("TiposUsuarioCache");
                 return true;
             }
             catch
@@ -173,15 +236,16 @@ namespace ObjetosIngresos.Services
             }
         }
 
-        public bool DeleteTipoUsuario(int id)
+        public async Task<bool> DeleteTipoUsuarioAsync(int id)
         {
             try
             {
-                var registro = db.TiposUsuarios.Find(id);
+                var registro = await db.TiposUsuarios.FindAsync(id);
                 if (registro == null) return false;
 
                 db.TiposUsuarios.Remove(registro);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
+                _cache.Remove("TiposUsuarioCache");
                 return true;
             }
             catch
@@ -190,5 +254,5 @@ namespace ObjetosIngresos.Services
             }
         }
     }
-    }
+}
 
