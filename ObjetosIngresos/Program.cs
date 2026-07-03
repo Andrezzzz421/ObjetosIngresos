@@ -12,11 +12,12 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🟢 CAMBIO: Reemplazado UseSqlServer por UseNpgsql para conectar a Supabase
 builder.Services.AddDbContext<SistemaIngresoContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("con"), npgsqlOptionsAction: npgsqlOptions =>
-    { 
-    }));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("con"), npgsqlOptionsAction: npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,   
+            maxRetryDelay: TimeSpan.FromSeconds(30), 
+            errorCodesToAdd: null
+ )));
 
 builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<AuthServices>();
