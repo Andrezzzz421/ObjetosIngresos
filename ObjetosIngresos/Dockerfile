@@ -10,8 +10,7 @@ WORKDIR /src
 
 # Copiar el archivo de proyecto y restaurar dependencias
 COPY ["ObjetosIngresos.csproj", "./"]
-RUN dotnet restore "ObjetosIngresos.csproj"
-rporac
+RUN dotnet restore "ObjetosIngresos.csproj" 
 # Copiar todo el código y compilar
 COPY . .
 WORKDIR "/src/."
