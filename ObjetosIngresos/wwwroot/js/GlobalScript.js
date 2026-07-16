@@ -529,24 +529,34 @@ document.addEventListener("DOMContentLoaded", function () {
 // 9. Validaciones
 // ==========================================
 
-
 document.addEventListener("DOMContentLoaded", function () {
-    const camposNumericos = document.querySelectorAll('input[type="number"], .input-solo-numeros');
+    inicializarControlesEstrictos();
+});
 
-    camposNumericos.forEach(function (input) {
-        input.addEventListener("keypress", function (e) {
-            if (e.key < '0' || e.key > '9') {
+function inicializarControlesEstrictos() {
+    document.querySelectorAll('.input-solo-letras').forEach(function (input) {
+        input.addEventListener('keypress', function (e) {
+            const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/;
+            if (!regex.test(e.key)) {
                 e.preventDefault();
             }
         });
 
-        input.addEventListener("paste", function (e) {
-            const clipboardData = e.clipboardData || window.clipboardData;
-            const dataPegada = clipboardData.getData('Text');
-
-            if (!/^\d+$/.test(dataPegada)) {
-                e.preventDefault();
-            }
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
         });
     });
-});
+
+    document.querySelectorAll('.input-solo-numeros').forEach(function (input) {
+        input.addEventListener('keypress', function (e) {
+            const regex = /^[0-9]$/;
+            if (!regex.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+}

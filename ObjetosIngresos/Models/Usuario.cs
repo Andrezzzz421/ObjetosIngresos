@@ -13,11 +13,13 @@ public class Usuario
     public string? Documento { get; set; }
 
     [Required(ErrorMessage = "El nombre es obligatorio.")]
-    [StringLength(100)]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$", ErrorMessage = "Los nombres solo deben contener letras.")]
+    [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
     public string Nombres { get; set; } = null!;
 
     [Required(ErrorMessage = "El apellido es obligatorio.")]
-    [StringLength(100)]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$", ErrorMessage = "Los apellidos solo deben contener letras.")]
+    [StringLength(100, ErrorMessage = "El apellido no puede superar los 100 caracteres.")]
     public string Apellidos { get; set; } = null!;
 
     [Required(ErrorMessage = "El correo es obligatorio.")]
