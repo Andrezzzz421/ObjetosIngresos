@@ -539,11 +539,17 @@ function inicializarControlesEstrictos() {
             const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/;
             if (!regex.test(e.key)) {
                 e.preventDefault();
+                mostrarAdvertencia(input, "Solo se permiten letras en este campo");
             }
         });
 
         input.addEventListener('input', function () {
-            this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+            const valorOriginal = this.value;
+            const valorLimpio = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+            if (valorOriginal !== valorLimpio) {
+                this.value = valorLimpio;
+                mostrarAdvertencia(input, "Se removieron los caracteres no permitidos");
+            }
         });
     });
 
@@ -552,11 +558,68 @@ function inicializarControlesEstrictos() {
             const regex = /^[0-9]$/;
             if (!regex.test(e.key)) {
                 e.preventDefault();
+                mostrarAdvertencia(input, "Solo se permiten números en este campo");
             }
         });
 
         input.addEventListener('input', function () {
-            this.value = this.value.replace(/[^0-9]/g, '');
+            const valorOriginal = this.value;
+            const valorLimpio = this.value.replace(/[^0-9]/g, '');
+            if (valorOriginal !== valorLimpio) {
+                this.value = valorLimpio;
+                mostrarAdvertencia(input, "Se removieron las letras o caracteres especiales");
+            }
         });
     });
+
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            let formularioValido = true;
+
+            form.querySelectorAll('select[required]').forEach(function (select) {
+                if (select.value === "") {
+                    formularioValido = false;
+                    e.preventDefault();
+
+                    mostrarAdvertencia(select, "Debes seleccionar una opción válida");
+                }
+            });
+        });
+    });
+}
+
+function mostrarAdvertencia(input, mensaje) {
+    if (input.parentNode.querySelector('.js-warning-bubble')) return;
+
+    if (!input.parentNode.classList.contains('relative')) {
+        input.parentNode.classList.add('relative');
+    }
+
+    const warning = document.createElement('div');
+    warning.className = "js-warning-bubble absolute z-50 left-1 -bottom-7 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md transition-all duration-300 opacity-0 transform translate-y-[-5px]";
+    warning.innerText = mensaje;
+
+    input.parentNode.appendChild(warning);
+
+    const clasesOriginales = ["border-slate-200", "focus:ring-indigo-500"];
+    const clasesError = ["border-amber-500", "focus:ring-amber-500", "ring-2", "ring-amber-200"];
+
+    input.classList.remove(...clasesOriginales);
+    input.classList.add(...clasesError);
+
+    setTimeout(() => {
+        warning.classList.remove('opacity-0', 'translate-y-[-5px]');
+        warning.classList.add('opacity-100', 'translate-y-0');
+    }, 10);
+
+    setTimeout(() => {
+        warning.classList.remove('opacity-100', 'translate-y-0');
+        warning.classList.add('opacity-0', 'translate-y-[-5px]');
+
+        setTimeout(() => {
+            warning.remove();
+            input.classList.remove(...clasesError);
+            input.classList.add(...clasesOriginales);
+        }, 300);
+    }, 2000);
 }
