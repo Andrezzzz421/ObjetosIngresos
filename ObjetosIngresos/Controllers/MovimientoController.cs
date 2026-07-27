@@ -26,11 +26,11 @@ namespace ObjetosIngresos.Controllers
 
             // Dashboard stats
             ViewBag.TotalEquipos = await _db.Elementos.CountAsync();
-            
+
             var colombiaNow = DateTime.UtcNow.AddHours(-5);
             var todayColombiaStartUtc = colombiaNow.Date.AddHours(5);
             var tomorrowColombiaStartUtc = todayColombiaStartUtc.AddDays(1);
-            
+
             ViewBag.EquiposIngresadosHoy = await _db.RegistrosMovimientos
                 .Where(m => m.FechaEntrada >= todayColombiaStartUtc && m.FechaEntrada < tomorrowColombiaStartUtc)
                 .CountAsync();
@@ -40,41 +40,75 @@ namespace ObjetosIngresos.Controllers
                 .CountAsync();
 
             return View("~/Views/Movimiento/Index.cshtml");
-        } 
+        }
         [HttpGet]
         public async Task<IActionResult> Buscar(string query)
         {
-            var elementos = await _srvMovimiento.BuscarElementosAsync(query ?? "");
+            var q = query?.Trim().ToLower() ?? "";
 
-            var resultado = new List<object>();
-            foreach (var e in elementos)
+            // 1. Preparamos la consulta sobre Elementos sin Include() masivos
+            IQueryable<Elemento> queryBase = _db.Elementos.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(q))
             {
-                var movActivo = await _srvMovimiento.GetMovimientoActivoAsync(e.IdElemento);
-                var fotoBase64 = e.FotoArchivo != null && e.FotoArchivo.Length > 0
-                    ? APHelpers.ToBase64(e.FotoArchivo)
-                    : null;
-
-                resultado.Add(new
-                {
-                    idElemento = e.IdElemento,
-                    tipoElemento = e.TipoElemento,
-                    marca = e.IdMarcaNavigation?.NombreMarca ?? "Sin marca",
-                    serial = e.Serial ?? "N/A",
-                    propietario = e.IdUsuarioNavigation != null
-                        ? $"{e.IdUsuarioNavigation.Nombres} {e.IdUsuarioNavigation.Apellidos}"
-                        : "Desconocido",
-                    documento = e.IdUsuarioNavigation?.Documento ?? "N/A",
-                    foto = fotoBase64,
-                    tieneMovimientoActivo = movActivo != null,
-                    idMovimientoActivo = movActivo?.IdMovimiento,
-                    fechaEntrada = movActivo?.FechaEntrada?.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt"),
-                    sedeEntrada = movActivo?.IdSedeNavigation?.NombreSede
-                });
+                queryBase = queryBase.Where(e =>
+                    (e.IdUsuarioNavigation != null && e.IdUsuarioNavigation.Documento != null && e.IdUsuarioNavigation.Documento.ToLower().Contains(q)) ||
+                    (e.Serial != null && e.Serial.ToLower().Contains(q)));
+            }
+            else
+            {
+                // Limitar a los últimos 30 en lugar de 100 para la carga inicial
+                queryBase = queryBase.OrderByDescending(e => e.IdElemento).Take(30);
             }
 
-            return Json(new { success = true, data = resultado });
-        } 
+            // 2. Proyección directa a SQL: La BD solo devolverá los campos estrictamente necesarios
+            var elementosProyectados = await queryBase.Select(e => new
+            {
+                idElemento = e.IdElemento,
+                tipoElemento = e.TipoElemento,
+                marca = e.IdMarcaNavigation != null ? e.IdMarcaNavigation.NombreMarca : "Sin marca",
+                serial = e.Serial ?? "N/A",
+                propietario = e.IdUsuarioNavigation != null
+                    ? e.IdUsuarioNavigation.Nombres + " " + e.IdUsuarioNavigation.Apellidos
+                    : "Desconocido",
+                documento = e.IdUsuarioNavigation != null ? e.IdUsuarioNavigation.Documento : "N/A",
 
+                // Verificamos si tiene foto sin traer los bytes completos
+                tieneFoto = e.FotoArchivo != null,
+
+                // Traemos SOLO el movimiento activo (el que no tiene fecha de salida)
+                movActivo = e.RegistrosMovimientos
+                    .Where(m => m.FechaSalida == null)
+                    .OrderByDescending(m => m.FechaEntrada)
+                    .Select(m => new
+                    {
+                        m.IdMovimiento,
+                        m.FechaEntrada,
+                        NombreSede = m.IdSedeNavigation != null ? m.IdSedeNavigation.NombreSede : "N/A"
+                    })
+                    .FirstOrDefault()
+            }).ToListAsync();
+
+            // 3. Mapeo final rápido en memoria
+            var resultado = elementosProyectados.Select(e => new
+            {
+                e.idElemento,
+                e.tipoElemento,
+                e.marca,
+                e.serial,
+                e.propietario,
+                e.documento,
+                foto = e.tieneFoto ? $"/Movimiento/GetFoto?id={e.idElemento}" : null,
+                tieneMovimientoActivo = e.movActivo != null,
+                idMovimientoActivo = e.movActivo?.IdMovimiento,
+                fechaEntrada = e.movActivo?.FechaEntrada != null
+                    ? e.movActivo.FechaEntrada.Value.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+                    : null,
+                sedeEntrada = e.movActivo?.NombreSede
+            });
+
+            return Json(new { success = true, data = resultado });
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CheckIn([FromForm] int idElemento, [FromForm] int idSede)
@@ -94,9 +128,10 @@ namespace ObjetosIngresos.Controllers
                     success = true,
                     message = "✅ Entrada registrada correctamente.",
                     idMovimiento = movimiento.IdMovimiento,
-                    fechaEntrada = fechaFormateada 
+                    fechaEntrada = fechaFormateada
                 });
             }
+
             catch (InvalidOperationException ex)
             {
                 return Json(new { success = false, message = ex.Message });
@@ -105,7 +140,7 @@ namespace ObjetosIngresos.Controllers
             {
                 return Json(new { success = false, message = "Error al registrar la entrada. Intente de nuevo." });
             }
-        } 
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -154,6 +189,27 @@ namespace ObjetosIngresos.Controllers
             });
 
             return Json(new { success = true, data = resultado });
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // GET /Movimiento/GetFoto?id=x  — Devuelve la imagen como archivo
+        // ─────────────────────────────────────────────────────────────────────
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFoto(int id)
+        {
+            var fotoBytes = await _db.Elementos
+                .Where(e => e.IdElemento == id)
+                .Select(e => e.FotoArchivo)
+                .FirstOrDefaultAsync();
+
+            if (fotoBytes == null || fotoBytes.Length == 0)
+            {
+                return NotFound();
+            }
+
+            return File(fotoBytes, "image/jpeg");
         }
     }
 }
