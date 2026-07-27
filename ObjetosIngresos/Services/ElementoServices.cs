@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
 
@@ -13,42 +13,42 @@ namespace ObjetosIngresos.Services
             this.db = db;
         }
 
-        public void Add(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
+        public async Task AddAsync(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
         {
-            using var transaction = db.Database.BeginTransaction();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
                 if (archivoImagen != null)
                     obj.FotoArchivo = APHelpers.ToBytes(archivoImagen);
 
                 db.Elementos.Add(obj);
-                db.SaveChanges(); 
+                await db.SaveChangesAsync(); 
 
                 if (detalles != null && detalles.Any())
                 {
-                    foreach (var detalle in detalles)
+                    foreach (var detalle in detalles.Where(d => d.IdTipoDetalle > 0))
                     {
                         detalle.IdElemento = obj.IdElemento; 
                         db.DetalleElementos.Add(detalle);
                     }
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                 }
 
-                transaction.Commit();
+                await transaction.CommitAsync();
             }
             catch (Exception)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
                 throw; 
             }
         }
 
-        public void Update(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
+        public async Task UpdateAsync(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
         {
-            using var transaction = db.Database.BeginTransaction();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var elementoExistente = db.Elementos.Find(obj.IdElemento);
+                var elementoExistente = await db.Elementos.FindAsync(obj.IdElemento);
                 if (elementoExistente == null) throw new Exception("El equipo no existe.");
 
                 elementoExistente.TipoElemento = obj.TipoElemento;
@@ -60,7 +60,7 @@ namespace ObjetosIngresos.Services
                     elementoExistente.FotoArchivo = APHelpers.ToBytes(archivoImagen);
                 }
 
-                var detallesAnteriores = db.DetalleElementos.Where(d => d.IdElemento == obj.IdElemento).ToList();
+                var detallesAnteriores = await db.DetalleElementos.Where(d => d.IdElemento == obj.IdElemento).ToListAsync();
                 if (detallesAnteriores.Any())
                 {
                     db.DetalleElementos.RemoveRange(detallesAnteriores);
@@ -68,62 +68,67 @@ namespace ObjetosIngresos.Services
 
                 if (detalles != null && detalles.Any())
                 {
-                    foreach (var det in detalles)
+                    foreach (var det in detalles.Where(d => d.IdTipoDetalle > 0))
                     {
                         det.IdElemento = obj.IdElemento; 
                         det.IdDetalle = 0;               
                         db.DetalleElementos.Add(det);
                     }
                 }
-                db.SaveChanges();
-                transaction.Commit();
+                await db.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
                 throw;
             }
         }
-        public void Delete(int id)
+
+        public async Task DeleteAsync(int id)
         {
-            using var transaction = db.Database.BeginTransaction();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var obj = db.Elementos.Find(id);
+                var obj = await db.Elementos.FindAsync(id);
                 if (obj != null)
                 {
-                   var detalles = db.DetalleElementos.Where(d => d.IdElemento == id);
+                   var detalles = await db.DetalleElementos.Where(d => d.IdElemento == id).ToListAsync();
                     db.DetalleElementos.RemoveRange(detalles);
 
                     db.Elementos.Remove(obj);
-                    db.SaveChanges();
-                    transaction.Commit();
+                    await db.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
             }
             catch (Exception)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
                 throw;
             }
         }
-       public Elemento? GetById(int id)
+
+        public async Task<Elemento?> GetByIdAsync(int id)
         {
-            return db.Elementos
+            return await db.Elementos
                 .Include(x => x.IdMarcaNavigation)
                 .Include(x => x.IdUsuarioNavigation)
                 .Include(x => x.DetalleElementos)
                     .ThenInclude(d => d.IdTipoDetalleNavigation)
-                .FirstOrDefault(x => x.IdElemento == id);
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(x => x.IdElemento == id);
         }
 
-        public IEnumerable<Elemento?>? GetAll()
+        public async Task<IEnumerable<Elemento>> GetAllAsync()
         {
-            return db.Elementos
+            return await db.Elementos
                 .Include(x => x.IdMarcaNavigation)
                 .Include(x => x.IdUsuarioNavigation)
                 .Include(x => x.DetalleElementos)
                     .ThenInclude(d => d.IdTipoDetalleNavigation)
-                .ToList();
+                .AsNoTracking()
+                .AsSplitQuery()
+                .ToListAsync();
         }
     }
 }

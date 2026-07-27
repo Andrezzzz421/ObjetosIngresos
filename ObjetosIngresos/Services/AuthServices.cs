@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
 using System.Net;
@@ -80,7 +80,7 @@ namespace ObjetosIngresos.Services
 
             string codigoGenerado = new Random().Next(100000, 999999).ToString();
             usuario.codigo_recuperacion = codigoGenerado;
-            usuario.codigo_expiracion = DateTime.Now.AddMinutes(15);
+            usuario.codigo_expiracion = DateTime.UtcNow.AddMinutes(15);
             await _db.SaveChangesAsync();
 
             var host = _config["SmtpConfig:Host"];
@@ -104,7 +104,7 @@ namespace ObjetosIngresos.Services
         
                 <p style='color: #9ca3af; font-size: 12px; margin-top: 25px;'>Este código expirará en 15 minutos. Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
                 <hr style='border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;'>
-                <p style='color: #6b7280; font-size: 12px; margin: 0;'>&copy; {DateTime.Now.Year} - Sistema de Gestión de Ingresos</p>
+                <p style='color: #6b7280; font-size: 12px; margin: 0;'>&copy; {DateTime.UtcNow.Year} - Sistema de Gestión de Ingresos</p>
             </div>";
 
             using var client = new SmtpClient(host, port);
@@ -126,7 +126,7 @@ namespace ObjetosIngresos.Services
         public async Task<bool> ValidarCodigoRecuperacionAsync(string email, string codigo)
         {
             var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.Correo == email && u.codigo_recuperacion == codigo);
-            if (usuario == null || usuario.codigo_expiracion < DateTime.Now)
+            if (usuario == null || usuario.codigo_expiracion < DateTime.UtcNow)
             {
                 return false;
             }

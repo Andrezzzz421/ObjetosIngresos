@@ -89,7 +89,7 @@
                                         @(item.IdSedePrincipalNavigation?.NombreSede ?? "Sin Sede")
                                     </span>
                                     <span class="text-xs font-bold text-indigo-500 uppercase tracking-tighter">
-                                        @(item.IdTipoUsuarioNavigation?.Descripcion ?? "Sin Rol")
+                                        @(item.IdTipoUsuarioNavigation?.Descripcion ?? "Desconocido")
                                     </span>
                                 </div>
                             </td>
@@ -158,7 +158,7 @@
                         fila.style.display = 'none';
                     }
                 });
-
+                    
                 // Mostrar/ocultar mensaje de "no hay resultados"
                 if (visibles === 0 && valorBusqueda !== '') {
                     sinResultados.classList.remove('hidden');

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,34 +31,34 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE MARCAS
         // =================================================================
         [HttpGet]
-        public IActionResult Marcas()
+        public async Task<IActionResult> Marcas()
         {
-            var marcas = srv.GetAllMarcas();
+            var marcas = await srv.GetAllMarcasAsync();
             return View("~/Views/Catalogos/Marcas.cshtml", marcas);
         }
 
         [HttpPost]
-        public IActionResult CreateMarca([FromForm] Marca model)
+        public async Task<IActionResult> CreateMarca([FromForm] Marca model)
         {
             if (string.IsNullOrEmpty(model.NombreMarca)) return BadRequest("El nombre de la marca es requerido.");
 
-            srv.AddMarca(model);
+            await srv.AddMarcaAsync(model);
             return RedirectToAction(nameof(Marcas));
         }
 
         [HttpPost]
-        public IActionResult EditMarca([FromForm] Marca model)
+        public async Task<IActionResult> EditMarca([FromForm] Marca model)
         {
             if (!ModelState.IsValid) return BadRequest("Datos inválidos.");
 
-            srv.UpdateMarca(model);
+            await srv.UpdateMarcaAsync(model);
             return RedirectToAction(nameof(Marcas));
         }
 
         [HttpPost]
-        public IActionResult DeleteMarca(int id)
+        public async Task<IActionResult> DeleteMarca(int id)
         {
-            bool eliminado = srv.DeleteMarca(id);
+            bool eliminado = await srv.DeleteMarcaAsync(id);
             if (!eliminado)
             {
                 return Json(new { success = false, message = "No se puede eliminar la marca porque está asociada a elementos del sistema." });
@@ -70,34 +70,34 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE TIPOS DETALLE (Periféricos)
         // =================================================================
         [HttpGet]
-        public IActionResult TiposDetalle()
+        public async Task<IActionResult> TiposDetalle()
         {
-            var tipos = srv.GetAllTiposDetalle();
+            var tipos = await srv.GetAllTiposDetalleAsync();
             return View("~/Views/Catalogos/TiposDetalle.cshtml", tipos);
         }
 
         [HttpPost]
-        public IActionResult CreateTipoDetalle([FromForm] TiposDetalle model)
+        public async Task<IActionResult> CreateTipoDetalle([FromForm] TiposDetalle model)
         {
             if (string.IsNullOrEmpty(model.Nombre)) return BadRequest("El nombre es requerido.");
 
-            srv.AddTipoDetalle(model);
+            await srv.AddTipoDetalleAsync(model);
             return RedirectToAction(nameof(TiposDetalle));
         }
 
         [HttpPost]
-        public IActionResult EditTipoDetalle([FromForm] TiposDetalle model)
+        public async Task<IActionResult> EditTipoDetalle([FromForm] TiposDetalle model)
         {
             if (!ModelState.IsValid) return BadRequest("Datos inválidos.");
 
-            srv.UpdateTipoDetalle(model);
+            await srv.UpdateTipoDetalleAsync(model);
             return RedirectToAction(nameof(TiposDetalle));
         }
 
         [HttpPost]
-        public IActionResult DeleteTipoDetalle(int id)
+        public async Task<IActionResult> DeleteTipoDetalle(int id)
         {
-            bool eliminado = srv.DeleteTipoDetalle(id);
+            bool eliminado = await srv.DeleteTipoDetalleAsync(id);
             if (!eliminado)
             {
                 return Json(new { success = false, message = "No se puede eliminar este tipo de detalle; se encuentra en uso activo." });
@@ -109,18 +109,18 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE REGIONALES
         // =================================================================
         [HttpGet]
-        public IActionResult Regionales()
+        public async Task<IActionResult> Regionales()
         {
-            var regionales = srv.GetAllRegionales();
+            var regionales = await srv.GetAllRegionalesAsync();
             return View("~/Views/Catalogos/Regionales.cshtml", regionales);
         }
 
         [HttpPost]
-        public IActionResult CreateRegional([FromForm] Regionale model)
+        public async Task<IActionResult> CreateRegional([FromForm] Regionale model)
         {
             if (string.IsNullOrEmpty(model.NombreRegional)) return BadRequest("El nombre de la regional es requerido.");
 
-            srv.AddRegional(model);
+            await srv.AddRegionalAsync(model);
             return RedirectToAction(nameof(Regionales));
         }
 
@@ -128,19 +128,19 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE CENTROS DE FORMACIÓN
         // =================================================================
         [HttpGet]
-        public IActionResult CentrosFormacion()
+        public async Task<IActionResult> CentrosFormacion()
         {
-            var centros = srv.GetAllCentros();
-            ViewBag.Regionales = srv.GetAllRegionales(); 
+            var centros = await srv.GetAllCentrosAsync();
+            ViewBag.Regionales = await srv.GetAllRegionalesAsync(); 
             return View("~/Views/Catalogos/CentrosFormacion.cshtml", centros);
         }
 
         [HttpPost]
-        public IActionResult CreateCentroFormacion([FromForm] CentrosFormacion model)
+        public async Task<IActionResult> CreateCentroFormacion([FromForm] CentrosFormacion model)
         {
             if (!ModelState.IsValid) return BadRequest("Información del centro de formación incompleta.");
 
-            srv.AddCentroFormacion(model);
+            await srv.AddCentroFormacionAsync(model);
             return RedirectToAction(nameof(CentrosFormacion));
         }
 
@@ -148,35 +148,35 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE SEDES
         // =================================================================
         [HttpGet]
-        public IActionResult Sedes()
+        public async Task<IActionResult> Sedes()
         {
-            var sedes = srv.GetAllSedes();
-            ViewBag.CentrosFormacion = srv.GetAllCentros(); // Para vincular la sede a un Centro
+            var sedes = await srv.GetAllSedesAsync();
+            ViewBag.CentrosFormacion = await srv.GetAllCentrosAsync(); // Para vincular la sede a un Centro
             return View("~/Views/Catalogos/Sedes.cshtml", sedes);
         }
 
         [HttpPost]
-        public IActionResult CreateSede([FromForm] Sede model)
+        public async Task<IActionResult> CreateSede([FromForm] Sede model)
         {
             if (!ModelState.IsValid) return BadRequest("Datos de la sede inválidos.");
 
-            srv.AddSede(model);
+            await srv.AddSedeAsync(model);
             return RedirectToAction(nameof(Sedes));
         }
 
         [HttpPost]
-        public IActionResult EditSede([FromForm] Sede model)
+        public async Task<IActionResult> EditSede([FromForm] Sede model)
         {
             if (!ModelState.IsValid) return BadRequest("Error al actualizar la sede.");
 
-            srv.UpdateSede(model);
+            await srv.UpdateSedeAsync(model);
             return RedirectToAction(nameof(Sedes));
         }
 
         [HttpPost]
-        public IActionResult DeleteSede(int id)
+        public async Task<IActionResult> DeleteSede(int id)
         {
-            bool eliminado = srv.DeleteSede(id);
+            bool eliminado = await srv.DeleteSedeAsync(id);
             if (!eliminado)
             {
                 return Json(new { success = false, message = "La sede no puede ser eliminada porque contiene usuarios o registros de movimiento vinculados." });
@@ -189,14 +189,14 @@ namespace ObjetosIngresos.Controllers
         // =================================================================
 
         [HttpGet]
-        public IActionResult TiposUsuario()
+        public async Task<IActionResult> TiposUsuario()
         {
-            var roles = srv.GetAllTiposUsuario();
+            var roles = await srv.GetAllTiposUsuarioAsync();
             return View("~/Views/Catalogos/TiposUsuario.cshtml", roles);
         }
 
         [HttpPost]
-        public IActionResult CreateTipoUsuario(string NombreTipo)
+        public async Task<IActionResult> CreateTipoUsuario(string NombreTipo)
         {
             if (string.IsNullOrWhiteSpace(NombreTipo))
             {
@@ -204,13 +204,13 @@ namespace ObjetosIngresos.Controllers
             }
 
             var nuevoRol = new TiposUsuario { Descripcion = NombreTipo.Trim() };
-            srv.CreateTipoUsuario(nuevoRol);
+            await srv.CreateTipoUsuarioAsync(nuevoRol);
 
             return RedirectToAction("TiposUsuario");
         }
 
         [HttpPost]
-        public IActionResult UpdateTipoUsuario(int IdTipoUsuario, string NombreTipo)
+        public async Task<IActionResult> UpdateTipoUsuario(int IdTipoUsuario, string NombreTipo)
         {
             if (string.IsNullOrWhiteSpace(NombreTipo))
             {
@@ -223,7 +223,7 @@ namespace ObjetosIngresos.Controllers
                 Descripcion = NombreTipo.Trim()
             };
 
-            bool resultado = srv.UpdateTipoUsuario(rol);
+            bool resultado = await srv.UpdateTipoUsuarioAsync(rol);
             if (resultado)
             {
                 return Json(new { success = true });
@@ -233,9 +233,9 @@ namespace ObjetosIngresos.Controllers
         }
 
         [HttpPost]
-        public IActionResult DeleteTipoUsuario(int id)
+        public async Task<IActionResult> DeleteTipoUsuario(int id)
         {
-            bool resultado = srv.DeleteTipoUsuario(id);
+            bool resultado = await srv.DeleteTipoUsuarioAsync(id);
             if (resultado)
             {
                 return Json(new { success = true });
