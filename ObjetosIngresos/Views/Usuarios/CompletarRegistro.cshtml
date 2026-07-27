@@ -38,9 +38,13 @@
                     </label>
                 </div>
 
-                <div class="flex items-center p-3 text-xs text-blue-800 bg-blue-50 rounded-xl border border-blue-100">
-                    <i class="bi bi-info-circle-fill text-sm mr-2 flex-shrink-0"></i>
-                    <span>Usa al menos 6 caracteres.</span>
+                <div class="flex flex-col p-3 text-xs text-blue-800 bg-blue-50 rounded-xl border border-blue-100 space-y-1">
+                    <div class="flex items-center"><i class="bi bi-info-circle-fill text-sm mr-2 flex-shrink-0"></i><span class="font-bold">Requisitos de seguridad:</span></div>
+                    <ul class="list-disc list-inside ml-5">
+                        <li id="req-capital" class="text-red-500 transition-colors">La primera letra debe ser Mayúscula</li>
+                        <li id="req-numbers" class="text-red-500 transition-colors">Debe contener mínimo 6 números</li>
+                        <li id="req-length" class="text-red-500 transition-colors">Mínimo 8 caracteres en total</li>
+                    </ul>
                 </div>
 
                 <button type="button" id="btnActualizar" onclick="despacharRegistro()"
@@ -73,8 +77,41 @@
 @section Scripts {
     <script>
         window.FirebaseConfigServidor = @Html.Raw(Json.Serialize(ViewBag.FirebaseConfig));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('newPass');
+            const reqCapital = document.getElementById('req-capital');
+            const reqNumbers = document.getElementById('req-numbers');
+            const reqLength = document.getElementById('req-length');
+
+            if(passwordInput) {
+                passwordInput.addEventListener('input', () => {
+                    const val = passwordInput.value;
+                    
+                    const startsWithUpper = /^[A-Z]/.test(val);
+                    updateRule(reqCapital, startsWithUpper);
+
+                    const digitCount = (val.match(/\d/g) || []).length;
+                    const hasSixDigits = digitCount >= 6;
+                    updateRule(reqNumbers, hasSixDigits);
+
+                    const isLongEnough = val.length >= 8;
+                    updateRule(reqLength, isLongEnough);
+                });
+            }
+
+            function updateRule(element, isValid) {
+                if (!element) return;
+                if (isValid) {
+                    element.classList.remove('text-red-500');
+                    element.classList.add('text-green-600');
+                } else {
+                    element.classList.remove('text-green-600');
+                    element.classList.add('text-red-500');
+                }
+            }
+        });
     </script>
 
     <script type="module" src="~/js/auth-login-v2.js?v=@DateTime.Now.Ticks"></script>
-
 }

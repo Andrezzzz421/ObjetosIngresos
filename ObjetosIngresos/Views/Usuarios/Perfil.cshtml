@@ -5,33 +5,50 @@
 }
 
 <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Panel del Perfil Principal -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
-        <div class="flex flex-col md:flex-row items-center gap-6">
-            <div class="relative">
-                <div class="w-24 h-24 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-200 ring-4 ring-white">
-                    @(string.IsNullOrEmpty(Model?.Nombres) ? "U" : Model.Nombres.Substring(0, 1))
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+
+            <!-- Datos del Usuario -->
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <div class="relative">
+                    <div class="w-24 h-24 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-200 ring-4 ring-white">
+                        @(string.IsNullOrEmpty(Model?.Nombres) ? "U" : Model.Nombres.Substring(0, 1))
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
                 </div>
-                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+
+                <div class="text-center md:text-left flex-grow">
+                    <h2 class="text-3xl font-bold text-slate-800">
+                        @(Model?.Nombres ?? "Usuario") @(Model?.Apellidos ?? "")
+                    </h2>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            @Model.IdTipoUsuarioNavigation?.Descripcion
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-50 text-slate-600 border border-slate-100">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            @Model.IdSedePrincipalNavigation?.NombreSede
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            <div class="text-center md:text-left flex-grow">
-                <h2 class="text-3xl font-bold text-slate-800">
-                    @(Model?.Nombres ?? "Usuario") @(Model?.Apellidos ?? "")
-                </h2>
-                <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
-                        @Model.IdTipoUsuarioNavigation?.Descripcion
-                    </span>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-50 text-slate-600 border border-slate-100">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        @Model.IdSedePrincipalNavigation?.NombreSede
-                    </span>
-                </div>
+            <!-- Botón de Cambio de Contraseña -->
+            <div class="w-full md:w-auto">
+                <a asp-controller="Auth" asp-action="NuevaPassword" asp-route-email="@Model.Correo"
+                   class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold rounded-2xl shadow-lg shadow-slate-200 hover:shadow-indigo-100 transition-all group">
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <span>Cambiar Contraseña</span>
+                </a>
             </div>
 
         </div>
     </div>
 
+    <!-- Información Detallada -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Información Detallada</h3>
@@ -65,6 +82,7 @@
         </table>
     </div>
 
+    <!-- Volver -->
     <div class="mt-8 text-center">
         <a asp-controller="Home" asp-action="Index" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors group decoration-none">
             <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,6 +92,7 @@
         </a>
     </div>
 </div>
+
 <div id="toastError" class="fixed bottom-5 right-5 z-[110] hidden transform transition-all duration-300 translate-y-10 opacity-0">
     <div class="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 max-w-sm">
         <div class="bg-red-500 p-2 rounded-lg">

@@ -176,8 +176,12 @@ window.finalizarRegistro = async (documento) => {
     pass1.classList.remove("border-red-500");
     pass2.classList.remove("border-red-500");
 
-    if (p1Value.length < 6) {
-        mostrarErrorRegistro("La contraseña debe tener al menos 6 caracteres.");
+    const startsWithUpper = /^[A-Z]/.test(p1Value);
+    const digitCount = (p1Value.match(/\d/g) || []).length;
+    const isLongEnough = p1Value.length >= 8;
+
+    if (!startsWithUpper || digitCount < 6 || !isLongEnough) {
+        mostrarErrorRegistro("La contraseña no cumple con los requisitos de seguridad.");
         pass1.classList.add("border-red-500");
         return;
     }

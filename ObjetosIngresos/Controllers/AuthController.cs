@@ -298,6 +298,12 @@ namespace ObjetosIngresos.Controllers
                 return View("NuevaPassword", model: email);
             }
 
+            if (string.IsNullOrEmpty(password) || password.Length < 8 || !char.IsUpper(password[0]) || password.Count(char.IsDigit) < 6)
+            {
+                ViewBag.Error = "La contraseña no cumple con los requisitos de seguridad.";
+                return View("NuevaPassword", model: email);
+            }
+
             try
             {
                 await _authService.ActualizarPasswordAsync(email, password);
