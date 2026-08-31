@@ -26,6 +26,5 @@
   </ItemGroup>
 	<Target Name="Tailwind" BeforeTargets="Build" Condition="'$(BuildNodeBundles)' != 'false'">
 		<Message Importance="high" Text="Compilando Tailwind CSS..." />
-		<Exec Command="npx @tailwindcss/cli -i wwwroot/css/input.css -o wwwroot/css/output.css" />
 	</Target>
 </Project>
