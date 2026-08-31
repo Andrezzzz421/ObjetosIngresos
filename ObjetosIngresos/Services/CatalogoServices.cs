@@ -132,15 +132,20 @@ namespace ObjetosIngresos.Services
 
         public async Task<List<CentrosFormacion>> GetAllCentrosAsync()
         {
-            if (!_cache.TryGetValue("CentrosCache", out List<CentrosFormacion>? centros))
-            {
-                centros = await db.CentrosFormacions
-                    .Include(c => c.IdRegionalNavigation)
-                    .AsNoTracking()
-                    .ToListAsync();
-                _cache.Set("CentrosCache", centros, CacheDuration);
-            }
-            return centros!;
+            return await db.CentrosFormacions
+                .AsNoTracking()
+                .Select(c => new CentrosFormacion
+                {
+                    IdCentro = c.IdCentro,
+                    NombreCentro = c.NombreCentro,
+                    IdRegional = c.IdRegional,
+                    IdRegionalNavigation = c.IdRegionalNavigation != null ? new Regionale
+                    {
+                        IdRegional = c.IdRegionalNavigation.IdRegional,
+                        NombreRegional = c.IdRegionalNavigation.NombreRegional
+                    } : null
+                })
+                .ToListAsync();
         }
 
         // <----------------------------------------------------------------------------->

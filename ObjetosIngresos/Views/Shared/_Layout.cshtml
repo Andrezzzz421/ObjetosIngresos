@@ -55,7 +55,7 @@
                         </li>
 
                         @* ── Sección de administración: solo para Administrador ── *@
-                        @if (User.IsInRole("Administrador"))
+                        @if (User.IsInRole("Administrador") || User.HasClaim(c => c.Type == System.Security.Claims.ClaimTypes.Role && c.Value == "Administrador"))
                         {
                             <li>
                                 <a asp-controller="Movimiento" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group">

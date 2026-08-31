@@ -23,6 +23,8 @@
             </h2>
 
             <form asp-action="CreateCentroFormacion" asp-controller="Catalogos" method="post" class="space-y-4">
+                @Html.AntiForgeryToken()
+
                 <div>
                     <label for="NombreCentro" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                         Nombre del Centro de Formación
@@ -79,7 +81,7 @@
                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                     <td class="px-6 py-4 text-sm font-semibold text-slate-900">@centro.NombreCentro</td>
                                     <td class="px-6 py-4 text-sm font-medium text-indigo-600">
-                                        @(centro.IdRegionalNavigation?.NombreRegional ?? "No asignada")
+                                        @(centro.IdRegionalNavigation != null ? centro.IdRegionalNavigation.NombreRegional : "No asignada")
                                     </td>
                                 </tr>
                             }

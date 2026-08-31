@@ -128,22 +128,42 @@ namespace ObjetosIngresos.Controllers
         // GESTIÓN DE CENTROS DE FORMACIÓN
         // =================================================================
         [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> CentrosFormacion()
         {
-            var centros = await srv.GetAllCentrosAsync();
-            ViewBag.Regionales = await srv.GetAllRegionalesAsync(); 
-            return View("~/Views/Catalogos/CentrosFormacion.cshtml", centros);
+            try
+            {
+                var centros = await srv.GetAllCentrosAsync();
+                var regionales = await srv.GetAllRegionalesAsync();
+
+                ViewBag.Regionales = regionales ?? new List<Regionale>();
+                return View("~/Views/Catalogos/CentrosFormacion.cshtml", centros ?? new List<CentrosFormacion>());
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Error CentrosFormacion]: {ex.Message}");
+                ViewBag.Regionales = new List<Regionale>();
+                return View("~/Views/Catalogos/CentrosFormacion.cshtml", new List<CentrosFormacion>());
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCentroFormacion([FromForm] CentrosFormacion model)
         {
-            if (!ModelState.IsValid) return BadRequest("Información del centro de formación incompleta.");
+            ModelState.Remove("IdRegionalNavigation");
+            ModelState.Remove("Sedes"); 
+
+            if (!ModelState.IsValid)
+            {
+                var centros = await srv.GetAllCentrosAsync();
+                ViewBag.Regionales = await srv.GetAllRegionalesAsync();
+                return View("~/Views/Catalogos/CentrosFormacion.cshtml", centros);
+            }
 
             await srv.AddCentroFormacionAsync(model);
             return RedirectToAction(nameof(CentrosFormacion));
         }
-
         // =================================================================
         // GESTIÓN DE SEDES
         // =================================================================

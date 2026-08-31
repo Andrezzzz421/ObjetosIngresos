@@ -1,11 +1,12 @@
-﻿using FirebaseAdmin.Auth;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
 using ObjetosIngresos.Services;
+using System;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ObjetosIngresos.Controllers
 {
@@ -21,53 +22,68 @@ namespace ObjetosIngresos.Controllers
             _ser = ser;
         }
 
-        private void CargarCombos(Usuario? u = null)
+        private async Task CargarCombosAsync(Usuario? u = null)
         {
-            ViewBag.Sedes = new SelectList(_db.Sedes, "IdSede", "NombreSede", u?.IdSedePrincipal);
-            ViewBag.TiposUsuarios = new SelectList(_db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
+            var sedes = await _db.Sedes.AsNoTracking().ToListAsync();
+            var tiposUsuarios = await _db.TiposUsuarios.AsNoTracking().ToListAsync();
+
+            ViewBag.Sedes = new SelectList(sedes, "IdSede", "NombreSede", u?.IdSedePrincipal);
+            ViewBag.TiposUsuarios = new SelectList(tiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
 
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
-        public ActionResult Index()
+        public async Task<IActionResult> Index()
         {
             if (User.IsInRole("Aprendiz"))
             {
                 return RedirectToAction("Perfil", "Auth");
             }
 
-            return View(_ser.GetAll());
+            var usuarios = await _ser.GetAll();
+            return View(usuarios);
         }
+
         [Authorize(Roles = "Administrador,Instructor")]
-        public ActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            CargarCombos();
+            await CargarCombosAsync();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador,Instructor")]
-        public ActionResult Create(Usuario us)
+        public async Task<IActionResult> Create(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
 
             if (ModelState.IsValid)
             {
-                _ser.Add(us);
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _ser.Add(us);
+                    TempData["Success"] = "Usuario creado con éxito.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Ocurrió un error al guardar el usuario: " + ex.Message);
+                }
             }
-            CargarCombos(us);
+
+            await CargarCombosAsync(us);
             return View(us);
         }
 
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
-        public ActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var user = _ser.GetById(id);
+            var user = await _ser.GetById(id);
             if (user == null)
             {
-                return Content($"Error: El usuario con ID {id} no existe.");
+                TempData["Error"] = $"El usuario con ID {id} no fue encontrado.";
+                return RedirectToAction(nameof(Index));
             }
 
             if (User.IsInRole("Aprendiz"))
@@ -75,18 +91,18 @@ namespace ObjetosIngresos.Controllers
                 var documentoLogueado = User.FindFirst("Documento")?.Value;
                 if (user.Documento != documentoLogueado)
                 {
-                    return RedirectToAction("AccessDenied", "Auth"); 
+                    return RedirectToAction("AccessDenied", "Auth");
                 }
             }
 
-            CargarCombos(user);
+            await CargarCombosAsync(user);
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
-        public ActionResult Edit(Usuario us)
+        public async Task<IActionResult> Edit(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
@@ -94,44 +110,46 @@ namespace ObjetosIngresos.Controllers
             if (User.IsInRole("Aprendiz"))
             {
                 var documentoLogueado = User.FindFirst("Documento")?.Value;
-                var usuarioOriginal = _ser.GetById(us.IdUsuario);
+                var usuarioOriginal = await _ser.GetById(us.IdUsuario);
 
                 if (usuarioOriginal == null || usuarioOriginal.Documento != documentoLogueado)
                 {
                     return Forbid();
                 }
 
+                // Protegemos campos no editables por un Aprendiz
                 us.IdTipoUsuario = usuarioOriginal.IdTipoUsuario;
                 us.IdSedePrincipal = usuarioOriginal.IdSedePrincipal;
             }
 
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
+                try
                 {
-                    _ser.Update(us);
+                    await _ser.Update(us);
+                    TempData["Success"] = "Datos actualizados correctamente.";
 
                     if (User.IsInRole("Aprendiz"))
                         return RedirectToAction("Perfil", "Auth");
 
                     return RedirectToAction(nameof(Index));
                 }
-                CargarCombos(us);
-                return View(us);
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Error al actualizar el usuario: " + ex.Message);
+                }
             }
-            catch
-            {
-                CargarCombos(us);
-                return View(us);
-            }
+
+            await CargarCombosAsync(us);
+            return View(us);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador")]
-        public ActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            bool eliminado = _ser.Delete(id);
+            bool eliminado = await _ser.Delete(id);
 
             if (eliminado)
             {
