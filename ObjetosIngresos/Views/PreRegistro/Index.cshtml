@@ -1,0 +1,100 @@
+﻿@model ObjetosIngresos.Models.PreRegistroViewModel
+
+@{
+    ViewData["Title"] = "Pre-Registro de Ingreso";
+}
+
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+            <!-- Header -->
+            <div class="bg-indigo-600 px-6 py-4">
+                <h3 class="text-xl font-bold text-white">Pre-Registro de Objeto</h3>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 sm:p-8">
+                <form asp-action="Registrar" method="post" class="space-y-6">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm font-medium"></div>
+
+                    <!-- Sección: Datos Personales -->
+                    <div>
+                        <h5 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                            Datos Personales
+                        </h5>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label asp-for="Documento" class="block text-sm font-medium text-gray-700 mb-1">Número de Documento</label>
+                                <input asp-for="Documento" placeholder="Ej. 123456789" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                                <span asp-validation-for="Documento" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="Correo" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                                <input asp-for="Correo" type="email" placeholder="nombre@correo.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                                <span asp-validation-for="Correo" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="Nombres" class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+                                <input asp-for="Nombres" placeholder="Ingresa tus nombres" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                                <span asp-validation-for="Nombres" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="Apellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+                                <input asp-for="Apellidos" placeholder="Ingresa tus apellidos" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                                <span asp-validation-for="Apellidos" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Datos del Elemento -->
+                    <div>
+                        <h5 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+                            Datos del Elemento
+                        </h5>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label asp-for="TipoElemento" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Elemento</label>
+                                <input asp-for="TipoElemento" placeholder="Ej. Portátil, Herramienta" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                                <span asp-validation-for="TipoElemento" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="IdMarca" class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                                <select asp-for="IdMarca" asp-items="ViewBag.Marcas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white transition duration-150">
+                                    <option value="">Seleccione una marca</option>
+                                </select>
+                                <span asp-validation-for="IdMarca" class="text-xs text-red-500 mt-1 block"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label asp-for="Serial" class="block text-sm font-medium text-gray-700 mb-1">Número de Serial / Serie</label>
+                            <input asp-for="Serial" placeholder="Ingrese el serial del dispositivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" />
+                            <span asp-validation-for="Serial" class="text-xs text-red-500 mt-1 block"></span>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Envío -->
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150">
+                            Registrar Ingreso
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
