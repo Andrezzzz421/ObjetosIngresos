@@ -26,7 +26,7 @@ builder.Services.AddScoped<ElementoServices>();
 builder.Services.AddScoped<MovimientoServices>();
 builder.Services.AddScoped<AdminServices>();
 builder.Services.AddMemoryCache();
-builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
+//builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
 
 var projectId = builder.Configuration["FirebaseConfig:ProjectId"];
 
@@ -90,7 +90,7 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-app.UseResponseCompression();
+//app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
