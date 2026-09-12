@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -28,14 +28,15 @@ namespace ObjetosIngresos.Controllers
         }
 
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
-        public ActionResult Index()
+        public async Task<IActionResult> Index()
         {
             if (User.IsInRole("Aprendiz"))
             {
                 return RedirectToAction("Perfil", "Auth");
             }
 
-            return View(_ser.GetAll());
+            var usuarios = await _ser.GetAllAsync();
+            return View(usuarios);
         }
         [Authorize(Roles = "Administrador,Instructor")]
         public ActionResult Create()

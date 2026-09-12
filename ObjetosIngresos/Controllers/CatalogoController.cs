@@ -118,10 +118,32 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateRegional([FromForm] Regionale model)
         {
-            if (string.IsNullOrEmpty(model.NombreRegional)) return BadRequest("El nombre de la regional es requerido.");
+            ModelState.Remove("CentrosFormacions");
+            if (string.IsNullOrWhiteSpace(model.NombreRegional)) return BadRequest("El nombre de la regional es requerido.");
 
             await srv.AddRegionalAsync(model);
             return RedirectToAction(nameof(Regionales));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditRegional([FromForm] Regionale model)
+        {
+            ModelState.Remove("CentrosFormacions");
+            if (model.IdRegional <= 0 || string.IsNullOrWhiteSpace(model.NombreRegional)) return BadRequest("Datos inválidos.");
+
+            await srv.UpdateRegionalAsync(model);
+            return RedirectToAction(nameof(Regionales));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteRegional(int id)
+        {
+            bool eliminado = await srv.DeleteRegionalAsync(id);
+            if (!eliminado)
+            {
+                return Json(new { success = false, message = "No se puede eliminar la regional porque tiene centros de formación asociados." });
+            }
+            return Json(new { success = true, message = "Regional eliminada correctamente." });
         }
 
         // =================================================================
@@ -138,10 +160,40 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCentroFormacion([FromForm] CentrosFormacion model)
         {
-            if (!ModelState.IsValid) return BadRequest("Información del centro de formación incompleta.");
+            ModelState.Remove("IdRegionalNavigation");
+            ModelState.Remove("Sedes");
+            if (!ModelState.IsValid || model.IdRegional <= 0 || string.IsNullOrWhiteSpace(model.NombreCentro))
+            {
+                return BadRequest("Información del centro de formación incompleta.");
+            }
 
             await srv.AddCentroFormacionAsync(model);
             return RedirectToAction(nameof(CentrosFormacion));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditCentroFormacion([FromForm] CentrosFormacion model)
+        {
+            ModelState.Remove("IdRegionalNavigation");
+            ModelState.Remove("Sedes");
+            if (!ModelState.IsValid || model.IdCentro <= 0 || string.IsNullOrWhiteSpace(model.NombreCentro))
+            {
+                return BadRequest("Información del centro de formación incompleta.");
+            }
+
+            await srv.UpdateCentroFormacionAsync(model);
+            return RedirectToAction(nameof(CentrosFormacion));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteCentroFormacion(int id)
+        {
+            bool eliminado = await srv.DeleteCentroFormacionAsync(id);
+            if (!eliminado)
+            {
+                return Json(new { success = false, message = "No se puede eliminar el centro de formación porque tiene sedes vinculadas." });
+            }
+            return Json(new { success = true, message = "Centro de formación eliminado con éxito." });
         }
 
         // =================================================================
@@ -158,7 +210,15 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSede([FromForm] Sede model)
         {
-            if (!ModelState.IsValid) return BadRequest("Datos de la sede inválidos.");
+            ModelState.Remove("IdCentroNavigation");
+            ModelState.Remove("Elementos");
+            ModelState.Remove("Usuarios");
+            ModelState.Remove("RegistrosMovimientos");
+
+            if (!ModelState.IsValid || model.IdCentro <= 0 || string.IsNullOrWhiteSpace(model.NombreSede))
+            {
+                return BadRequest("Datos de la sede inválidos.");
+            }
 
             await srv.AddSedeAsync(model);
             return RedirectToAction(nameof(Sedes));
@@ -167,7 +227,15 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         public async Task<IActionResult> EditSede([FromForm] Sede model)
         {
-            if (!ModelState.IsValid) return BadRequest("Error al actualizar la sede.");
+            ModelState.Remove("IdCentroNavigation");
+            ModelState.Remove("Elementos");
+            ModelState.Remove("Usuarios");
+            ModelState.Remove("RegistrosMovimientos");
+
+            if (!ModelState.IsValid || model.IdSede <= 0 || string.IsNullOrWhiteSpace(model.NombreSede))
+            {
+                return BadRequest("Error al actualizar la sede.");
+            }
 
             await srv.UpdateSedeAsync(model);
             return RedirectToAction(nameof(Sedes));

@@ -1,0 +1,101 @@
+@model ObjetosIngresos.Models.AdminKpiDto
+
+@* ══════════════════════════════════════════════════════════════════════════════
+   TARJETAS PRINCIPALES DE ESTADÍSTICAS (KPIs)
+══════════════════════════════════════════════════════════════════════════════ *@
+<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+
+    @* Equipos dentro *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-indigo-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="scan-line" class="h-5 w-5"></i>
+            </div>
+            <span class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                Activo
+            </span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.EquiposDentro</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Equipos Dentro</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">En instalaciones ahora</p>
+        </div>
+    </div>
+
+    @* Entradas Hoy *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-emerald-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="log-in" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Hoy</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.IngresoHoy</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Entradas Hoy</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Registros desde 00:00</p>
+        </div>
+    </div>
+
+    @* Salidas Hoy *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-amber-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="log-out" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">@Model.RetornoHoyPct% Retorno</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.SalidaHoy</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Salidas Hoy</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Retiros verificados</p>
+        </div>
+    </div>
+
+    @* Inventario Total *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-sky-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="package" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">Equipos</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.TotalElementos</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Inventario Global</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">@Model.TotalMarcas marcas registradas</p>
+        </div>
+    </div>
+
+    @* Accesorios Registrados *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-purple-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="paperclip" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">Partes</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.TotalAccesorios</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Accesorios</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Detalles vinculados</p>
+        </div>
+    </div>
+
+    @* Total Usuarios *@
+    <div class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-rose-400 hover:shadow-md transition-all duration-200">
+        <div class="flex items-center justify-between">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600 group-hover:scale-110 transition-transform">
+                <i data-lucide="users" class="h-5 w-5"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">Activos</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-3xl font-extrabold tracking-tight text-slate-900">@Model.TotalUsuarios</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-0.5">Usuarios</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Cuentas en plataforma</p>
+        </div>
+    </div>
+
+</div>

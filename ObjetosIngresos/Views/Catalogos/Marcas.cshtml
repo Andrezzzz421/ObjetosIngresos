@@ -1,4 +1,4 @@
-﻿@model List<ObjetosIngresos.Models.Marca>
+@model List<ObjetosIngresos.Models.Marca>
 @{
     ViewData["Title"] = "Administración de Marcas";
 }
@@ -61,9 +61,12 @@
                             {
                                 <tr id="fila-marca-@marca.IdMarca" class="hover:bg-slate-50/60 transition-colors">
                                     @* <td class="px-6 py-4 text-sm font-mono text-slate-400">#@marca.IdMarca</td> *@
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@marca.NombreMarca</td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarRegistro(@marca.IdMarca)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900" id="nombre-marca-@marca.IdMarca">@marca.NombreMarca</td>
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <button onclick="editarMarca(@marca.IdMarca, '@marca.NombreMarca')" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                            Editar
+                                        </button>
+                                        <button onclick="eliminarRegistro(@marca.IdMarca)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -78,5 +81,57 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        async function editarMarca(id, nombreActual) {
+            if (typeof Swal === 'undefined') {
+                const nuevo = prompt("Nombre de la marca:", nombreActual);
+                if (nuevo && nuevo.trim()) {
+                    enviarEdicionMarca(id, nuevo.trim());
+                }
+                return;
+            }
+
+            const { value: nuevoNombre } = await Swal.fire({
+                title: 'Editar Marca',
+                input: 'text',
+                inputValue: nombreActual,
+                inputLabel: 'Nombre del Fabricante / Marca',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5', cancelButton: 'rounded-xl px-5 py-2.5' },
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'El nombre de la marca no puede estar vacío';
+                    }
+                }
+            });
+
+            if (nuevoNombre && nuevoNombre.trim() !== nombreActual) {
+                enviarEdicionMarca(id, nuevoNombre.trim());
+            }
+        }
+
+        function enviarEdicionMarca(id, nombre) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Catalogos/EditMarca';
+            
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'IdMarca';
+            inputId.value = id;
+            
+            const inputNom = document.createElement('input');
+            inputNom.type = 'hidden';
+            inputNom.name = 'NombreMarca';
+            inputNom.value = nombre;
+            
+            form.appendChild(inputId);
+            form.appendChild(inputNom);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 }

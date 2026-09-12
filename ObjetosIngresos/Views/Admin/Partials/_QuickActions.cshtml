@@ -1,0 +1,87 @@
+@* ══════════════════════════════════════════════════════════════════════════════
+   ACCIONES RÁPIDAS (ACCESO DIRECTO A TODOS LOS MÓDULOS)
+══════════════════════════════════════════════════════════════════════════════ *@
+<div class="rounded-2xl border border-slate-200 bg-white shadow-sm mb-6 overflow-hidden">
+    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <i data-lucide="zap" class="h-4 w-4 text-indigo-500"></i>
+            Módulos y Acciones Rápidas
+        </h2>
+        <span class="text-xs text-slate-400">Acceso expedito a la administración</span>
+    </div>
+    <div class="p-5 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+
+        <a href="@Url.Action("Index","Movimiento")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="scan-line" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Control Ingresos</span>
+            <span class="text-[10px] text-slate-400">Entradas y salidas</span>
+        </a>
+
+        <a href="@Url.Action("Index","Elementos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="package" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Inventario Global</span>
+            <span class="text-[10px] text-slate-400">Equipos y seriales</span>
+        </a>
+
+        <a href="@Url.Action("Index","Usuarios")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-purple-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="users" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Usuarios</span>
+            <span class="text-[10px] text-slate-400">Roles y accesos</span>
+        </a>
+
+        <a href="@Url.Action("Index","Catalogos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="layout-grid" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Catálogos</span>
+            <span class="text-[10px] text-slate-400">Parámetros base</span>
+        </a>
+
+        <a href="@Url.Action("Marcas","Catalogos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-orange-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="tag" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Marcas</span>
+            <span class="text-[10px] text-slate-400">Fabricantes</span>
+        </a>
+
+        <a href="@Url.Action("Sedes","Catalogos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-sky-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="map-pin" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Sedes</span>
+            <span class="text-[10px] text-slate-400">Puntos de control</span>
+        </a>
+
+        <a href="@Url.Action("CentrosFormacion","Catalogos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-fuchsia-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="building-2" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Centros</span>
+            <span class="text-[10px] text-slate-400">Formación SENA</span>
+        </a>
+
+        <a href="@Url.Action("Regionales","Catalogos")"
+           class="group flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-white p-4 hover:-translate-y-0.5 hover:border-rose-400 hover:shadow-md transition-all duration-200">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 group-hover:scale-105 transition-transform">
+                <i data-lucide="globe" class="h-5 w-5"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800 leading-tight">Regionales</span>
+            <span class="text-[10px] text-slate-400">Departamentos</span>
+        </a>
+
+    </div>
+</div>

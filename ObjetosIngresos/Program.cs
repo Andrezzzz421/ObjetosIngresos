@@ -24,6 +24,7 @@ builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<CatalogoServices>();
 builder.Services.AddScoped<ElementoServices>();
 builder.Services.AddScoped<MovimientoServices>();
+builder.Services.AddScoped<AdminServices>();
 builder.Services.AddMemoryCache();
 builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
 
@@ -60,13 +61,29 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var rutaConfig = Path.Combine(Directory.GetCurrentDirectory(), "firebase-admin.json");
+var rutaConfigLocal = Path.Combine(Directory.GetCurrentDirectory(), "Firebase-admin.json");
+var rutaConfigRender = "/etc/secrets/firebase-admin.json"; // Ruta para Secret Files en Render
+
 if (FirebaseApp.DefaultInstance == null)
 {
-    FirebaseApp.Create(new AppOptions()
+    if (File.Exists(rutaConfigLocal))
     {
-        Credential = GoogleCredential.FromFile(rutaConfig)
-    });
+        FirebaseApp.Create(new AppOptions()
+        {
+            Credential = GoogleCredential.FromFile(rutaConfigLocal)
+        });
+    }
+    else if (File.Exists(rutaConfigRender))
+    {
+        FirebaseApp.Create(new AppOptions()
+        {
+            Credential = GoogleCredential.FromFile(rutaConfigRender)
+        });
+    }
+    else
+    {
+        Console.WriteLine("ADVERTENCIA: No se encontró el archivo de credenciales de Firebase.");
+    }
 }
 
 builder.Services.AddControllersWithViews();

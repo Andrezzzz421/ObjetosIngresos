@@ -108,9 +108,34 @@
     </form>
 </div>
 
-@section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+<template id="plantilla-detalle">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl relative group fila-detalle">
+        <div class="md:col-span-4">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tipo de Detalle</label>
+            <select name="detalles[__INDEX__].IdTipoDetalle" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500">
+                <option value="">-- Seleccione --</option>
+                @if (ViewBag.TiposDetalle != null)
+                {
+                    foreach (var tipo in ViewBag.TiposDetalle)
+                    {
+                        <option value="@tipo.IdTipoDetalle">@tipo.Nombre</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="md:col-span-7">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notas / Especificaciones</label>
+            <input type="text" name="detalles[__INDEX__].Nota" placeholder="Ej. Color negro, 65W original, cable desgastado" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div class="md:col-span-1 flex items-end justify-center">
+            <button type="button" onclick="removerFila(this)" class="mb-1 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors opacity-100">
+                &times;
+            </button>
+        </div>
+    </div>
+</template>
 
+@section Scripts {
     @if (!ViewData.ModelState.IsValid)
     {
         var errores = ViewData.ModelState.Values
@@ -118,6 +143,6 @@
             .Select(e => e.ErrorMessage)
             .ToList();
 
-        <div id="validation-errors-carrier" data-errors="@Json.Serialize(errores)" class="hidden"></div>
+        <div id="validation-errors-carrier" data-errors='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errores))' class="hidden"></div>
     }
 }

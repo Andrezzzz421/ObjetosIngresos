@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
@@ -49,9 +49,19 @@ namespace ObjetosIngresos.Services
             return db.Usuarios.Find(id);
         }
 
+        public async Task<List<Usuario>> GetAllAsync()
+        {
+            return await db.Usuarios
+                .AsNoTracking()
+                .Include(u => u.IdTipoUsuarioNavigation)
+                .Include(u => u.IdSedePrincipalNavigation)
+                .ToListAsync();
+        }
+
         public List<Usuario> GetAll()
         {
             return db.Usuarios
+                .AsNoTracking()
                 .Include(u => u.IdTipoUsuarioNavigation)
                 .Include(u => u.IdSedePrincipalNavigation)
                 .ToList();

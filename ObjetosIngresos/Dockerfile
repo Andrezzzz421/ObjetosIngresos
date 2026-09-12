@@ -32,5 +32,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://+:8080
+# Desactivar Server GC para evitar alto consumo de memoria y Error 139 (Segfault) en Render
+ENV DOTNET_gcServer=0
 
 ENTRYPOINT ["dotnet", "ObjetosIngresos.dll"]

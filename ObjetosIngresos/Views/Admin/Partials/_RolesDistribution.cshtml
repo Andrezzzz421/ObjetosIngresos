@@ -1,0 +1,33 @@
+@using ObjetosIngresos.Helpers
+@model List<ObjetosIngresos.Models.AdminRolDto>
+
+@* ══════════════════════════════════════════════════════════════════════════════
+   DISTRIBUCIÓN DE USUARIOS POR ROL
+══════════════════════════════════════════════════════════════════════════════ *@
+<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+        <h3 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <i data-lucide="user-check" class="h-4 w-4 text-purple-600"></i>
+            Usuarios por Rol
+        </h3>
+        <span class="text-xs font-bold text-slate-500">@Model.Sum(r => r.Cantidad) total</span>
+    </div>
+    <div class="space-y-2.5">
+        @if (!Model.Any())
+        {
+            <p class="text-xs text-slate-400 py-2 text-center">Sin datos de roles.</p>
+        }
+        else
+        {
+            @foreach (var ru in Model)
+            {
+                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                    <span class="text-xs font-medium text-slate-700">@ru.Rol</span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full @AdminHelper.GetRolBadgeClass(ru.Rol)">
+                        @ru.Cantidad
+                    </span>
+                </div>
+            }
+        }
+    </div>
+</div>

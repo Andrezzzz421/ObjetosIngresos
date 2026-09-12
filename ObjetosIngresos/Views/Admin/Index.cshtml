@@ -1,0 +1,32 @@
+@model ObjetosIngresos.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Panel Administrativo";
+}
+
+@* 1. Hero Banner principal con estado del sistema *@
+<partial name="Partials/_HeroBanner" model="Model" />
+
+@* 2. Métricas y KPIs globales del sistema *@
+<partial name="Partials/_KpiCards" model="Model.Kpis" />
+
+@* 3. Módulos y acciones de acceso rápido *@
+<partial name="Partials/_QuickActions" />
+
+@* 4. Grid principal de contenido: Tablas y Paneles de Inteligencia *@
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    @* Columna izquierda/central (2/3 de ancho) *@
+    <div class="xl:col-span-2 flex flex-col gap-6">
+        <partial name="Partials/_RecentMovements" model="Model.UltimosMovimientos" />
+        <partial name="Partials/_InventoryDistribution" model="Model.DistribucionEquipos" />
+    </div>
+
+    @* Columna lateral derecha (1/3 de ancho) *@
+    <div class="flex flex-col gap-6">
+        <partial name="Partials/_AuditCard" model="Model.Kpis" />
+        <partial name="Partials/_RolesDistribution" model="Model.RolesUsuarios" />
+        <partial name="Partials/_ActiveSedes" model="Model.SedesActivas" />
+        <partial name="Partials/_RecentUsers" model="Model.UltimosUsuarios" />
+    </div>
+
+</div>

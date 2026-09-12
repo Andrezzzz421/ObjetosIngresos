@@ -1,0 +1,44 @@
+@model List<ObjetosIngresos.Models.AdminDistribucionEquipoDto>
+
+@* ══════════════════════════════════════════════════════════════════════════════
+   DISTRIBUCIÓN DE INVENTARIO POR TIPO DE EQUIPO
+══════════════════════════════════════════════════════════════════════════════ *@
+<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <i data-lucide="pie-chart" class="h-4 w-4 text-indigo-600"></i>
+            Distribución de Inventario (Top Tipos de Equipo)
+        </h3>
+        <a href="@Url.Action("Index","Elementos")" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+            Ver catálogo →
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p class="text-xs text-slate-400 py-4 text-center">No hay equipos registrados en el inventario.</p>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            @foreach (var de in Model)
+            {
+                <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-800 truncate">@de.Tipo</span>
+                        <span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">@de.Cantidad</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                        <span>Porcentaje</span>
+                        <span class="font-medium">@de.Porcentaje%</span>
+                    </div>
+                    <div class="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden"
+                         data-admin-progress="@de.Porcentaje">
+                        <div class="h-full rounded-full bg-indigo-600 transition-[width] duration-700 ease-out"
+                             style="width: 0%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

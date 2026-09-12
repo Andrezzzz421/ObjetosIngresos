@@ -17,10 +17,11 @@
         <p class="text-sm text-slate-600 mt-1">Actualice los datos principales, la imagen o el conjunto de accesorios asignados.</p>
     </div>
 
-    <form asp-action="Edit" asp-controller="Elementos" method="post" enctype="multipart/form-data" class="space-y-8">
+    <form id="form-editar-elemento" asp-action="Edit" asp-controller="Elementos" method="post" enctype="multipart/form-data" class="space-y-8">
         @Html.AntiForgeryToken()
 
         <input type="hidden" asp-for="IdElemento" />
+        <input type="hidden" asp-for="IdUsuario" />
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -151,7 +152,7 @@
 
                     <div class="mt-8 pt-4 border-t border-slate-200 flex justify-end gap-3">
                         <a href="@Url.Action("Index", "Elementos")" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Cancelar</a>
-                        <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
+                        <button type="button" onclick="confirmarEdicionElemento()" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
                             Guardar Cambios
                         </button>
                     </div>
@@ -183,7 +184,6 @@
 </template>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 
     @if (!ViewData.ModelState.IsValid)
     {
@@ -192,6 +192,6 @@
             .Select(e => e.ErrorMessage)
             .ToList();
 
-        <div id="validation-errors-carrier" data-errors="@Json.Serialize(errores)" class="hidden"></div>
+        <div id="validation-errors-carrier" data-errors='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errores))' class="hidden"></div>
     }
 }

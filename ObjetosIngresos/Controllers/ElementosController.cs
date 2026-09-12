@@ -18,7 +18,7 @@ namespace ObjetosIngresos.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var elementos = await srvElemento.GetAllAsync();
+            var elementos = await srvElemento.GetAllOptimizadoAsync();
             return View("~/Views/Elemento/Index.cshtml", elementos);
         }
 
@@ -51,6 +51,7 @@ namespace ObjetosIngresos.Controllers
                 if (ModelState.IsValid)
                 {
                     await srvElemento.AddAsync(nuevoElemento, detalles, foto);
+                    TempData["Success"] = "¡Equipo registrado correctamente en el inventario!";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -82,7 +83,15 @@ namespace ObjetosIngresos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Elemento elementoActualizado, List<DetalleElemento> detalles, IFormFile? foto)
         {
-            var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("detalles")).ToList();
+            var keysToRemove = ModelState.Keys.Where(k =>
+                k.StartsWith("detalles") ||
+                k.Contains("Navigation") ||
+                k == "FotoArchivo" ||
+                k == "IdUsuario" ||
+                k == "RegistrosMovimientos" ||
+                k == "DetalleElementos"
+            ).ToList();
+
             foreach (var key in keysToRemove)
             {
                 ModelState.Remove(key);
@@ -93,6 +102,7 @@ namespace ObjetosIngresos.Controllers
                 if (ModelState.IsValid)
                 {
                     await srvElemento.UpdateAsync(elementoActualizado, detalles, foto);
+                    TempData["Success"] = "¡Equipo actualizado correctamente en el inventario!";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -114,12 +124,20 @@ namespace ObjetosIngresos.Controllers
                 await srvElemento.DeleteAsync(id);
                 return Json(new { success = true });
             }
-            catch (Exception)
+            catch (InvalidOperationException ex)
             {
                 return Json(new
                 {
                     success = false,
-                    message = "No se puede eliminar el equipo. Verifique si está asociado a un registro de movimientos/ingresos activo."
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "No se pudo eliminar el equipo: " + (ex.InnerException?.Message ?? ex.Message)
                 });
             }
         }

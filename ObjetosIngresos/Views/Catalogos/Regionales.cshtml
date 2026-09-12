@@ -1,4 +1,4 @@
-﻿@model List<ObjetosIngresos.Models.Regionale>
+@model List<ObjetosIngresos.Models.Regionale>
 @{
     ViewData["Title"] = "Administración de Regionales";
 }
@@ -61,9 +61,12 @@
                             {
                                 <tr id="fila-regional-@regional.IdRegional" class="hover:bg-slate-50/60 transition-colors">
                                     @* <td class="px-6 py-4 text-sm font-mono text-slate-400">#@regional.IdRegional</td> *@
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@regional.NombreRegional</td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarRegional(@regional.IdRegional)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900" id="nombre-regional-@regional.IdRegional">@regional.NombreRegional</td>
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <button onclick="editarRegional(@regional.IdRegional, '@regional.NombreRegional')" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                            Editar
+                                        </button>
+                                        <button onclick="eliminarRegional(@regional.IdRegional)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -78,5 +81,57 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        async function editarRegional(id, nombreActual) {
+            if (typeof Swal === 'undefined') {
+                const nuevo = prompt("Nombre de la regional:", nombreActual);
+                if (nuevo && nuevo.trim()) {
+                    enviarEdicion(id, nuevo.trim());
+                }
+                return;
+            }
+
+            const { value: nuevoNombre } = await Swal.fire({
+                title: 'Editar Regional',
+                input: 'text',
+                inputValue: nombreActual,
+                inputLabel: 'Nombre de la Regional',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5', cancelButton: 'rounded-xl px-5 py-2.5' },
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'El nombre de la regional no puede estar vacío';
+                    }
+                }
+            });
+
+            if (nuevoNombre && nuevoNombre.trim() !== nombreActual) {
+                enviarEdicion(id, nuevoNombre.trim());
+            }
+        }
+
+        function enviarEdicion(id, nombre) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Catalogos/EditRegional';
+            
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'IdRegional';
+            inputId.value = id;
+            
+            const inputNom = document.createElement('input');
+            inputNom.type = 'hidden';
+            inputNom.name = 'NombreRegional';
+            inputNom.value = nombre;
+            
+            form.appendChild(inputId);
+            form.appendChild(inputNom);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 }
