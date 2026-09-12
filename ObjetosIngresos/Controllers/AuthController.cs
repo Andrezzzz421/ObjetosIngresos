@@ -19,7 +19,7 @@ namespace ObjetosIngresos.Controllers
             _authService = authService;
             _config = config;
         }
-
+        
         private void CargarConfiguracionFirebase()
         {
             ViewBag.FirebaseConfig = new

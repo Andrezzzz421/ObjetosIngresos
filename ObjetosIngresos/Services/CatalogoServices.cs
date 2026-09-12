@@ -105,7 +105,30 @@ namespace ObjetosIngresos.Services
             _cache.Remove("RegionalesCache");
         }
 
-        // <----------------------------------------------------------------------------->
+        public async Task UpdateRegionalAsync(Regionale r)
+        {
+            db.Regionales.Update(r);
+            await db.SaveChangesAsync();
+            _cache.Remove("RegionalesCache");
+        }
+
+        public async Task<bool> DeleteRegionalAsync(int id)
+        {
+            var reg = await db.Regionales.FindAsync(id);
+            if (reg == null) return false;
+
+            bool tieneCentros = await db.CentrosFormacions.AnyAsync(c => c.IdRegional == id);
+            if (tieneCentros) return false;
+
+            try
+            {
+                db.Regionales.Remove(reg);
+                await db.SaveChangesAsync();
+                _cache.Remove("RegionalesCache");
+                return true;
+            }
+            catch { return false; }
+        }
 
         public async Task<Regionale?> GetRegionalByIdAsync(int id) => await db.Regionales.FindAsync(id);
 
@@ -126,6 +149,31 @@ namespace ObjetosIngresos.Services
             db.CentrosFormacions.Add(c);
             await db.SaveChangesAsync();
             _cache.Remove("CentrosCache");
+        }
+
+        public async Task UpdateCentroFormacionAsync(CentrosFormacion c)
+        {
+            db.CentrosFormacions.Update(c);
+            await db.SaveChangesAsync();
+            _cache.Remove("CentrosCache");
+        }
+
+        public async Task<bool> DeleteCentroFormacionAsync(int id)
+        {
+            var centro = await db.CentrosFormacions.FindAsync(id);
+            if (centro == null) return false;
+
+            bool tieneSedes = await db.Sedes.AnyAsync(s => s.IdCentro == id);
+            if (tieneSedes) return false;
+
+            try
+            {
+                db.CentrosFormacions.Remove(centro);
+                await db.SaveChangesAsync();
+                _cache.Remove("CentrosCache");
+                return true;
+            }
+            catch { return false; }
         }
 
         public async Task<CentrosFormacion?> GetCentroByIdAsync(int id) => await db.CentrosFormacions.FindAsync(id);

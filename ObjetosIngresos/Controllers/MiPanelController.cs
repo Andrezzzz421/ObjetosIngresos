@@ -18,12 +18,7 @@ namespace ObjetosIngresos.Controllers
         public MiPanelController(SistemaIngresoContext db)
         {
             _db = db;
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Helpers de sesión
-        // ─────────────────────────────────────────────────────────────────────
-
+        } 
         private async Task<Usuario?> GetUsuarioSesionAsync()
         {
             var doc = User.FindFirst("Documento")?.Value;
@@ -37,64 +32,93 @@ namespace ObjetosIngresos.Controllers
                 .Include(u => u.IdTipoUsuarioNavigation)
                 .FirstOrDefaultAsync(u => u.Documento == doc.Trim());
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // GET /MiPanel  — Dashboard principal del usuario
-        // ─────────────────────────────────────────────────────────────────────
+         
 
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Index()
         {
-            var usuario = await GetUsuarioSesionAsync();
-            if (usuario == null)
+            var doc = User.FindFirst("Documento")?.Value;
+            if (string.IsNullOrEmpty(doc))
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return RedirectToAction("Login", "Auth");
             }
 
-            // Si no tiene objetos registrados → ir directo al formulario
-            if (!usuario.Elementos.Any())
+            var limpio = doc.Trim();
+            var usuarioInfo = await _db.Usuarios
+                .AsNoTracking()
+                .Where(u => u.Documento == limpio)
+                .Select(u => new
+                {
+                    u.IdUsuario,
+                    u.Nombres,
+                    Elementos = u.Elementos.Select(e => new MiPanelEquipoViewModel
+                    {
+                        IdElemento = e.IdElemento,
+                        TipoElemento = e.TipoElemento,
+                        Serial = e.Serial,
+                        NombreMarca = e.IdMarcaNavigation != null ? e.IdMarcaNavigation.NombreMarca : "Sin marca",
+                        TieneFoto = e.FotoArchivo != null,
+                        TieneIngresoActivo = e.RegistrosMovimientos.Any(m => m.FechaSalida == null)
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (usuarioInfo == null)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (!usuarioInfo.Elementos.Any())
+            {
                 return RedirectToAction(nameof(RegistrarEquipo));
+            }
 
-            return View("~/Views/MiPanel/Index.cshtml", usuario);
+            var model = new MiPanelViewModel
+            {
+                Nombres = usuarioInfo.Nombres,
+                Elementos = usuarioInfo.Elementos
+            };
+
+            return View("~/Views/MiPanel/Index.cshtml", model);
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // GET /MiPanel/RegistrarEquipo
-        // ─────────────────────────────────────────────────────────────────────
 
         [HttpGet]
         public async Task<IActionResult> RegistrarEquipo()
         {
-            var usuario = await GetUsuarioSesionAsync();
-            if (usuario == null) return RedirectToAction("Login", "Auth");
+            var doc = User.FindFirst("Documento")?.Value;
+            if (string.IsNullOrEmpty(doc)) return RedirectToAction("Login", "Auth");
 
-            ViewBag.Marcas = new SelectList(await _db.Marcas.OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
+            ViewBag.Marcas = new SelectList(await _db.Marcas.AsNoTracking().OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
             return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // POST /MiPanel/RegistrarEquipo
-        // ─────────────────────────────────────────────────────────────────────
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarEquipo(string tipoElemento, int? idMarca, string? serial, IFormFile? foto)
         {
-            var usuario = await GetUsuarioSesionAsync();
-            if (usuario == null) return RedirectToAction("Login", "Auth");
+            var doc = User.FindFirst("Documento")?.Value;
+            if (string.IsNullOrEmpty(doc)) return RedirectToAction("Login", "Auth");
+
+            var idUsuario = await _db.Usuarios
+                .Where(u => u.Documento == doc.Trim())
+                .Select(u => (int?)u.IdUsuario)
+                .FirstOrDefaultAsync();
+
+            if (idUsuario == null) return RedirectToAction("Login", "Auth");
 
             if (string.IsNullOrWhiteSpace(tipoElemento))
             {
                 ModelState.AddModelError("tipoElemento", "El tipo de elemento es obligatorio.");
-                ViewBag.Marcas = new SelectList(await _db.Marcas.OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
+                ViewBag.Marcas = new SelectList(await _db.Marcas.AsNoTracking().OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
                 return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
             }
 
             var elemento = new Elemento
             {
-                IdUsuario = usuario.IdUsuario,
+                IdUsuario = idUsuario.Value,
                 TipoElemento = tipoElemento.Trim(),
                 IdMarca = idMarca,
                 Serial = string.IsNullOrWhiteSpace(serial) ? null : serial.Trim()
@@ -110,33 +134,47 @@ namespace ObjetosIngresos.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // POST /MiPanel/EliminarEquipo
-        // ─────────────────────────────────────────────────────────────────────
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarEquipo(int id)
         {
-            var usuario = await GetUsuarioSesionAsync();
-            if (usuario == null)
+            var doc = User.FindFirst("Documento")?.Value;
+            if (string.IsNullOrEmpty(doc))
+                return Json(new { success = false, message = "Sesión no válida." });
+
+            var idUsuario = await _db.Usuarios
+                .Where(u => u.Documento == doc.Trim())
+                .Select(u => (int?)u.IdUsuario)
+                .FirstOrDefaultAsync();
+
+            if (idUsuario == null)
                 return Json(new { success = false, message = "Sesión no válida." });
 
             var elemento = await _db.Elementos
                 .Include(e => e.DetalleElementos)
-                .FirstOrDefaultAsync(e => e.IdElemento == id && e.IdUsuario == usuario.IdUsuario);
+                .FirstOrDefaultAsync(e => e.IdElemento == id && e.IdUsuario == idUsuario.Value);
 
             if (elemento == null)
                 return Json(new { success = false, message = "Equipo no encontrado o no te pertenece." });
 
-            // Verificar si tiene movimientos activos (sin salida)
             var tieneMovimientoActivo = await _db.RegistrosMovimientos
                 .AnyAsync(m => m.IdElemento == id && m.FechaSalida == null);
 
             if (tieneMovimientoActivo)
                 return Json(new { success = false, message = "No puedes eliminar un equipo que tiene un ingreso activo. Primero registra su salida." });
 
-            // Eliminar detalles y el elemento
+            var movimientos = await _db.RegistrosMovimientos.Where(m => m.IdElemento == id).ToListAsync();
+            if (movimientos.Any())
+            {
+                var idMovimientos = movimientos.Select(m => m.IdMovimiento).ToList();
+                var detallesMov = await _db.MovimientoDetalles.Where(md => idMovimientos.Contains(md.IdMovimiento)).ToListAsync();
+                if (detallesMov.Any())
+                {
+                    _db.MovimientoDetalles.RemoveRange(detallesMov);
+                }
+                _db.RegistrosMovimientos.RemoveRange(movimientos);
+            }
+
             _db.DetalleElementos.RemoveRange(elemento.DetalleElementos);
             _db.Elementos.Remove(elemento);
             await _db.SaveChangesAsync();

@@ -1,0 +1,42 @@
+@using ObjetosIngresos.Helpers
+@model List<ObjetosIngresos.Models.AdminUsuarioDto>
+
+@* ══════════════════════════════════════════════════════════════════════════════
+   ÚLTIMOS USUARIOS REGISTRADOS
+══════════════════════════════════════════════════════════════════════════════ *@
+<div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <h3 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <i data-lucide="user-plus" class="h-4 w-4 text-indigo-600"></i>
+            Últimos Usuarios Registrados
+        </h3>
+        <a href="@Url.Action("Index","Usuarios")"
+           class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+            Ver todos →
+        </a>
+    </div>
+    <div class="divide-y divide-slate-50">
+        @if (!Model.Any())
+        {
+            <p class="px-5 py-6 text-center text-xs text-slate-400">Sin usuarios registrados.</p>
+        }
+        else
+        {
+            @foreach (var u in Model)
+            {
+                <div class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/80 transition-colors">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br @AdminHelper.GetAvatarGradient(u.Nombre) text-xs font-bold text-white shadow-sm">
+                        @u.Inicial
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-bold text-slate-900">@u.Nombre</p>
+                        <p class="truncate text-[11px] text-slate-400">@u.Rol · @u.Sede</p>
+                    </div>
+                    <span class="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-600">
+                        @u.Documento
+                    </span>
+                </div>
+            }
+        }
+    </div>
+</div>

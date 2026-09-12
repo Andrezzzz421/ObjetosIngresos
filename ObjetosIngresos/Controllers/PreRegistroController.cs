@@ -20,8 +20,8 @@ namespace ObjetosIngresos.Controllers
         // GET: /PreRegistro
         public async Task<IActionResult> Index()
         {
-            ViewBag.Marcas = new SelectList(await _context.Marcas.ToListAsync(), "IdMarca", "NombreMarca");
-            return View();
+            ViewBag.Marcas = new SelectList(await _context.Marcas.OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
+            return View("~/Views/PreRegistro/Index.cshtml");
         }
 
         // POST: /PreRegistro/Registrar
@@ -31,17 +31,24 @@ namespace ObjetosIngresos.Controllers
         {
             if (ModelState.IsValid)
             {
-                var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Documento == model.Documento);
+                var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Documento == model.Documento.Trim());
 
                 if (usuario == null)
                 {
+                    var idRolVisitante = await _context.TiposUsuarios
+                        .Where(t => t.Descripcion.ToLower().Contains("visitante"))
+                        .Select(t => t.IdTipoUsuario)
+                        .FirstOrDefaultAsync();
+
+                    if (idRolVisitante == 0) idRolVisitante = 4;
+
                     usuario = new Usuario
                     {
-                        Documento = model.Documento,
-                        Nombres = model.Nombres,
-                        Apellidos = model.Apellidos,
-                        Correo = model.Correo,
-                        IdTipoUsuario = 4 // ID para Visitante
+                        Documento = model.Documento.Trim(),
+                        Nombres = model.Nombres.Trim(),
+                        Apellidos = model.Apellidos.Trim(),
+                        Correo = model.Correo.Trim(),
+                        IdTipoUsuario = idRolVisitante
                     };
                     _context.Usuarios.Add(usuario);
                     await _context.SaveChangesAsync();
@@ -50,18 +57,22 @@ namespace ObjetosIngresos.Controllers
                 var elemento = new Elemento
                 {
                     IdUsuario = usuario.IdUsuario,
-                    TipoElemento = model.TipoElemento,
+                    TipoElemento = model.TipoElemento.Trim(),
                     IdMarca = model.IdMarca,
-                    Serial = model.Serial
+                    Serial = model.Serial?.Trim()
                 };
                 _context.Elementos.Add(elemento);
                 await _context.SaveChangesAsync();
 
-                return View("Exito");
+                ViewBag.Propietario = $"{usuario.Nombres} {usuario.Apellidos}";
+                ViewBag.Equipo = elemento.TipoElemento;
+                ViewBag.Serial = elemento.Serial ?? "Sin serial";
+
+                return View("~/Views/PreRegistro/Exito.cshtml");
             }
 
-            ViewBag.Marcas = new SelectList(await _context.Marcas.ToListAsync(), "IdMarca", "NombreMarca", model.IdMarca);
-            return View("Index", model);
+            ViewBag.Marcas = new SelectList(await _context.Marcas.OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca", model.IdMarca);
+            return View("~/Views/PreRegistro/Index.cshtml", model);
         }
     }
 }

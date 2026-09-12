@@ -1,7 +1,6 @@
-﻿using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using ObjetosIngresos.Models;
 using System.Security.Claims;
 
@@ -10,42 +9,34 @@ namespace ObjetosIngresos.Services
     public class UsuarioServices
     {
         private readonly SistemaIngresoContext db;
-        private readonly IMemoryCache cache;
-        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
-        private const string CacheKey = "UsuariosCache";
 
-
-        public UsuarioServices(SistemaIngresoContext db,IMemoryCache cache)
+        public UsuarioServices(SistemaIngresoContext db)
         {
             this.db = db;
-            this.cache = cache;
         }
 
-        public async Task Add(Usuario u)
+        public void Add(Usuario u)
         {
             db.Usuarios.Add(u);
-            await db.SaveChangesAsync();
-            InvalidarCache();
+            db.SaveChanges();
         }
 
-        public async Task Update(Usuario u)
+        public void Update(Usuario u)
         {
             db.Usuarios.Update(u);
-            await db.SaveChangesAsync();
-            InvalidarCache();
+            db.SaveChanges();
         }
 
-        public async Task<bool> Delete(int id)
+        public bool Delete(int id)
         {
-            var usuario = await db.Usuarios.FindAsync(id);
+            var usuario = db.Usuarios.Find(id);
             if (usuario == null) return false;
 
             try
             {
                 db.Usuarios.Remove(usuario);
-                await db.SaveChangesAsync();
-                InvalidarCache();
-                return true;
+                db.SaveChanges();
+                return true; 
             }
             catch (Exception)
             {
@@ -53,31 +44,30 @@ namespace ObjetosIngresos.Services
             }
         }
 
-        public async Task<Usuario?> GetById(int id)
+        public Usuario? GetById(int id)
+        {
+            return db.Usuarios.Find(id);
+        }
+
+        public async Task<List<Usuario>> GetAllAsync()
         {
             return await db.Usuarios
+                .AsNoTracking()
                 .Include(u => u.IdTipoUsuarioNavigation)
                 .Include(u => u.IdSedePrincipalNavigation)
-                .FirstOrDefaultAsync(u => u.IdUsuario == id);
+                .ToListAsync();
         }
 
-        public async Task<List<Usuario>> GetAll()
+        public List<Usuario> GetAll()
         {
-            return await cache.GetOrCreateAsync(CacheKey, async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-
-                return await db.Usuarios
-                    .AsNoTracking() 
-                    .Include(u => u.IdTipoUsuarioNavigation)
-                    .Include(u => u.IdSedePrincipalNavigation)
-                    .ToListAsync(); 
-            }) ?? new List<Usuario>();
+            return db.Usuarios
+                .AsNoTracking()
+                .Include(u => u.IdTipoUsuarioNavigation)
+                .Include(u => u.IdSedePrincipalNavigation)
+                .ToList();
         }
 
-        private void InvalidarCache()
-        {
-            cache.Remove(CacheKey);
-        }
+
+
     }
 }

@@ -1,4 +1,4 @@
-﻿@model List<ObjetosIngresos.Models.Sede>
+@model List<ObjetosIngresos.Models.Sede>
 @{
     ViewData["Title"] = "Administración de Sedes";
     var centros = ViewBag.CentrosFormacion as List<ObjetosIngresos.Models.CentrosFormacion>;
@@ -70,7 +70,7 @@
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Sede</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Ciudad</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Centro de Formación</th>
-                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-32">Acciones</th>
+                            <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-36">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -92,8 +92,11 @@
                                     <td class="px-6 py-4 text-sm font-medium text-indigo-600">
                                         @(sede.IdCentroNavigation?.NombreCentro ?? "No asignado")
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarSede(@sede.IdSede)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <button onclick="editarSede(@sede.IdSede, '@sede.NombreSede', '@sede.Ciudad', @sede.IdCentro)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                            Editar
+                                        </button>
+                                        <button onclick="eliminarSede(@sede.IdSede)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -108,5 +111,98 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        const listaCentros = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            centros?.Select(c => new { id = c.IdCentro, nombre = c.NombreCentro }) ?? Enumerable.Empty<object>()
+        ));
+
+        async function editarSede(id, nombreActual, ciudadActual, centroActualId) {
+            let opcionesHtml = '';
+            listaCentros.forEach(c => {
+                const selected = c.id === centroActualId ? 'selected' : '';
+                opcionesHtml += `<option value="${c.id}" ${selected}>${c.nombre}</option>`;
+            });
+
+            const htmlForm = `
+                <div class="text-left space-y-3 mt-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nombre de la Sede</label>
+                        <input id="swal-nombre-sede" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" value="${nombreActual}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Ciudad</label>
+                        <input id="swal-ciudad-sede" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" value="${ciudadActual}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Centro de Formación</label>
+                        <select id="swal-centro-sede" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                            ${opcionesHtml}
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Editar Sede',
+                html: htmlForm,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5', cancelButton: 'rounded-xl px-5 py-2.5' },
+                preConfirm: () => {
+                    const nombre = document.getElementById('swal-nombre-sede').value;
+                    const ciudad = document.getElementById('swal-ciudad-sede').value;
+                    const idCentro = document.getElementById('swal-centro-sede').value;
+
+                    if (!nombre || !nombre.trim()) {
+                        Swal.showValidationMessage('El nombre de la sede es requerido');
+                        return false;
+                    }
+                    if (!ciudad || !ciudad.trim()) {
+                        Swal.showValidationMessage('La ciudad es requerida');
+                        return false;
+                    }
+                    if (!idCentro) {
+                        Swal.showValidationMessage('Debe seleccionar un centro');
+                        return false;
+                    }
+                    return { nombre: nombre.trim(), ciudad: ciudad.trim(), idCentro: idCentro };
+                }
+            });
+
+            if (formValues) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Catalogos/EditSede';
+
+                const inId = document.createElement('input');
+                inId.type = 'hidden';
+                inId.name = 'IdSede';
+                inId.value = id;
+
+                const inNom = document.createElement('input');
+                inNom.type = 'hidden';
+                inNom.name = 'NombreSede';
+                inNom.value = formValues.nombre;
+
+                const inCiu = document.createElement('input');
+                inCiu.type = 'hidden';
+                inCiu.name = 'Ciudad';
+                inCiu.value = formValues.ciudad;
+
+                const inCen = document.createElement('input');
+                inCen.type = 'hidden';
+                inCen.name = 'IdCentro';
+                inCen.value = formValues.idCentro;
+
+                form.appendChild(inId);
+                form.appendChild(inNom);
+                form.appendChild(inCiu);
+                form.appendChild(inCen);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
 }

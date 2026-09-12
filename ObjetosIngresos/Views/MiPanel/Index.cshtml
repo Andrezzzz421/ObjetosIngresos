@@ -1,4 +1,4 @@
-@model ObjetosIngresos.Models.Usuario
+@model ObjetosIngresos.Models.MiPanelViewModel
 @using ObjetosIngresos.Helpers
 @{
     ViewData["Title"] = "Mi Panel";
@@ -56,11 +56,11 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         @foreach (var eq in Model.Elementos)
         {
-            string foto = eq.FotoArchivo != null && eq.FotoArchivo.Length > 0
+            string foto = eq.TieneFoto
                 ? Url.Action("ObtenerImagen", "Elementos", new { id = eq.IdElemento })
                 : string.Empty;
 
-            bool tieneIngresoActivo = eq.RegistrosMovimientos.Any(m => m.FechaSalida == null);
+            bool tieneIngresoActivo = eq.TieneIngresoActivo;
 
             <div id="card-equipo-@eq.IdElemento"
                  class="group bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
@@ -97,7 +97,7 @@
                     <div class="flex items-start justify-between gap-3 mb-3">
                         <div>
                             <h3 class="font-bold text-slate-900 text-base leading-tight">@eq.TipoElemento</h3>
-                            <p class="text-sm text-slate-500 mt-0.5">@(eq.IdMarcaNavigation?.NombreMarca ?? "Sin marca")</p>
+                            <p class="text-sm text-slate-500 mt-0.5">@eq.NombreMarca</p>
                         </div>
                     </div>
 
@@ -165,65 +165,7 @@
 <!-- Token anti-falsificación para peticiones AJAX -->
 @Html.AntiForgeryToken()
 
+
 @section Scripts {
-<script>
-    async function confirmarEliminar(id, nombre) {
-        const result = await Swal.fire({
-            title: '¿Eliminar equipo?',
-            html: `Estás a punto de eliminar <strong>${nombre}</strong> de tu panel. Esta acción no se puede deshacer.`,
-            icon: 'warning',
-            iconColor: '#ef4444',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            customClass: {
-                popup: 'rounded-2xl',
-                confirmButton: 'rounded-xl font-semibold px-5 py-2.5',
-                cancelButton: 'rounded-xl font-semibold px-5 py-2.5'
-            }
-        });
-
-        if (!result.isConfirmed) return;
-
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        const resp = await fetch('/MiPanel/EliminarEquipo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `id=${id}&__RequestVerificationToken=${encodeURIComponent(token)}`
-        });
-
-        const json = await resp.json();
-        if (json.success) {
-            const card = document.getElementById(`card-equipo-${id}`);
-            card?.remove();
-            await Swal.fire({
-                title: '¡Eliminado!',
-                text: 'El equipo ha sido eliminado correctamente.',
-                icon: 'success',
-                confirmButtonColor: '#4f46e5',
-                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
-            });
-            // Recargar para actualizar el indicador de cupos
-            location.reload();
-        } else {
-            Swal.fire({
-                title: 'No se pudo eliminar',
-                text: json.message,
-                icon: 'error',
-                confirmButtonColor: '#ef4444',
-                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
-            });
-        }
-    }
-
-    // Auto-ocultar alertas después de 5 segundos
-    setTimeout(() => {
-        ['alert-exito', 'alert-error'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.opacity = '0', el.style.transition = 'opacity 0.5s', setTimeout(() => el.remove(), 500);
-        });
-    }, 5000);
-</script>
+    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
 }

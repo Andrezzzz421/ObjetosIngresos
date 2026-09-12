@@ -12,17 +12,17 @@ namespace ObjetosIngresos.Controllers
     {
         private readonly MovimientoServices _srvMovimiento;
         private readonly SistemaIngresoContext _db;
-
+        
         public MovimientoController(MovimientoServices srvMovimiento, SistemaIngresoContext db)
         {
             _srvMovimiento = srvMovimiento;
             _db = db;
         }
-
+            
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            ViewBag.Sedes = await _db.Sedes.OrderBy(s => s.NombreSede).ToListAsync();
+            ViewBag.Sedes = await _db.Sedes.AsNoTracking().OrderBy(s => s.NombreSede).ToListAsync();
 
             // Dashboard stats
             ViewBag.TotalEquipos = await _db.Elementos.CountAsync();
@@ -31,13 +31,17 @@ namespace ObjetosIngresos.Controllers
             var todayColombiaStartUtc = colombiaNow.Date.AddHours(5);
             var tomorrowColombiaStartUtc = todayColombiaStartUtc.AddDays(1);
 
-            ViewBag.EquiposIngresadosHoy = await _db.RegistrosMovimientos
-                .Where(m => m.FechaEntrada >= todayColombiaStartUtc && m.FechaEntrada < tomorrowColombiaStartUtc)
-                .CountAsync();
+            var statsMov = await _db.RegistrosMovimientos
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Hoy = g.Count(m => m.FechaEntrada >= todayColombiaStartUtc && m.FechaEntrada < tomorrowColombiaStartUtc),
+                    Dentro = g.Count(m => m.FechaSalida == null)
+                })
+                .FirstOrDefaultAsync();
 
-            ViewBag.EquiposDentro = await _db.RegistrosMovimientos
-                .Where(m => m.FechaSalida == null)
-                .CountAsync();
+            ViewBag.EquiposIngresadosHoy = statsMov?.Hoy ?? 0;
+            ViewBag.EquiposDentro = statsMov?.Dentro ?? 0;
 
             return View("~/Views/Movimiento/Index.cshtml");
         }
@@ -158,7 +162,7 @@ namespace ObjetosIngresos.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = ex.Message }); 
             }
             catch (InvalidOperationException ex)
             {
@@ -169,10 +173,6 @@ namespace ObjetosIngresos.Controllers
                 return Json(new { success = false, message = "Error al registrar la salida: " + ex.ToString() });
             }
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // GET /Movimiento/Historial?idElemento=x  — Historial de movimientos
-        // ─────────────────────────────────────────────────────────────────────
 
         [HttpGet]
         public async Task<IActionResult> Historial(int idElemento)
@@ -190,10 +190,6 @@ namespace ObjetosIngresos.Controllers
 
             return Json(new { success = true, data = resultado });
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // GET /Movimiento/GetFoto?id=x  — Devuelve la imagen como archivo
-        // ─────────────────────────────────────────────────────────────────────
 
         [HttpGet]
         [AllowAnonymous]

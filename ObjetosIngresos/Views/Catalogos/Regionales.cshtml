@@ -1,4 +1,4 @@
-﻿@model List<ObjetosIngresos.Models.Regionale>
+@model List<ObjetosIngresos.Models.Regionale>
 @{
     ViewData["Title"] = "Administración de Regionales";
 }
@@ -27,7 +27,7 @@
                         Nombre de la Regional
                     </label>
                     <input type="text" id="NombreRegional" name="NombreRegional" placeholder="Ej. Regional Cesar, Regional Bogotá" required
-                           class="input-solo-letras w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
                 </div>
 
                 <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -41,6 +41,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
+                            @* <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-24">ID</th> *@
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre de la Regional</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-32">Acciones</th>
                         </tr>
@@ -49,7 +50,7 @@
                         @if (Model == null || !Model.Any())
                         {
                             <tr>
-                                <td colspan="2" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
                                     No hay regionales registradas en el sistema.
                                 </td>
                             </tr>
@@ -59,9 +60,13 @@
                             foreach (var regional in Model)
                             {
                                 <tr id="fila-regional-@regional.IdRegional" class="hover:bg-slate-50/60 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@regional.NombreRegional</td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarRegional(@regional.IdRegional)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    @* <td class="px-6 py-4 text-sm font-mono text-slate-400">#@regional.IdRegional</td> *@
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900" id="nombre-regional-@regional.IdRegional">@regional.NombreRegional</td>
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <button onclick="editarRegional(@regional.IdRegional, '@regional.NombreRegional')" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                            Editar
+                                        </button>
+                                        <button onclick="eliminarRegional(@regional.IdRegional)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -76,5 +81,57 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        async function editarRegional(id, nombreActual) {
+            if (typeof Swal === 'undefined') {
+                const nuevo = prompt("Nombre de la regional:", nombreActual);
+                if (nuevo && nuevo.trim()) {
+                    enviarEdicion(id, nuevo.trim());
+                }
+                return;
+            }
+
+            const { value: nuevoNombre } = await Swal.fire({
+                title: 'Editar Regional',
+                input: 'text',
+                inputValue: nombreActual,
+                inputLabel: 'Nombre de la Regional',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5', cancelButton: 'rounded-xl px-5 py-2.5' },
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'El nombre de la regional no puede estar vacío';
+                    }
+                }
+            });
+
+            if (nuevoNombre && nuevoNombre.trim() !== nombreActual) {
+                enviarEdicion(id, nuevoNombre.trim());
+            }
+        }
+
+        function enviarEdicion(id, nombre) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Catalogos/EditRegional';
+            
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'IdRegional';
+            inputId.value = id;
+            
+            const inputNom = document.createElement('input');
+            inputNom.type = 'hidden';
+            inputNom.name = 'NombreRegional';
+            inputNom.value = nombre;
+            
+            form.appendChild(inputId);
+            form.appendChild(inputNom);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 }

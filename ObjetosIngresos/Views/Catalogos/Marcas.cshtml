@@ -1,4 +1,4 @@
-﻿@model List<ObjetosIngresos.Models.Marca>
+@model List<ObjetosIngresos.Models.Marca>
 @{
     ViewData["Title"] = "Administración de Marcas";
 }
@@ -27,7 +27,7 @@
                         Nombre de la Marca
                     </label>
                     <input type="text" id="NombreMarca" name="NombreMarca" placeholder="Ej. Lenovo, Dell, Apple" required
-                           class="input-solo-letras w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
+                           class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all" />
                 </div>
 
                 <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -41,6 +41,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 bg-slate-50">
+                            @* <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 w-24">ID</th> *@
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Nombre de la Marca</th>
                             <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right w-32">Acciones</th>
                         </tr>
@@ -49,7 +50,7 @@
                         @if (Model == null || !Model.Any())
                         {
                             <tr>
-                                <td colspan="2" class="px-6 py-10 text-sm text-center text-slate-400 italic">
+                                <td colspan="3" class="px-6 py-10 text-sm text-center text-slate-400 italic">
                                     No hay marcas registradas en el sistema.
                                 </td>
                             </tr>
@@ -59,9 +60,13 @@
                             foreach (var marca in Model)
                             {
                                 <tr id="fila-marca-@marca.IdMarca" class="hover:bg-slate-50/60 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900">@marca.NombreMarca</td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        <button onclick="eliminarRegistro(@marca.IdMarca)" class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    @* <td class="px-6 py-4 text-sm font-mono text-slate-400">#@marca.IdMarca</td> *@
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-900" id="nombre-marca-@marca.IdMarca">@marca.NombreMarca</td>
+                                    <td class="px-6 py-4 text-sm text-right space-x-1">
+                                        <button onclick="editarMarca(@marca.IdMarca, '@marca.NombreMarca')" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+                                            Editar
+                                        </button>
+                                        <button onclick="eliminarRegistro(@marca.IdMarca)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                             Eliminar
                                         </button>
                                     </td>
@@ -76,5 +81,57 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        async function editarMarca(id, nombreActual) {
+            if (typeof Swal === 'undefined') {
+                const nuevo = prompt("Nombre de la marca:", nombreActual);
+                if (nuevo && nuevo.trim()) {
+                    enviarEdicionMarca(id, nuevo.trim());
+                }
+                return;
+            }
+
+            const { value: nuevoNombre } = await Swal.fire({
+                title: 'Editar Marca',
+                input: 'text',
+                inputValue: nombreActual,
+                inputLabel: 'Nombre del Fabricante / Marca',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl px-5 py-2.5', cancelButton: 'rounded-xl px-5 py-2.5' },
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'El nombre de la marca no puede estar vacío';
+                    }
+                }
+            });
+
+            if (nuevoNombre && nuevoNombre.trim() !== nombreActual) {
+                enviarEdicionMarca(id, nuevoNombre.trim());
+            }
+        }
+
+        function enviarEdicionMarca(id, nombre) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Catalogos/EditMarca';
+            
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'IdMarca';
+            inputId.value = id;
+            
+            const inputNom = document.createElement('input');
+            inputNom.type = 'hidden';
+            inputNom.name = 'NombreMarca';
+            inputNom.value = nombre;
+            
+            form.appendChild(inputId);
+            form.appendChild(inputNom);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 }

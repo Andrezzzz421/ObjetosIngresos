@@ -1,4 +1,4 @@
-@model IEnumerable<ObjetosIngresos.Models.Elemento>
+@model IEnumerable<ObjetosIngresos.Models.ElementoIndexViewModel>
 @using ObjetosIngresos.Helpers
 @using ObjetosIngresos.Services
 @{
@@ -47,7 +47,7 @@
                             <tr id="fila-elemento-@item.IdElemento" class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-4">
                                     @{
-                                        string cadenaFoto = item.FotoArchivo != null && item.FotoArchivo.Length > 0
+                                        string cadenaFoto = item.TieneFoto
                                         ? Url.Action("ObtenerImagen", "Elementos", new { id = item.IdElemento })
                                         : string.Empty;
                                     }
@@ -67,21 +67,21 @@
                                     <span class="text-sm font-semibold text-slate-900">@item.TipoElemento</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-slate-800">@(item.IdUsuarioNavigation?.Nombres) @(item.IdUsuarioNavigation?.Apellidos)</div>
-                                    <div class="text-xs text-slate-500">@(item.IdUsuarioNavigation?.Documento ?? "Sin documento")</div>
+                                    <div class="text-sm font-bold text-slate-800">@item.PropietarioNombres @item.PropietarioApellidos</div>
+                                    <div class="text-xs text-slate-500">@item.PropietarioDocumento</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm text-slate-800">@(item.IdMarcaNavigation?.NombreMarca ?? "Sin Marca")</div>
+                                    <div class="text-sm text-slate-800">@item.NombreMarca</div>
                                     <div class="text-xs font-mono text-slate-400 mt-0.5">@(string.IsNullOrEmpty(item.Serial) ? "N/A" : item.Serial)</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if (item.DetalleElementos != null && item.DetalleElementos.Any())
+                                    @if (item.Accesorios != null && item.Accesorios.Any())
                                     {
                                         <div class="flex flex-wrap gap-1.5 max-w-md">
-                                            @foreach (var det in item.DetalleElementos)
+                                            @foreach (var accesorio in item.Accesorios)
                                             {
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700">
-                                                    <span class="font-bold text-slate-900">@(det.IdTipoDetalleNavigation?.Nombre ?? "Componente")</span>
+                                                    <span class="font-bold text-slate-900">@accesorio</span>
                                                 </span>
                                             }
                                         </div>
@@ -95,7 +95,7 @@
                                     <a href="@Url.Action("Edit", "Elementos", new { id = item.IdElemento })" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">
                                         Editar
                                     </a>
-                                    <button onclick="eliminarElemento(@item.IdElemento)" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <button onclick="eliminarElemento(@item.IdElemento, '@item.TipoElemento')" class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                         Eliminar
                                     </button>
                                 </td>
@@ -108,6 +108,27 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
 @section Scripts {
-    <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    @if (TempData["Success"] != null || TempData["Error"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const isError = @(TempData["Error"] != null ? "true" : "false");
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: isError ? 'error' : 'success',
+                    title: isError ? '@TempData["Error"]' : '@TempData["Success"]',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true,
+                    customClass: {
+                        popup: 'rounded-2xl'
+                    }
+                });
+            });
+        </script>
+    }
 }
