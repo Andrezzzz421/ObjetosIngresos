@@ -15,7 +15,6 @@
             <div class="hidden sm:block bg-white/10 p-4 rounded-2xl backdrop-blur-md">
                 <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </
                 </svg>
             </div>
         </div>
@@ -26,14 +25,14 @@
                 <div class="space-y-2">
                     <label asp-for="Nombres" class="text-sm font-semibold text-slate-700 ml-1">Nombres</label>
                     <input asp-for="Nombres" placeholder="Ej. Juan Carlos"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                           class="input-solo-letras w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
                     <span asp-validation-for="Nombres" class="text-xs text-red-500"></span>
                 </div>
 
                 <div class="space-y-2">
                     <label asp-for="Apellidos" class="text-sm font-semibold text-slate-700 ml-1">Apellidos</label>
                     <input asp-for="Apellidos" placeholder="Ej. Pérez"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                           class="input-solo-letras w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
                     <span asp-validation-for="Apellidos" class="text-xs text-red-500"></span>
                 </div>
             </div>
@@ -41,14 +40,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label asp-for="Documento" class="text-sm font-semibold text-slate-700 ml-1">Número de Documento</label>
-                    <input asp-for="Documento" placeholder="123456789"
+                    <input asp-for="Documento" placeholder="123456789" type="text" inputmode="numeric"
                            class="input-solo-numeros w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                     <span asp-validation-for="Documento" class="text-xs text-red-500"></span>
                 </div>
 
                 <div class="space-y-2">
                     <label asp-for="Ficha" class="text-sm font-semibold text-slate-700 ml-1">Número de Ficha (Opcional)</label>
-                    <input asp-for="Ficha" placeholder="267... o N/A"
+                    <input asp-for="Ficha" placeholder="267..." type="text" inputmode="numeric"
                            class="input-solo-numeros w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                     <span asp-validation-for="Ficha" class="text-xs text-red-500"></span>
                 </div>
