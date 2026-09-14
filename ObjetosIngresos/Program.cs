@@ -12,6 +12,12 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 var builder = WebApplication.CreateBuilder(args);
 
+var rutaAppsettingsRender = "/etc/secrets/appsettings.json";
+if (File.Exists(rutaAppsettingsRender))
+{
+    builder.Configuration.AddJsonFile(rutaAppsettingsRender, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddDbContext<SistemaIngresoContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("con"), npgsqlOptionsAction: npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,   
