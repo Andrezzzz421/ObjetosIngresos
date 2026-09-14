@@ -12,11 +12,12 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV MSBUILDDISABLENODEREUSE=1
 
 # Copiar el archivo de proyecto y restaurar
-COPY ["ObjetosIngresos.csproj", "./"]
-RUN dotnet restore "ObjetosIngresos.csproj"
+COPY ["ObjetosIngresos/ObjetosIngresos.csproj", "ObjetosIngresos/"]
+RUN dotnet restore "ObjetosIngresos/ObjetosIngresos.csproj"
 
 # Copiar el resto del código
 COPY . .
+WORKDIR "/src/ObjetosIngresos"
 
 # Publicar directamente en un solo paso para reducir capas y consumo de RAM
 RUN dotnet publish "ObjetosIngresos.csproj" \
