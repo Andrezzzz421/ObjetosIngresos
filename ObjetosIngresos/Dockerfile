@@ -12,7 +12,7 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV MSBUILDDISABLENODEREUSE=1
 
 # Copiar el archivo de proyecto y restaurar
-COPY ["ObjetosIngresos.csproj", "./"]
+COPY ["ObjetosIngresos/ObjetosIngresos.csproj", "ObjetosIngresos/"]
 RUN dotnet restore "ObjetosIngresos.csproj"
 
 # Copiar el resto del código
