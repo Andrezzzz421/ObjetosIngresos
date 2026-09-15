@@ -1,6 +1,7 @@
 using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
 using System.Security.Claims;
 
@@ -67,7 +68,38 @@ namespace ObjetosIngresos.Services
                 .ToList();
         }
 
+        public async Task<byte[]> ExportarUsuariosAExcelAsync()
+        {
+            var usuariosStream = db.Usuarios
+                .AsNoTracking()
+                .Select(u => new
+                {
+                    u.IdUsuario,
+                    Documento = u.Documento ?? "Sin documento",
+                    NombreCompleto = $"{u.Nombres} {u.Apellidos}".Trim(),
+                    Correo = u.Correo,
+                    Ficha = u.Ficha ?? "N/A",
+                    TipoUsuario = u.IdTipoUsuarioNavigation != null
+                        ? u.IdTipoUsuarioNavigation.Descripcion
+                        : "Sin Tipo",
+                    SedePrincipal = u.IdSedePrincipalNavigation != null
+                        ? u.IdSedePrincipalNavigation.NombreSede
+                        : "Sin Sede"
+                })
+                .AsAsyncEnumerable();
 
+            var columnas = new Dictionary<string, Func<dynamic, object?>>
+            {
+                { "ID", u => u.IdUsuario },
+                { "Documento", u => u.Documento },
+                { "Nombre Completo", u => u.NombreCompleto },
+                { "Correo Electrónico", u => u.Correo },
+                { "Ficha", u => u.Ficha },
+                { "Tipo de Usuario", u => u.TipoUsuario },
+                { "Sede Principal", u => u.SedePrincipal }
+            };
 
+            return await ExcelExportHelper.ExportarAExcelAsync(usuariosStream, "Directorio de Usuarios", columnas);
+        }
     }
 }

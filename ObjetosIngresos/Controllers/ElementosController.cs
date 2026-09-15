@@ -154,6 +154,27 @@ namespace ObjetosIngresos.Controllers
             }
             return NotFound();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportarExcel(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var excelBytes = await srvElemento.ExportarElementosAExcelAsync();
+                string fileName = $"Inventario_Elementos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (OperationCanceledException)
+            {
+                return Empty;
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Ocurrió un error al generar el archivo de exportación.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }
 
