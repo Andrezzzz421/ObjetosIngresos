@@ -145,5 +145,26 @@ namespace ObjetosIngresos.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportarExcel(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var bytes = await _ser.ExportarUsuariosAExcelAsync();
+                string fileName = $"Usuarios_Registrados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (OperationCanceledException)
+            {
+                return Empty;
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "No se pudo generar el reporte de usuarios.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }

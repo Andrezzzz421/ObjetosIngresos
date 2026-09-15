@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
@@ -141,6 +142,41 @@ namespace ObjetosIngresos.Services
                 .AsNoTracking()
                 .AsSplitQuery()
                 .ToListAsync();
+        }
+        public async Task<byte[]> ExportarElementosAExcelAsync()
+        {
+            var elementosStream = db.Elementos
+                .AsNoTracking()
+                .Select(x => new
+                {
+                    x.IdElemento,
+                    x.TipoElemento,
+                    Propietario = x.IdUsuarioNavigation != null
+                        ? x.IdUsuarioNavigation.Nombres + " " + x.IdUsuarioNavigation.Apellidos
+                        : "Sin Propietario",
+                    Documento = x.IdUsuarioNavigation != null && x.IdUsuarioNavigation.Documento != null
+                        ? x.IdUsuarioNavigation.Documento
+                        : "Sin documento",
+                    Marca = x.IdMarcaNavigation != null ? x.IdMarcaNavigation.NombreMarca : "Sin Marca",
+                    Serial = x.Serial,
+                    Accesorios = string.Join(", ", x.DetalleElementos
+                        .Where(d => d.IdTipoDetalleNavigation != null)
+                        .Select(d => d.IdTipoDetalleNavigation!.Nombre))
+                })
+                .AsAsyncEnumerable();
+
+            var columnas = new Dictionary<string, Func<dynamic, object?>>
+            {
+                { "ID", x => x.IdElemento },
+                { "Tipo Equipo", x => x.TipoElemento },
+                { "Propietario", x => x.Propietario },
+                { "Documento", x => x.Documento },
+                { "Marca", x => x.Marca },
+                { "Serial", x => string.IsNullOrEmpty(x.Serial) ? "N/A" : x.Serial },
+                { "Accesorios", x => string.IsNullOrEmpty(x.Accesorios) ? "Ninguno" : x.Accesorios }
+            };
+
+            return await ExcelExportHelper.ExportarAExcelAsync(elementosStream, "Inventario Global", columnas);
         }
     }
 }
