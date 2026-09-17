@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ObjetosIngresos.Models
+namespace ObjetosIngresos.ViewModel
 {
     public class PreRegistroViewModel
     {

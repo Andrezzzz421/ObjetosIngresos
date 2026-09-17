@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ObjetosIngresos.Models;
+using ObjetosIngresos.ViewModel;
 
 namespace ObjetosIngresos.Controllers
 {

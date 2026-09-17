@@ -1,4 +1,4 @@
-namespace ObjetosIngresos.Models
+namespace ObjetosIngresos.ViewModel
 {
     public class ErrorViewModel
     {

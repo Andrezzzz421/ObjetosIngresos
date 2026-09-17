@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
+using ObjetosIngresos.ViewModel;
 using System.Threading.Tasks;
 
 namespace ObjetosIngresos.Controllers

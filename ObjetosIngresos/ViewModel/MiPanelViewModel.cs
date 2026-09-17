@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ObjetosIngresos.Models
+namespace ObjetosIngresos.ViewModel
 {
     public class MiPanelEquipoViewModel
     {
