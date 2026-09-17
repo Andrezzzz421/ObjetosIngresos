@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
-using ObjetosIngresos.Models;
+using ObjetosIngresos.ViewModel;
 using System.Security.Claims;
+using ObjetosIngresos.Models;
 
 namespace ObjetosIngresos.Controllers
 {

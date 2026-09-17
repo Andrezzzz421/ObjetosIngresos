@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
+using ObjetosIngresos.ViewModel;
 
 namespace ObjetosIngresos.Services
 {
