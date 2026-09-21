@@ -6,10 +6,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
-using ObjetosIngresos.Models.ViewModels;
 using ObjetosIngresos.ViewModel;
-using System.Security.Claims;
-using ObjetosIngresos.Models;
+
 
 namespace ObjetosIngresos.Controllers
 {
@@ -127,7 +125,6 @@ namespace ObjetosIngresos.Controllers
                 return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
             }
 
-            // Obtener la estrategia de ejecución para PostgreSQL con Retry
             var strategy = _db.Database.CreateExecutionStrategy();
 
             try
@@ -148,7 +145,6 @@ namespace ObjetosIngresos.Controllers
                             Serial = string.IsNullOrWhiteSpace(item.NumeroSerie) ? null : item.NumeroSerie.Trim()
                         };
 
-                        // Validar la foto correspondiente al índice i
                         if (FotosEquipos != null && i < FotosEquipos.Count)
                         {
                             var foto = FotosEquipos[i];
@@ -159,9 +155,8 @@ namespace ObjetosIngresos.Controllers
                         }
 
                         _db.Elementos.Add(elemento);
-                        await _db.SaveChangesAsync(); // Genera el IdElemento
+                        await _db.SaveChangesAsync(); 
 
-                        // Registrar los accesorios válidos
                         if (item.Detalles != null && item.Detalles.Any())
                         {
                             var detallesValidos = item.Detalles.Where(d => d.IdTipoDetalle > 0).ToList();
@@ -221,7 +216,6 @@ namespace ObjetosIngresos.Controllers
             if (tieneMovimientoActivo)
                 return Json(new { success = false, message = "No puedes eliminar un equipo que tiene un ingreso activo. Primero registra su salida." });
 
-            // Eliminación en cascada de movimientos y sus detalles
             var movimientos = await _db.RegistrosMovimientos.Where(m => m.IdElemento == id).ToListAsync();
             if (movimientos.Any())
             {
