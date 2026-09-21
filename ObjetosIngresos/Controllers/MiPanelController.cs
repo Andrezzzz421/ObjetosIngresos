@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
+using ObjetosIngresos.Models;
+using ObjetosIngresos.Models.ViewModels;
 using ObjetosIngresos.ViewModel;
 using System.Security.Claims;
 using ObjetosIngresos.Models;
@@ -19,21 +21,37 @@ namespace ObjetosIngresos.Controllers
         public MiPanelController(SistemaIngresoContext db)
         {
             _db = db;
-        } 
-        private async Task<Usuario?> GetUsuarioSesionAsync()
+        }
+
+        #region Métodos Privados Auxiliares
+
+        private async Task<int?> ObtenerIdUsuarioSesionAsync()
         {
             var doc = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(doc)) return null;
+            if (string.IsNullOrWhiteSpace(doc)) return null;
 
             return await _db.Usuarios
-                .Include(u => u.Elementos)
-                    .ThenInclude(e => e.IdMarcaNavigation)
-                .Include(u => u.Elementos)
-                    .ThenInclude(e => e.RegistrosMovimientos)
-                .Include(u => u.IdTipoUsuarioNavigation)
-                .FirstOrDefaultAsync(u => u.Documento == doc.Trim());
+                .AsNoTracking()
+                .Where(u => u.Documento == doc.Trim())
+                .Select(u => (int?)u.IdUsuario)
+                .FirstOrDefaultAsync();
         }
-         
+
+        private async Task CargarViewBagsAsync()
+        {
+            ViewBag.Marcas = new SelectList(
+                await _db.Marcas.AsNoTracking().OrderBy(m => m.NombreMarca).ToListAsync(),
+                "IdMarca",
+                "NombreMarca"
+            );
+
+            ViewBag.TiposDetalle = await _db.TiposDetalles
+                .AsNoTracking()
+                .OrderBy(t => t.Nombre)
+                .ToListAsync();
+        }
+
+        #endregion
 
         [HttpGet]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -52,7 +70,6 @@ namespace ObjetosIngresos.Controllers
                 .Where(u => u.Documento == limpio)
                 .Select(u => new
                 {
-                    u.IdUsuario,
                     u.Nombres,
                     Elementos = u.Elementos.Select(e => new MiPanelEquipoViewModel
                     {
@@ -89,65 +106,105 @@ namespace ObjetosIngresos.Controllers
         [HttpGet]
         public async Task<IActionResult> RegistrarEquipo()
         {
-            var doc = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(doc)) return RedirectToAction("Login", "Auth");
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
+            if (idUsuario == null) return RedirectToAction("Login", "Auth");
 
-            ViewBag.Marcas = new SelectList(await _db.Marcas.AsNoTracking().OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
+            await CargarViewBagsAsync();
             return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RegistrarEquipo(string tipoElemento, int? idMarca, string? serial, IFormFile? foto)
+        public async Task<IActionResult> RegistrarEquipo(List<RegistrarEquipoViewModel> Equipos, List<IFormFile> FotosEquipos)
         {
-            var doc = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(doc)) return RedirectToAction("Login", "Auth");
-
-            var idUsuario = await _db.Usuarios
-                .Where(u => u.Documento == doc.Trim())
-                .Select(u => (int?)u.IdUsuario)
-                .FirstOrDefaultAsync();
-
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
             if (idUsuario == null) return RedirectToAction("Login", "Auth");
 
-            if (string.IsNullOrWhiteSpace(tipoElemento))
+            if (Equipos == null || !Equipos.Any())
             {
-                ModelState.AddModelError("tipoElemento", "El tipo de elemento es obligatorio.");
-                ViewBag.Marcas = new SelectList(await _db.Marcas.AsNoTracking().OrderBy(m => m.NombreMarca).ToListAsync(), "IdMarca", "NombreMarca");
+                ModelState.AddModelError("", "Debes agregar al menos un equipo a la lista.");
+                await CargarViewBagsAsync();
                 return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
             }
 
-            var elemento = new Elemento
+            // Obtener la estrategia de ejecución para PostgreSQL con Retry
+            var strategy = _db.Database.CreateExecutionStrategy();
+
+            try
             {
-                IdUsuario = idUsuario.Value,
-                TipoElemento = tipoElemento.Trim(),
-                IdMarca = idMarca,
-                Serial = string.IsNullOrWhiteSpace(serial) ? null : serial.Trim()
-            };
+                await strategy.ExecuteAsync(async () =>
+                {
+                    using var transaction = await _db.Database.BeginTransactionAsync();
 
-            if (foto != null && foto.Length > 0)
-                elemento.FotoArchivo = APHelpers.ToBytes(foto);
+                    for (int i = 0; i < Equipos.Count; i++)
+                    {
+                        var item = Equipos[i];
 
-            _db.Elementos.Add(elemento);
-            await _db.SaveChangesAsync();
+                        var elemento = new Elemento
+                        {
+                            IdUsuario = idUsuario.Value,
+                            TipoElemento = item.TipoElemento?.Trim(),
+                            IdMarca = item.IdMarca > 0 ? item.IdMarca : null,
+                            Serial = string.IsNullOrWhiteSpace(item.NumeroSerie) ? null : item.NumeroSerie.Trim()
+                        };
 
-            TempData["Exito"] = "¡Equipo registrado correctamente!";
-            return RedirectToAction(nameof(Index));
+                        // Validar la foto correspondiente al índice i
+                        if (FotosEquipos != null && i < FotosEquipos.Count)
+                        {
+                            var foto = FotosEquipos[i];
+                            if (foto != null && foto.Length > 0 && foto.ContentType.StartsWith("image/"))
+                            {
+                                elemento.FotoArchivo = await APHelpers.ToBytes(foto);
+                            }
+                        }
+
+                        _db.Elementos.Add(elemento);
+                        await _db.SaveChangesAsync(); // Genera el IdElemento
+
+                        // Registrar los accesorios válidos
+                        if (item.Detalles != null && item.Detalles.Any())
+                        {
+                            var detallesValidos = item.Detalles.Where(d => d.IdTipoDetalle > 0).ToList();
+
+                            foreach (var det in detallesValidos)
+                            {
+                                var detalleElemento = new DetalleElemento
+                                {
+                                    IdDetalle = 0,
+                                    IdElemento = elemento.IdElemento,
+                                    IdTipoDetalle = det.IdTipoDetalle
+                                };
+                                _db.DetalleElementos.Add(detalleElemento);
+                            }
+
+                            if (detallesValidos.Any())
+                            {
+                                await _db.SaveChangesAsync();
+                            }
+                        }
+                    }
+
+                    await transaction.CommitAsync();
+                });
+
+                TempData["Exito"] = "¡Todos los equipos fueron registrados correctamente!";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                var mensajeError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                ModelState.AddModelError("", "Ocurrió un error al intentar guardar: " + mensajeError);
+
+                await CargarViewBagsAsync();
+                return View("~/Views/MiPanel/RegistrarEquipo.cshtml");
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarEquipo(int id)
         {
-            var doc = User.FindFirst("Documento")?.Value;
-            if (string.IsNullOrEmpty(doc))
-                return Json(new { success = false, message = "Sesión no válida." });
-
-            var idUsuario = await _db.Usuarios
-                .Where(u => u.Documento == doc.Trim())
-                .Select(u => (int?)u.IdUsuario)
-                .FirstOrDefaultAsync();
-
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
             if (idUsuario == null)
                 return Json(new { success = false, message = "Sesión no válida." });
 
@@ -164,11 +221,13 @@ namespace ObjetosIngresos.Controllers
             if (tieneMovimientoActivo)
                 return Json(new { success = false, message = "No puedes eliminar un equipo que tiene un ingreso activo. Primero registra su salida." });
 
+            // Eliminación en cascada de movimientos y sus detalles
             var movimientos = await _db.RegistrosMovimientos.Where(m => m.IdElemento == id).ToListAsync();
             if (movimientos.Any())
             {
                 var idMovimientos = movimientos.Select(m => m.IdMovimiento).ToList();
                 var detallesMov = await _db.MovimientoDetalles.Where(md => idMovimientos.Contains(md.IdMovimiento)).ToListAsync();
+
                 if (detallesMov.Any())
                 {
                     _db.MovimientoDetalles.RemoveRange(detallesMov);

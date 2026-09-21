@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
 
@@ -102,6 +103,25 @@ namespace ObjetosIngresos.Services
                 .OrderByDescending(m => m.FechaEntrada)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<bool> EliminarMovimientoAsync(int id)
+        {
+            var detalles = await _db.MovimientoDetalles
+                .Where(d => d.IdMovimiento == id)
+                .ToListAsync();
+
+            if (detalles.Any())
+            {
+                _db.MovimientoDetalles.RemoveRange(detalles);
+            }
+
+            var movimiento = await _db.RegistrosMovimientos.FindAsync(id);
+            if (movimiento == null) return false;
+
+            _db.RegistrosMovimientos.Remove(movimiento);
+            await _db.SaveChangesAsync();
+            return true;
         }
     }
 }

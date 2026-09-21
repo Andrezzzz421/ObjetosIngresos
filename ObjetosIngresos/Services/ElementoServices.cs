@@ -17,8 +17,10 @@ namespace ObjetosIngresos.Services
 
         public async Task AddAsync(Elemento obj, List<DetalleElemento> detalles, IFormFile? archivoImagen)
         {
-            if (archivoImagen != null)
-                obj.FotoArchivo = APHelpers.ToBytes(archivoImagen);
+            if (archivoImagen != null && archivoImagen.Length > 0)
+            {
+                obj.FotoArchivo = await APHelpers.ToBytes(archivoImagen);
+            }
 
             if (detalles != null && detalles.Any())
             {
@@ -38,9 +40,10 @@ namespace ObjetosIngresos.Services
             elementoExistente.IdMarca = obj.IdMarca;
             elementoExistente.Serial = obj.Serial;
 
+            // Procesamiento asíncrono de la imagen solo si se adjuntó un archivo válido
             if (archivoImagen != null && archivoImagen.Length > 0)
             {
-                elementoExistente.FotoArchivo = APHelpers.ToBytes(archivoImagen);
+                elementoExistente.FotoArchivo = await APHelpers.ToBytes(archivoImagen);
             }
 
             var detallesAnteriores = await db.DetalleElementos.Where(d => d.IdElemento == obj.IdElemento).ToListAsync();
@@ -53,8 +56,8 @@ namespace ObjetosIngresos.Services
             {
                 foreach (var det in detalles.Where(d => d.IdTipoDetalle > 0))
                 {
-                    det.IdElemento = obj.IdElemento; 
-                    det.IdDetalle = 0;               
+                    det.IdElemento = obj.IdElemento;
+                    det.IdDetalle = 0;
                     db.DetalleElementos.Add(det);
                 }
             }
@@ -98,6 +101,25 @@ namespace ObjetosIngresos.Services
             // 4. Eliminar el elemento
             db.Elementos.Remove(obj);
             await db.SaveChangesAsync();
+        }
+
+        public async Task<bool> EliminarElementoAsync(int id)
+        {
+            var detalles = await db.DetalleElementos
+                .Where(d => d.IdElemento == id)
+                .ToListAsync();
+
+            if (detalles.Any())
+            {
+                db.DetalleElementos.RemoveRange(detalles);
+            }
+
+            var elemento = await db.Elementos.FindAsync(id);
+            if (elemento == null) return false;
+
+            db.Elementos.Remove(elemento);
+            await db.SaveChangesAsync();
+            return true;
         }
 
         public async Task<Elemento?> GetByIdAsync(int id)
@@ -144,6 +166,7 @@ namespace ObjetosIngresos.Services
                 .AsSplitQuery()
                 .ToListAsync();
         }
+
         public async Task<byte[]> ExportarElementosAExcelAsync()
         {
             var elementosStream = db.Elementos
