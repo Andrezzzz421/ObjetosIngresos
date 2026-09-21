@@ -43,7 +43,7 @@ namespace ObjetosIngresos.Services
                 .ToListAsync();
         }
          
-        public async Task<RegistrosMovimiento> RegistrarEntradaAsync(int idElemento, int idSede)
+        public async Task<RegistrosMovimiento> RegistrarEntradaAsync(int idElemento, int idSede, List<int>? detallesPresentes = null)
         {
             // Verificar que no haya un movimiento activo sin salida
             var activo = await _db.RegistrosMovimientos
@@ -62,6 +62,27 @@ namespace ObjetosIngresos.Services
 
             _db.RegistrosMovimientos.Add(movimiento);
             await _db.SaveChangesAsync();
+
+            // Vincular los accesorios/objetos del elemento a este movimiento
+            var detallesElemento = await _db.DetalleElementos
+                .Where(d => d.IdElemento == idElemento)
+                .ToListAsync();
+
+            if (detallesElemento.Any())
+            {
+                foreach (var det in detallesElemento)
+                {
+                    bool isPresente = detallesPresentes == null || detallesPresentes.Contains(det.IdTipoDetalle);
+                    _db.MovimientoDetalles.Add(new MovimientoDetalle
+                    {
+                        IdMovimiento = movimiento.IdMovimiento,
+                        IdTipoDetalle = det.IdTipoDetalle,
+                        Presente = isPresente
+                    });
+                }
+                await _db.SaveChangesAsync();
+            }
+
             return movimiento;
         }
 
@@ -99,6 +120,8 @@ namespace ObjetosIngresos.Services
         {
             return await _db.RegistrosMovimientos
                 .Include(m => m.IdSedeNavigation)
+                .Include(m => m.MovimientoDetalles)
+                    .ThenInclude(md => md.IdTipoDetalleNavigation)
                 .Where(m => m.IdElemento == idElemento)
                 .OrderByDescending(m => m.FechaEntrada)
                 .AsNoTracking()

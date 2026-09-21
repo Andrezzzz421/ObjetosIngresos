@@ -159,7 +159,11 @@ namespace ObjetosIngresos.Controllers
             };
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-            return Ok(new { redirectUrl = "/Auth/Perfil" });
+            string targetUrl = usuario.IdTipoUsuarioNavigation?.Descripcion.Equals("Administrador", StringComparison.OrdinalIgnoreCase) == true
+        ? "/Admin/Index"
+        : "/Auth/Perfil";
+
+            return Ok(new { redirectUrl = targetUrl });
         }
 
         [HttpGet]
