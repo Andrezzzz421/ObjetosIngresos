@@ -2,14 +2,14 @@
 {
     public class APHelpers
     {
-        public static byte[] ToBytes(IFormFile file)
+        public static async Task<byte[]> ToBytes(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return null;
 
             using (var ms = new MemoryStream())
             {
-                file.CopyTo(ms);
+                await file.CopyToAsync(ms);
                 return ms.ToArray();
             }
         }
@@ -20,7 +20,6 @@
                 return string.Empty;
 
             string base64String = Convert.ToBase64String(imageBytes);
-
             return $"data:image/jpeg;base64,{base64String}";
         }
     }
