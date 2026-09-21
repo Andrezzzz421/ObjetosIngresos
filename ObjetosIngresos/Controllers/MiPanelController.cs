@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
 using ObjetosIngresos.Models.ViewModels;
+using ObjetosIngresos.ViewModel;
+using System.Security.Claims;
+using ObjetosIngresos.Models;
 
 namespace ObjetosIngresos.Controllers
 {
