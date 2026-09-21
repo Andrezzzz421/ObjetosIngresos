@@ -28,23 +28,18 @@ namespace ObjetosIngresos.Controllers
             ViewBag.TotalEquipos = await _db.Elementos.CountAsync();
 
             var colombiaNow = DateTime.UtcNow.AddHours(-5);
-            var todayColombiaStartUtc = colombiaNow.Date.AddHours(5);
-            var tomorrowColombiaStartUtc = todayColombiaStartUtc.AddDays(1);
+            var todayUtc = DateTime.SpecifyKind(colombiaNow.Date.AddHours(5), DateTimeKind.Utc);
+            var tomorrowUtc = todayUtc.AddDays(1);
 
-            var statsMov = await _db.RegistrosMovimientos
-                .GroupBy(_ => 1)
-                .Select(g => new
-                {
-                    Hoy = g.Count(m => m.FechaEntrada >= todayColombiaStartUtc && m.FechaEntrada < tomorrowColombiaStartUtc),
-                    Dentro = g.Count(m => m.FechaSalida == null)
-                })
-                .FirstOrDefaultAsync();
+            ViewBag.EquiposIngresadosHoy = await _db.RegistrosMovimientos
+                .CountAsync(m => m.FechaEntrada >= todayUtc && m.FechaEntrada < tomorrowUtc);
 
-            ViewBag.EquiposIngresadosHoy = statsMov?.Hoy ?? 0;
-            ViewBag.EquiposDentro = statsMov?.Dentro ?? 0;
+            ViewBag.EquiposDentro = await _db.RegistrosMovimientos
+                .CountAsync(m => m.FechaSalida == null);
 
             return View("~/Views/Movimiento/Index.cshtml");
         }
+
         [HttpGet]
         public async Task<IActionResult> Buscar(string query)
         {
@@ -80,6 +75,15 @@ namespace ObjetosIngresos.Controllers
                 // Verificamos si tiene foto sin traer los bytes completos
                 tieneFoto = e.FotoArchivo != null,
 
+                // Objetos / Accesorios vinculados junto con sus imágenes
+                objetosVinculados = e.DetalleElementos.Select(d => new
+                {
+                    idDetalle = d.IdDetalle,
+                    idTipoDetalle = d.IdTipoDetalle,
+                    nombre = d.IdTipoDetalleNavigation != null ? d.IdTipoDetalleNavigation.Nombre : "Accesorio",
+                    foto = d.IdTipoDetalleNavigation != null ? d.IdTipoDetalleNavigation.FotoDetalle : null
+                }).ToList(),
+
                 // Traemos SOLO el movimiento activo (el que no tiene fecha de salida)
                 movActivo = e.RegistrosMovimientos
                     .Where(m => m.FechaSalida == null)
@@ -103,6 +107,7 @@ namespace ObjetosIngresos.Controllers
                 e.propietario,
                 e.documento,
                 foto = e.tieneFoto ? $"/Movimiento/GetFoto?id={e.idElemento}" : null,
+                e.objetosVinculados,
                 tieneMovimientoActivo = e.movActivo != null,
                 idMovimientoActivo = e.movActivo?.IdMovimiento,
                 fechaEntrada = e.movActivo?.FechaEntrada != null
@@ -113,14 +118,26 @@ namespace ObjetosIngresos.Controllers
 
             return Json(new { success = true, data = resultado });
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckIn([FromForm] int idElemento, [FromForm] int idSede)
+        public async Task<IActionResult> CheckIn([FromForm] int idElemento, [FromForm] int idSede, [FromForm] string? detallesPresentes = null)
         {
             try
             {
-                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede);
-                string fechaFormateada = null;
+                List<int>? listaDetalles = null;
+                if (!string.IsNullOrWhiteSpace(detallesPresentes))
+                {
+                    listaDetalles = detallesPresentes
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(s => int.TryParse(s, out int val) ? val : (int?)null)
+                        .Where(v => v.HasValue)
+                        .Select(v => v!.Value)
+                        .ToList();
+                }
+
+                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede, listaDetalles);
+                string? fechaFormateada = null;
 
                 if (movimiento.FechaEntrada.HasValue)
                 {
@@ -135,14 +152,13 @@ namespace ObjetosIngresos.Controllers
                     fechaEntrada = fechaFormateada
                 });
             }
-
             catch (InvalidOperationException ex)
             {
                 return Json(new { success = false, message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error al registrar la entrada. Intente de nuevo." });
+                return Json(new { success = false, message = "Error al registrar la entrada: " + ex.Message });
             }
         }
 
@@ -185,7 +201,13 @@ namespace ObjetosIngresos.Controllers
                 fechaEntrada = m.FechaEntrada?.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt"),
                 fechaSalida = m.FechaSalida?.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt") ?? "—",
                 sede = m.IdSedeNavigation?.NombreSede ?? "N/A",
-                estado = m.FechaSalida == null ? "Activo" : "Finalizado"
+                estado = m.FechaSalida == null ? "Activo" : "Finalizado",
+                detalles = m.MovimientoDetalles.Select(md => new
+                {
+                    nombre = md.IdTipoDetalleNavigation != null ? md.IdTipoDetalleNavigation.Nombre : "Accesorio",
+                    presente = md.Presente,
+                    foto = md.IdTipoDetalleNavigation != null ? md.IdTipoDetalleNavigation.FotoDetalle : null
+                }).ToList()
             });
 
             return Json(new { success = true, data = resultado });

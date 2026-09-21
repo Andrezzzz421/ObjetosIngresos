@@ -816,7 +816,10 @@ async function buscar() {
 document.getElementById('btn-buscar')?.addEventListener('click', buscar);
 document.getElementById('input-busqueda')?.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
 
+let elementosActuales = [];
+
 function renderResultados(elementos) {
+    elementosActuales = elementos || [];
     const contenedor = document.getElementById('contenedor-resultados');
     contenedor.innerHTML = '';
 
@@ -853,6 +856,42 @@ function renderResultados(elementos) {
                        Registrar Entrada (Check-In)
                    </button>`;
 
+        let objetosVinculadosHtml = '';
+        if (el.objetosVinculados && el.objetosVinculados.length > 0) {
+            const items = el.objetosVinculados.map(obj => {
+                const fotoObj = obj.foto
+                    ? `<img src="${obj.foto}" alt="${obj.nombre}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-sm" onclick="abrirModalFoto('${obj.foto}')" title="Clic para ampliar foto" />`
+                    : `<div class="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0" title="Sin foto">
+                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                       </div>`;
+                return `
+                    <div class="inline-flex items-center gap-2 p-1.5 pr-2.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/70 transition-all">
+                        ${fotoObj}
+                        <div class="text-left">
+                            <p class="text-xs font-semibold text-slate-800 leading-tight">${obj.nombre}</p>
+                            <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Vinculado</span>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            objetosVinculadosHtml = `
+                <div class="pt-3 border-t border-slate-100">
+                    <div class="flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        Objetos Vinculados (${el.objetosVinculados.length})
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        ${items}
+                    </div>
+                </div>`;
+        } else {
+            objetosVinculadosHtml = `
+                <div class="pt-2 border-t border-slate-100 text-xs text-slate-400 italic flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                    Sin objetos o accesorios vinculados
+                </div>`;
+        }
+
         const card = document.createElement('div');
         card.id = `card-resultado-${el.idElemento}`;
         card.className = 'bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow';
@@ -878,6 +917,7 @@ function renderResultados(elementos) {
                                 <p class="text-xs text-slate-400 font-mono">Doc: ${el.documento}</p>
                             </div>
                         </div>
+                        ${objetosVinculadosHtml}
                         <div id="accion-${el.idElemento}">
                             ${accionHtml}
                         </div>
@@ -895,42 +935,98 @@ function renderResultados(elementos) {
 
 // ──────── Check-In ────────
 async function hacerCheckIn(idElemento, btn) {
-    // Preguntar por la sede
+    const el = (elementosActuales || []).find(x => x.idElemento === idElemento);
     const selectSede = document.getElementById('select-sede-global');
     const opcionesSede = {};
     for (const opt of selectSede.options) {
         if (opt.value) opcionesSede[opt.value] = opt.text;
     }
 
-    const { value: idSede, isConfirmed } = await Swal.fire({
-        title: 'Seleccionar Sede',
-        html: `<select id="swal-sede" class="swal2-input" style="width:100%">
-                       <option value="">— Seleccione sede —</option>
-                       ${Object.entries(opcionesSede).map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}
-                   </select>`,
+    let objetosCheckInHtml = '';
+    if (el && el.objetosVinculados && el.objetosVinculados.length > 0) {
+        const rows = el.objetosVinculados.map(obj => {
+            const img = obj.foto
+                ? `<img src="${obj.foto}" alt="${obj.nombre}" class="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0 shadow-sm" />`
+                : `<div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0">
+                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                   </div>`;
+            return `
+                <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50/50 cursor-pointer transition-colors text-left">
+                    <input type="checkbox" name="chk-accesorio" value="${obj.idTipoDetalle}" checked
+                           class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                    ${img}
+                    <div class="flex-grow">
+                        <p class="text-xs font-bold text-slate-800">${obj.nombre}</p>
+                        <p class="text-[10px] text-slate-500">Marcar si ingresa con el equipo</p>
+                    </div>
+                </label>`;
+        }).join('');
+
+        objetosCheckInHtml = `
+            <div class="mt-3 text-left">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Objetos / Accesorios vinculados:
+                </p>
+                <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    ${rows}
+                </div>
+            </div>`;
+    } else {
+        objetosCheckInHtml = `
+            <div class="mt-3 py-2 px-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-xs text-slate-500 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Este equipo no tiene objetos vinculados.
+            </div>`;
+    }
+
+    const { value: formValues, isConfirmed } = await Swal.fire({
+        title: 'Registrar Entrada (Check-In)',
+        html: `
+            <div class="text-left mb-3 pb-3 border-b border-slate-100 text-xs">
+                <p class="text-sm font-bold text-slate-900">${el ? el.tipoElemento + ' - ' + el.marca : 'Equipo'}</p>
+                <p class="text-slate-500">Serial: <span class="font-mono text-slate-700">${el?.serial || 'N/A'}</span></p>
+                <p class="text-slate-500">Propietario: <span class="font-semibold text-slate-700">${el?.propietario || 'N/A'}</span> (Doc: ${el?.documento || 'N/A'})</p>
+            </div>
+            ${objetosCheckInHtml}
+            <div class="mt-3 text-left">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Sede:</label>
+                <select id="swal-sede" class="swal2-input !mt-0 !w-full !text-sm !h-10 !rounded-xl !border-slate-300">
+                    <option value="">— Seleccione sede —</option>
+                    ${Object.entries(opcionesSede).map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}
+                </select>
+            </div>
+        `,
         showCancelButton: true,
-        confirmButtonText: 'Confirmar Check-In',
+        confirmButtonText: 'Confirmar Entrada',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#4f46e5',
         cancelButtonColor: '#6b7280',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold', cancelButton: 'rounded-xl font-semibold' },
+        customClass: { popup: 'rounded-2xl max-w-md', confirmButton: 'rounded-xl font-semibold', cancelButton: 'rounded-xl font-semibold' },
         preConfirm: () => {
-            const v = document.getElementById('swal-sede').value;
-            if (!v) { Swal.showValidationMessage('Debes seleccionar una sede'); }
-            return v;
+            const v = document.getElementById('swal-sede')?.value;
+            if (!v) { Swal.showValidationMessage('Debes seleccionar una sede'); return false; }
+            const checkedCheckboxes = Array.from(document.querySelectorAll('input[name="chk-accesorio"]:checked')).map(cb => cb.value);
+            return { idSede: v, detallesPresentes: checkedCheckboxes };
         }
     });
 
-    if (!isConfirmed || !idSede) return;
+    if (!isConfirmed || !formValues) return;
 
     btn.disabled = true;
     btn.textContent = 'Registrando...';
 
     try {
+        const payload = new URLSearchParams();
+        payload.append('idElemento', idElemento);
+        payload.append('idSede', formValues.idSede);
+        payload.append('detallesPresentes', formValues.detallesPresentes.join(','));
+        payload.append('__RequestVerificationToken', token());
+
         const resp = await fetch('/Movimiento/CheckIn', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `idElemento=${idElemento}&idSede=${idSede}&__RequestVerificationToken=${encodeURIComponent(token())}`
+            body: payload.toString()
         });
         const json = await resp.json();
 
@@ -1018,17 +1114,30 @@ async function verHistorial(idElemento, btn) {
     if (!json.success || !json.data?.length) {
         contenedor.innerHTML = '<p class="text-xs text-slate-400 italic">Sin registros de movimientos.</p>';
     } else {
-        const filas = json.data.map(m => `
+        const filas = json.data.map(m => {
+            let detallesHtml = '<span class="text-slate-400">—</span>';
+            if (m.detalles && m.detalles.length > 0) {
+                detallesHtml = m.detalles.map(d => {
+                    const statusClass = d.presente
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-50 text-slate-400 border-slate-200 line-through';
+                    return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${statusClass}">${d.nombre}</span>`;
+                }).join(' ');
+            }
+
+            return `
                 <tr class="border-t border-slate-100 text-xs">
-                    <td class="py-2 pr-4 text-slate-500">${m.fechaEntrada ?? '—'}</td>
-                    <td class="py-2 pr-4 text-slate-500">${m.fechaSalida}</td>
-                    <td class="py-2 pr-4 text-slate-500">${m.sede}</td>
+                    <td class="py-2 pr-3 text-slate-500">${m.fechaEntrada ?? '—'}</td>
+                    <td class="py-2 pr-3 text-slate-500">${m.fechaSalida}</td>
+                    <td class="py-2 pr-3 text-slate-500">${m.sede}</td>
+                    <td class="py-2 pr-3">${detallesHtml}</td>
                     <td class="py-2">
                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${m.estado === 'Activo' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
                             ${m.estado}
                         </span>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+        }).join('');
 
         contenedor.innerHTML = `
                 <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -1038,6 +1147,7 @@ async function verHistorial(idElemento, btn) {
                                 <th class="px-3 py-2">Entrada</th>
                                 <th class="px-3 py-2">Salida</th>
                                 <th class="px-3 py-2">Sede</th>
+                                <th class="px-3 py-2">Accesorios</th>
                                 <th class="px-3 py-2">Estado</th>
                             </tr>
                         </thead>

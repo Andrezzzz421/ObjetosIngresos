@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
 using System;
 using System.Collections.Generic;
@@ -133,6 +133,7 @@ public partial class SistemaIngresoContext : DbContext
             entity.HasIndex(e => e.Nombre, "UQ_TiposDetalle_Nombre").IsUnique();
             entity.Property(e => e.IdTipoDetalle).HasColumnName("id_tipo_detalle");
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
+            entity.Property(e => e.FotoDetalle).HasColumnName("foto_detalle");
         });
 
         modelBuilder.Entity<TiposUsuario>(entity =>
@@ -159,6 +160,11 @@ public partial class SistemaIngresoContext : DbContext
             entity.Property(e => e.IdSedePrincipal).HasColumnName("id_sede_principal");
             entity.Property(e => e.IdTipoUsuario).HasColumnName("id_tipo_usuario");
             entity.Property(e => e.Nombres).HasMaxLength(100).HasColumnName("nombres");
+            entity.Property(e => e.CodigoRecuperacion).HasColumnName("codigo_recuperacion");
+            entity.Property(e => e.CodigoExpiracion).HasColumnName("codigo_expiracion");
+            // Las propiedades alias snake_case son solo wrappers en C#, no columnas independientes
+            entity.Ignore(e => e.codigo_recuperacion);
+            entity.Ignore(e => e.codigo_expiracion);
             entity.HasOne(d => d.IdSedePrincipalNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdSedePrincipal);
             entity.HasOne(d => d.IdTipoUsuarioNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdTipoUsuario);
         }); 
