@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
-namespace ObjetosIngresos.Models.ViewModels
+namespace ObjetosIngresos.ViewModel
 {
     public class RegistrarEquipoViewModel
     {
