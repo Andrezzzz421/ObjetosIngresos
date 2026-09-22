@@ -87,24 +87,32 @@ async function procesarLogin() {
 
 async function vincularUsuario(doc) {
     try {
+        const bodyData = new URLSearchParams();
+        bodyData.append('documento', doc.trim());
+
         const response = await fetch('/Auth/VincularPrimerIngreso', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `documento=${encodeURIComponent(doc)}`
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: bodyData.toString()
         });
 
         if (response.ok) {
-            window.location.href = `/Auth/CompletarRegistro?documento=${doc}`;
+            window.location.href = `/Auth/CompletarRegistro?documento=${encodeURIComponent(doc.trim())}`;
         } else {
-            const txt = await response.text();
-            mostrarError(txt);
+            const errorTexto = await response.text();
+            console.error("Error devuelto por el servidor (400):", errorTexto);
+            mostrarError(errorTexto || "No se pudo realizar el primer ingreso. Verifica tu número de documento.");
             setLoading(false);
         }
     } catch (err) {
-        mostrarError("Error de conexión al vincular.");
+        console.error("Error de red o ejecución:", err);
+        mostrarError("Error de conexión con el servidor al intentar vincular.");
         setLoading(false);
     }
 }
+
 
 function setLoading(isLoading) {
     const btn = document.getElementById("btnLogin");

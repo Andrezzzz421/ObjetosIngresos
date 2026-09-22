@@ -63,32 +63,47 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = $"https://securetoken.google.com/{projectId}",
         ValidateAudience = true,
         ValidAudience = projectId,
-        ValidateLifetime = true
+        ValidateLifetime = true,
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role,
+        ClockSkew = TimeSpan.FromMinutes(2)
     };
 });
 
 var rutaConfigLocal = Path.Combine(Directory.GetCurrentDirectory(), "Firebase-admin.json");
-var rutaConfigRender = "/etc/secrets/firebase-admin.json"; // Ruta para Secret Files en Render
+var rutaConfigRender = "/etc/secrets/firebase-admin.json";
+var envCreds = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
 
 if (FirebaseApp.DefaultInstance == null)
 {
+    GoogleCredential? credencial = null;
+
     if (File.Exists(rutaConfigLocal))
     {
-        FirebaseApp.Create(new AppOptions()
-        {
-            Credential = GoogleCredential.FromFile(rutaConfigLocal)
-        });
+        credencial = GoogleCredential.FromFile(rutaConfigLocal);
     }
     else if (File.Exists(rutaConfigRender))
     {
+        credencial = GoogleCredential.FromFile(rutaConfigRender);
+    }
+    else if (!string.IsNullOrEmpty(envCreds) && File.Exists(envCreds))
+    {
+        credencial = GoogleCredential.FromFile(envCreds);
+    }
+
+    if (credencial != null)
+    {
         FirebaseApp.Create(new AppOptions()
         {
-            Credential = GoogleCredential.FromFile(rutaConfigRender)
+            Credential = credencial
         });
     }
     else
     {
-        Console.WriteLine("ADVERTENCIA: No se encontró el archivo de credenciales de Firebase.");
+        throw new FileNotFoundException(
+            "CRÍTICO: No se encontró el archivo 'Firebase-admin.json' ni en la raíz local ni en '/etc/secrets/firebase-admin.json'. " +
+            "Asegúrate de haber generado una nueva Clave Privada (Service Account) desde la consola de Firebase."
+        );
     }
 }
 
