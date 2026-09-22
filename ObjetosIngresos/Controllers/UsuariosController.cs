@@ -48,16 +48,25 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador,Instructor")]
-        public ActionResult Create(Usuario us)
+        public async Task<IActionResult> Create(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
 
             if (ModelState.IsValid)
             {
-                _ser.Add(us);
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _ser.Add(us);
+                    TempData["Success"] = "Usuario creado exitosamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                }
             }
+
             CargarCombos(us);
             return View(us);
         }
@@ -76,7 +85,7 @@ namespace ObjetosIngresos.Controllers
                 var documentoLogueado = User.FindFirst("Documento")?.Value;
                 if (user.Documento != documentoLogueado)
                 {
-                    return RedirectToAction("AccessDenied", "Auth"); 
+                    return RedirectToAction("AccessDenied", "Auth");
                 }
             }
 
@@ -87,7 +96,7 @@ namespace ObjetosIngresos.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
-        public ActionResult Edit(Usuario us)
+        public async Task<IActionResult> Edit(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
@@ -106,26 +115,51 @@ namespace ObjetosIngresos.Controllers
                 us.IdSedePrincipal = usuarioOriginal.IdSedePrincipal;
             }
 
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
+                try
                 {
-                    _ser.Update(us);
+                    await _ser.Update(us);
 
                     if (User.IsInRole("Aprendiz"))
                         return RedirectToAction("Perfil", "Auth");
 
                     return RedirectToAction(nameof(Index));
                 }
-                CargarCombos(us);
-                return View(us);
+                catch (InvalidOperationException ex)
+                {
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                }
             }
-            catch
-            {
-                CargarCombos(us);
-                return View(us);
-            }
+
+            CargarCombos(us);
+            return View(us);
         }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ValidarDocumento(string documento, int idUsuario = 0)
+        {
+            bool existe = await _ser.ExisteDocumento(documento, idUsuario);
+            if (existe)
+            {
+                return Json($"El número de documento '{documento}' ya está registrado.");
+            }
+            return Json(true);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ValidarCorreo(string correo, int idUsuario = 0)
+        {
+            bool existe = await _ser.ExisteCorreo(correo, idUsuario);
+            if (existe)
+            {
+                return Json($"El correo electrónico '{correo}' ya está registrado.");
+            }
+            return Json(true);
+        }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

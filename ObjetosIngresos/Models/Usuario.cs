@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -10,6 +11,7 @@ public class Usuario
 
     [RegularExpression(@"^[0-9]+$", ErrorMessage = "El documento debe contener únicamente números.")]
     [StringLength(20, ErrorMessage = "El documento no puede superar los 20 caracteres.")]
+    [Remote(action: "ValidarDocumento", controller: "Usuarios", AdditionalFields = nameof(IdUsuario))]
     public string? Documento { get; set; }
 
     [Required(ErrorMessage = "El nombre es obligatorio.")]
@@ -25,6 +27,7 @@ public class Usuario
     [Required(ErrorMessage = "El correo es obligatorio.")]
     [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
     [StringLength(150)]
+    [Remote(action: "ValidarCorreo", controller: "Usuarios", AdditionalFields = nameof(IdUsuario))]
     public string Correo { get; set; }
 
     [MaxLength(6)]
