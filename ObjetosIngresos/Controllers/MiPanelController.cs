@@ -159,23 +159,52 @@ namespace ObjetosIngresos.Controllers
 
                         if (item.Detalles != null && item.Detalles.Any())
                         {
-                            var detallesValidos = item.Detalles.Where(d => d.IdTipoDetalle > 0).ToList();
-
-                            foreach (var det in detallesValidos)
+                            for (int j = 0; j < item.Detalles.Count; j++)
                             {
+                                var det = item.Detalles[j];
+                                if (det.IdTipoDetalle <= 0 && string.IsNullOrWhiteSpace(det.Nombre)) continue;
+
+                                int idTipoDetalleFinal = det.IdTipoDetalle;
+
+                                // Si fue escrito manualmente ("Otro"), verificar o crear en TiposDetalle
+                                if (idTipoDetalleFinal <= 0 && !string.IsNullOrWhiteSpace(det.Nombre))
+                                {
+                                    var nombreLimpio = det.Nombre.Trim();
+                                    var tipoExistente = await _db.TiposDetalles
+                                        .FirstOrDefaultAsync(t => t.Nombre.ToLower() == nombreLimpio.ToLower());
+
+                                    if (tipoExistente != null)
+                                    {
+                                        idTipoDetalleFinal = tipoExistente.IdTipoDetalle;
+                                    }
+                                    else
+                                    {
+                                        var nuevoTipo = new TiposDetalle { Nombre = nombreLimpio };
+                                        _db.TiposDetalles.Add(nuevoTipo);
+                                        await _db.SaveChangesAsync();
+                                        idTipoDetalleFinal = nuevoTipo.IdTipoDetalle;
+                                    }
+                                }
+
+                                // Obtener la foto del accesorio tomada por el usuario si existe
+                                byte[]? fotoAccesorioBytes = null;
+                                var fotoAccFile = Request.Form.Files[$"foto_acc_{i}_{j}"];
+                                if (fotoAccFile != null && fotoAccFile.Length > 0 && fotoAccFile.ContentType.StartsWith("image/"))
+                                {
+                                    fotoAccesorioBytes = await APHelpers.ToBytes(fotoAccFile);
+                                }
+
                                 var detalleElemento = new DetalleElemento
                                 {
                                     IdDetalle = 0,
                                     IdElemento = elemento.IdElemento,
-                                    IdTipoDetalle = det.IdTipoDetalle
+                                    IdTipoDetalle = idTipoDetalleFinal,
+                                    FotoArchivo = fotoAccesorioBytes
                                 };
                                 _db.DetalleElementos.Add(detalleElemento);
                             }
 
-                            if (detallesValidos.Any())
-                            {
-                                await _db.SaveChangesAsync();
-                            }
+                            await _db.SaveChangesAsync();
                         }
                     }
 

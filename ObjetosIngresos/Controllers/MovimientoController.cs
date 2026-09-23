@@ -81,7 +81,8 @@ namespace ObjetosIngresos.Controllers
                     idDetalle = d.IdDetalle,
                     idTipoDetalle = d.IdTipoDetalle,
                     nombre = d.IdTipoDetalleNavigation != null ? d.IdTipoDetalleNavigation.Nombre : "Accesorio",
-                    foto = d.IdTipoDetalleNavigation != null ? d.IdTipoDetalleNavigation.FotoDetalle : null
+                    tieneFotoArchivo = d.FotoArchivo != null,
+                    fotoCatalogo = d.IdTipoDetalleNavigation != null ? d.IdTipoDetalleNavigation.FotoDetalle : null
                 }).ToList(),
 
                 // Traemos SOLO el movimiento activo (el que no tiene fecha de salida)
@@ -107,7 +108,16 @@ namespace ObjetosIngresos.Controllers
                 e.propietario,
                 e.documento,
                 foto = e.tieneFoto ? $"/Movimiento/GetFoto?id={e.idElemento}" : null,
-                e.objetosVinculados,
+                objetosVinculados = e.objetosVinculados.Select(obj => new
+                {
+                    obj.idDetalle,
+                    obj.idTipoDetalle,
+                    obj.nombre,
+                    tieneFotoPropia = obj.tieneFotoArchivo,
+                    foto = obj.tieneFotoArchivo
+                        ? $"/Movimiento/GetFotoAccesorio?id={obj.idDetalle}"
+                        : obj.fotoCatalogo
+                }).ToList(),
                 tieneMovimientoActivo = e.movActivo != null,
                 idMovimientoActivo = e.movActivo?.IdMovimiento,
                 fechaEntrada = e.movActivo?.FechaEntrada != null
@@ -220,6 +230,23 @@ namespace ObjetosIngresos.Controllers
             var fotoBytes = await _db.Elementos
                 .Where(e => e.IdElemento == id)
                 .Select(e => e.FotoArchivo)
+                .FirstOrDefaultAsync();
+
+            if (fotoBytes == null || fotoBytes.Length == 0)
+            {
+                return NotFound();
+            }
+
+            return File(fotoBytes, "image/jpeg");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFotoAccesorio(int id)
+        {
+            var fotoBytes = await _db.DetalleElementos
+                .Where(d => d.IdDetalle == id)
+                .Select(d => d.FotoArchivo)
                 .FirstOrDefaultAsync();
 
             if (fotoBytes == null || fotoBytes.Length == 0)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
@@ -10,6 +10,8 @@ public  class DetalleElemento
     public int IdElemento { get; set; }
 
     public int IdTipoDetalle { get; set; }
+
+    public byte[]? FotoArchivo { get; set; }
 
     public virtual Elemento IdElementoNavigation { get; set; } = null!;
 

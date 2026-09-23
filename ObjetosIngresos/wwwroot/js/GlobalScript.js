@@ -859,17 +859,26 @@ function renderResultados(elementos) {
         let objetosVinculadosHtml = '';
         if (el.objetosVinculados && el.objetosVinculados.length > 0) {
             const items = el.objetosVinculados.map(obj => {
-                const fotoObj = obj.foto
-                    ? `<img src="${obj.foto}" alt="${obj.nombre}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-sm" onclick="abrirModalFoto('${obj.foto}')" title="Clic para ampliar foto" />`
-                    : `<div class="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0" title="Sin foto">
+                const tieneFoto = Boolean(obj.foto);
+                const fotoObj = tieneFoto
+                    ? `<div class="relative shrink-0">
+                           <img src="${obj.foto}" alt="${obj.nombre}" class="w-10 h-10 object-cover rounded-lg border ${obj.tieneFotoPropia ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-200'} cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-sm" onclick="abrirModalFoto('${obj.foto}')" title="Clic para ampliar foto" />
+                           ${obj.tieneFotoPropia ? '<span class="absolute -bottom-1 -right-1 bg-indigo-600 text-white text-[8px] font-bold px-1 rounded-full shadow" title="Foto tomada por el usuario al registrar el equipo">📸</span>' : ''}
+                       </div>`
+                    : `<div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0" title="Sin foto">
                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
                        </div>`;
+
+                const badge = obj.tieneFotoPropia
+                    ? `<span class="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 border border-indigo-100">Foto usuario</span>`
+                    : `<span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Vinculado</span>`;
+
                 return `
                     <div class="inline-flex items-center gap-2 p-1.5 pr-2.5 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/70 transition-all">
                         ${fotoObj}
                         <div class="text-left">
                             <p class="text-xs font-semibold text-slate-800 leading-tight">${obj.nombre}</p>
-                            <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Vinculado</span>
+                            ${badge}
                         </div>
                     </div>`;
             }).join('');
@@ -946,7 +955,7 @@ async function hacerCheckIn(idElemento, btn) {
     if (el && el.objetosVinculados && el.objetosVinculados.length > 0) {
         const rows = el.objetosVinculados.map(obj => {
             const img = obj.foto
-                ? `<img src="${obj.foto}" alt="${obj.nombre}" class="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0 shadow-sm" />`
+                ? `<img src="${obj.foto}" alt="${obj.nombre}" class="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0 shadow-sm cursor-pointer hover:opacity-90" onclick="abrirModalFoto('${obj.foto}')" title="Clic para ampliar foto" />`
                 : `<div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0">
                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
                    </div>`;
@@ -957,7 +966,7 @@ async function hacerCheckIn(idElemento, btn) {
                     ${img}
                     <div class="flex-grow">
                         <p class="text-xs font-bold text-slate-800">${obj.nombre}</p>
-                        <p class="text-[10px] text-slate-500">Marcar si ingresa con el equipo</p>
+                        <p class="text-[10px] text-slate-500">${obj.tieneFotoPropia ? 'Foto del usuario adjunta (clic para ver)' : 'Marcar si ingresa con el equipo'}</p>
                     </div>
                 </label>`;
         }).join('');
@@ -1235,7 +1244,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     selectTipo.addEventListener("change", gestionarCambioTipo);
     gestionarCambioTipo(); // Evaluar al cargar por si se restaura el estado del formulario
-}); 
+});
 
 // ==========================================
 // PANEL ADMINISTRATIVO
