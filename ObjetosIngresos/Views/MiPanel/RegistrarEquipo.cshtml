@@ -186,10 +186,29 @@
                        placeholder="Nota (Ej: 65W, Color Negro)..."
                        class="custom-input flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800" />
 
+                <!-- Input de Foto para el accesorio -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <input type="file" id="temp-foto-accesorio" accept="image/*" capture="environment" class="hidden" />
+                    <label for="temp-foto-accesorio" id="lbl-foto-accesorio"
+                           class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition-all shadow-sm"
+                           title="Tomar o adjuntar foto del accesorio">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span id="txt-foto-accesorio">Foto</span>
+                    </label>
+                    <div id="preview-box-accesorio" class="hidden relative">
+                        <img id="preview-img-accesorio" class="w-9 h-9 rounded-lg object-cover border-2 border-indigo-500 shadow-sm" />
+                        <button type="button" id="btn-quitar-foto-accesorio" class="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold shadow hover:bg-rose-600" title="Quitar foto">&times;</button>
+                    </div>
+                </div>
+
                 <button type="button"
                         id="btn-add-detalle"
-                        class="px-5 py-2.5 bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-semibold text-sm rounded-xl transition-all shrink-0">
-                    + Añadir
+                        class="px-5 py-2.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 border border-indigo-200 font-semibold text-sm rounded-xl transition-all shrink-0 flex items-center gap-1.5 shadow-2xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Añadir accesorio
                 </button>
             </div>
 

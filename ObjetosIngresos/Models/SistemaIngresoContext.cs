@@ -51,6 +51,7 @@ public partial class SistemaIngresoContext : DbContext
             entity.Property(e => e.IdDetalle).HasColumnName("id_detalle");
             entity.Property(e => e.IdElemento).HasColumnName("id_elemento");
             entity.Property(e => e.IdTipoDetalle).HasColumnName("id_tipo_detalle");
+            entity.Property(e => e.FotoArchivo).HasColumnName("foto_archivo");
             entity.HasOne(d => d.IdElementoNavigation).WithMany(p => p.DetalleElementos).HasForeignKey(d => d.IdElemento);
             entity.HasOne(d => d.IdTipoDetalleNavigation).WithMany(p => p.DetalleElementos).HasForeignKey(d => d.IdTipoDetalle);
         });
