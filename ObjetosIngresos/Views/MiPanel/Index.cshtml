@@ -4,168 +4,417 @@
     ViewData["Title"] = "Mi Panel";
     int limite = ViewBag.LimiteElementos ?? 2;
     int cuposUsados = Model.Elementos.Count;
-    int cuposRestantes = limite - cuposUsados;
+    int cuposRestantes = Math.Max(0, limite - cuposUsados);
     bool puedeAgregar = cuposUsados < limite;
+    int ingresadosActivos = Model.Elementos.Count(e => e.TieneIngresoActivo);
+    int fueraDeSede = cuposUsados - ingresadosActivos;
+    double porcentajeUso = limite > 0 ? Math.Min(100, ((double)cuposUsados / limite) * 100) : 0;
+    string primerNombre = !string.IsNullOrWhiteSpace(Model.Nombres) ? Model.Nombres.Split(' ')[0] : "Usuario";
+    string inicial = !string.IsNullOrWhiteSpace(Model.Nombres) ? Model.Nombres.Substring(0, 1).ToUpper() : "U";
 }
 
-<div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+<style>
+    .panel-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+    }
+    .card-equipo {
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .card-equipo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(99,102,241,0.15);
+        border-color: #a5b4fc;
+    }
+    .dot-pulse {
+        animation: dot-pulse-anim 2s ease-in-out infinite;
+    }
+    @@keyframes dot-pulse-anim {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+    .progress-bar-fill {
+        background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        border-radius: 9999px;
+        transition: width 0.7s ease;
+    }
+    .btn-agregar-icon {
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .btn-agregar:hover .btn-agregar-icon {
+        background-color: #4f46e5;
+        transform: scale(1.08);
+    }
+    .btn-agregar:hover .btn-agregar-icon svg {
+        color: #ffffff;
+    }
+    .card-img-overlay {
+        background: linear-gradient(to top, rgba(15,23,42,0.6) 0%, transparent 60%);
+    }
+</style>
 
-    <!-- ── Encabezado de bienvenida ── -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">Hola, @Model.Nombres</h1>
-            <p class="text-sm text-slate-500 mt-0.5">Gestiona tus activos registrados en el sistema.</p>
+<div class="max-w-5xl mx-auto px-4 py-5 space-y-5">
+
+    <!-- Hero Header -->
+    <div class="panel-hero rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
+             style="background:radial-gradient(circle,#a5b4fc,transparent);transform:translate(30%,-30%)"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
+             style="background:radial-gradient(circle,#c4b5fd,transparent);transform:translate(-30%,30%)"></div>
+        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-lg"
+                     style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                    @inicial
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-2xl font-black tracking-tight text-white">Hola, @primerNombre</h1>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold text-indigo-200"
+                              style="background:rgba(165,180,252,0.15);border:1px solid rgba(165,180,252,0.3)">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 dot-pulse"></span>
+                            Panel Personal
+                        </span>
+                    </div>
+                    <p class="text-sm text-indigo-200 mt-1">
+                        Gestiona tus dispositivos, consulta su estado y manten tu inventario al dia.
+                    </p>
+                </div>
+            </div>
+            @if (puedeAgregar)
+            {
+                <a href="@Url.Action("RegistrarEquipo", "MiPanel")"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold text-white shrink-0 transition-all duration-200 hover:opacity-90 active:scale-95"
+                   style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Registrar Equipo
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Cupos de Equipos</span>
+                <span class="p-1.5 rounded-xl bg-indigo-50 text-indigo-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </span>
+            </div>
+            <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-3xl font-black text-slate-900">@cuposUsados</span>
+                <span class="text-sm font-semibold text-slate-400">/ @limite</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 mb-1.5 overflow-hidden">
+                <div class="progress-bar-fill h-1.5" style="width:@((int)porcentajeUso)%"></div>
+            </div>
+            <p class="text-xs text-slate-400">
+                @(puedeAgregar ? $"{cuposRestantes} cupo{(cuposRestantes != 1 ? "s" : "")} libre{(cuposRestantes != 1 ? "s" : "")}" : "Limite alcanzado")
+            </p>
         </div>
 
-        <!-- Indicador de cupos -->
-        <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
-            <div class="flex gap-1.5">
-                @for (int i = 0; i < limite; i++)
-                {
-                    <div class="w-3 h-3 rounded-full @(i < cuposUsados ? "bg-indigo-500" : "bg-slate-200")"></div>
-                }
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">En Sede</span>
+                <span class="p-1.5 rounded-xl bg-emerald-50 text-emerald-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
             </div>
-            <div class="text-sm">
-                <span class="font-bold text-slate-800">@cuposUsados</span>
-                <span class="text-slate-400"> / @limite cupos usados</span>
+            <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-3xl font-black text-emerald-600">@ingresadosActivos</span>
+                <span class="text-xs font-semibold text-slate-400">activo@(ingresadosActivos != 1 ? "s" : "")</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                <span class="w-2 h-2 rounded-full @(ingresadosActivos > 0 ? "bg-emerald-500 dot-pulse" : "bg-slate-300")"></span>
+                <span>@(ingresadosActivos > 0 ? "Dentro de las instalaciones" : "Sin ingresos activos")</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Fuera de Sede</span>
+                <span class="p-1.5 rounded-xl bg-slate-100 text-slate-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </span>
+            </div>
+            <div class="flex items-baseline gap-1.5 mb-2">
+                <span class="text-3xl font-black text-slate-800">@fueraDeSede</span>
+                <span class="text-xs font-semibold text-slate-400">equipo@(fueraDeSede != 1 ? "s" : "")</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Listos para ingreso en porteria</span>
             </div>
         </div>
     </div>
 
-    <!-- ── Alertas de TempData ── -->
+    <!-- Alertas TempData -->
     @if (TempData["Exito"] != null)
     {
-        <div id="alert-exito" class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-2xl px-5 py-4 text-sm font-medium shadow-sm">
-            <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            @TempData["Exito"]
+        <div id="alert-exito" class="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl px-4 py-3 text-sm font-medium">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <span>@TempData["Exito"]</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="p-1 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div id="alert-error" class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4 text-sm font-medium shadow-sm">
-            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            @TempData["Error"]
+        <div id="alert-error" class="flex items-center justify-between gap-3 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl px-4 py-3 text-sm font-medium">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <span>@TempData["Error"]</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="p-1 rounded-lg hover:bg-rose-100 text-rose-600 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     }
 
-    <!-- ── Tarjetas de equipos ── -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        @foreach (var eq in Model.Elementos)
-        {
-            string foto = eq.TieneFoto
-                ? Url.Action("ObtenerImagen", "Elementos", new { id = eq.IdElemento })
-                : string.Empty;
+    <!-- Mis Dispositivos -->
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Mis Dispositivos</h2>
+                <p class="text-xs text-slate-500">Marca, serial y accesorios vinculados</p>
+            </div>
+            <span class="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full">
+                @Model.Elementos.Count @(Model.Elementos.Count == 1 ? "equipo" : "equipos")
+            </span>
+        </div>
 
-            bool tieneIngresoActivo = eq.TieneIngresoActivo;
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach (var eq in Model.Elementos)
+            {
+                string foto = eq.TieneFoto
+                    ? Url.Action("ObtenerImagen", "Elementos", new { id = eq.IdElemento })
+                    : string.Empty;
+                bool tieneIngresoActivo = eq.TieneIngresoActivo;
 
-            <div id="card-equipo-@eq.IdElemento"
-                 class="group bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
+                <div id="card-equipo-@eq.IdElemento"
+                     class="card-equipo bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
 
-                <!-- Foto del equipo -->
-                <div class="relative h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
-                    @if (!string.IsNullOrEmpty(foto))
-                    {
-                        <img src="@foto" alt="@eq.TipoElemento"
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-                    }
-                    else
-                    {
-                        <div class="flex flex-col items-center gap-2 text-slate-400">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="text-xs font-medium">Sin foto</span>
+                    <!-- Zona de imagen -->
+                    <div class="relative h-36 overflow-hidden" style="background:#f1f5f9">
+                        @if (!string.IsNullOrEmpty(foto))
+                        {
+                            <img src="@foto" alt="@eq.TipoElemento" class="w-full h-full object-cover" />
+                            <div class="card-img-overlay absolute inset-0"></div>
+                            <div class="absolute bottom-2 left-3">
+                                <span class="text-white text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(0,0,0,0.5)">
+                                    @eq.NombreMarca
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="w-full h-full flex flex-col items-center justify-center gap-2">
+                                <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-slate-200">
+                                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <span class="text-xs font-medium text-slate-400">Sin fotografia</span>
+                            </div>
+                        }
+
+                        <!-- Badge estado -->
+                        <div class="absolute top-2.5 right-2.5">
+                            @if (tieneIngresoActivo)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold text-white"
+                                      style="background:#10b981;box-shadow:0 2px 8px rgba(16,185,129,0.4)">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white dot-pulse"></span>
+                                    EN SEDE
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-slate-600"
+                                      style="background:rgba(241,245,249,0.95);border:1px solid #e2e8f0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    FUERA
+                                </span>
+                            }
                         </div>
-                    }
+                    </div>
 
-                    <!-- Badge de estado -->
-                    @if (tieneIngresoActivo)
-                    {
-                        <span class="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md">
-                            <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                            INGRESADO
-                        </span>
-                    }
-                </div>
+                    <!-- Contenido -->
+                    <div class="p-4 flex flex-col gap-3 flex-grow">
 
-                <!-- Datos del equipo -->
-                <div class="p-5">
-                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <!-- Tipo y marca (chip si no hay foto) -->
                         <div>
-                            <h3 class="font-bold text-slate-900 text-base leading-tight">@eq.TipoElemento</h3>
-                            <p class="text-sm text-slate-500 mt-0.5">@eq.NombreMarca</p>
+                            @if (string.IsNullOrEmpty(foto))
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-1">
+                                    @eq.NombreMarca
+                                </span>
+                            }
+                            <h3 class="font-extrabold text-slate-900 text-sm leading-snug">@eq.TipoElemento</h3>
+                        </div>
+
+                        <!-- Serial -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                </svg>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wide leading-none mb-0.5">Serial</div>
+                                    <span class="text-xs font-mono font-semibold text-slate-700 truncate block">
+                                        @(string.IsNullOrEmpty(eq.Serial) ? "Sin serial registrado" : eq.Serial)
+                                    </span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(eq.Serial))
+                            {
+                                <button type="button" onclick="copiarSerial('@eq.Serial')" title="Copiar serial"
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white border border-transparent hover:border-slate-200 transition-colors shrink-0">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            }
+                        </div>
+
+                        <!-- Accesorios -->
+                        <div class="border-t border-slate-100 pt-2.5">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-500 mb-1.5">
+                                <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Accesorios vinculados
+                            </div>
+                            @if (eq.Accesorios != null && eq.Accesorios.Any())
+                            {
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach (var acc in eq.Accesorios)
+                                    {
+                                        <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <span class="w-1 h-1 rounded-full bg-indigo-400 shrink-0"></span>
+                                            @acc
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-xs text-slate-400 italic">Sin accesorios registrados</p>
+                            }
+                        </div>
+
+                        <!-- Boton accion -->
+                        <div class="mt-auto pt-1">
+                            @if (tieneIngresoActivo)
+                            {
+                                <div class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 cursor-not-allowed">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    No se puede eliminar mientras este en sede
+                                </div>
+                            }
+                            else
+                            {
+                                <button type="button" onclick="confirmarEliminar(@eq.IdElemento, '@eq.TipoElemento')"
+                                        class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 transition-all duration-200">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Eliminar equipo
+                                </button>
+                            }
                         </div>
                     </div>
+                </div>
+            }
 
-                    <div class="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2 mb-4">
-                        <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+            <!-- Tarjeta Agregar -->
+            @if (puedeAgregar)
+            {
+                <a href="@Url.Action("RegistrarEquipo", "MiPanel")"
+                   class="btn-agregar group flex flex-col items-center justify-center bg-white border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-6 text-center transition-all duration-200"
+                   style="min-height:14rem">
+                    <div class="btn-agregar-icon w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                         </svg>
-                        <span class="text-xs font-mono text-slate-600">@(string.IsNullOrEmpty(eq.Serial) ? "Sin serial registrado" : eq.Serial)</span>
                     </div>
-
-                    <!-- Botón eliminar -->
-                    @if (tieneIngresoActivo)
-                    {
-                        <button disabled title="No puedes eliminar un equipo mientras esté ingresado."
-                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-slate-400 bg-slate-100 cursor-not-allowed">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
-                            Equipo actualmente ingresado
-                        </button>
-                    }
-                    else
-                    {
-                        <button onclick="confirmarEliminar(@eq.IdElemento, '@eq.TipoElemento')"
-                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-600 hover:text-white transition-all duration-200 group/btn">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Eliminar equipo
-                        </button>
-                    }
+                    <h3 class="font-bold text-slate-800 group-hover:text-indigo-600 text-sm transition-colors mb-0.5">Registrar Nuevo Equipo</h3>
+                    <p class="text-xs text-slate-400">@cuposRestantes cupo@(cuposRestantes > 1 ? "s" : "") libre@(cuposRestantes > 1 ? "s" : "")</p>
+                </a>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center" style="min-height:14rem">
+                    <div class="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center mb-3 text-slate-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-bold text-slate-500 text-sm mb-0.5">Limite de Cupos Alcanzado</h3>
+                    <p class="text-xs text-slate-400">Elimina un equipo para liberar un cupo.</p>
                 </div>
-            </div>
-        }
-
-        <!-- Tarjeta "Agregar nuevo" -->
-        @if (puedeAgregar)
-        {
-            <a href="@Url.Action("RegistrarEquipo", "MiPanel")"
-               class="group flex flex-col items-center justify-center h-full min-h-[280px] bg-white border-2 border-dashed border-slate-300 rounded-3xl hover:border-indigo-400 hover:bg-indigo-50/30 transition-all duration-300 cursor-pointer p-8">
-                <div class="w-14 h-14 bg-indigo-100 group-hover:bg-indigo-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
-                    <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                </div>
-                <p class="font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">Registrar nuevo equipo</p>
-                <p class="text-sm text-slate-400 mt-1">@cuposRestantes cupo@(cuposRestantes > 1 ? "s" : "") disponible@(cuposRestantes > 1 ? "s" : "")</p>
-            </a>
-        }
-        else
-        {
-            <div class="flex flex-col items-center justify-center min-h-[280px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 opacity-60 cursor-not-allowed">
-                <div class="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center mb-4">
-                    <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
-                </div>
-                <p class="font-semibold text-slate-500">Límite de equipos alcanzado</p>
-                <p class="text-sm text-slate-400 mt-1 text-center">Elimina un equipo para liberar un cupo</p>
-            </div>
-        }
+            }
+        </div>
     </div>
+
+    <!-- Guia Rapida -->
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-900 text-sm">Control de Ingreso y Salida</h4>
+                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Presenta tu documento o el serial de tu equipo en porteria. El personal registrara tu movimiento en tiempo real.
+                </p>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- Token anti-falsificación para peticiones AJAX -->
 @Html.AntiForgeryToken()
-
 
 @section Scripts {
     <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
+    <script>
+        function copiarSerial(texto) {
+            if (!texto) return;
+            navigator.clipboard.writeText(texto).then(() => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Serial copiado: ' + texto, showConfirmButton: false, timer: 2000 });
+                }
+            }).catch(err => console.error('Error al copiar:', err));
+        }
+    </script>
 }
