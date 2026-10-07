@@ -76,7 +76,11 @@ namespace ObjetosIngresos.Controllers
                         Serial = e.Serial,
                         NombreMarca = e.IdMarcaNavigation != null ? e.IdMarcaNavigation.NombreMarca : "Sin marca",
                         TieneFoto = e.FotoArchivo != null,
-                        TieneIngresoActivo = e.RegistrosMovimientos.Any(m => m.FechaSalida == null)
+                        TieneIngresoActivo = e.RegistrosMovimientos.Any(m => m.FechaSalida == null),
+                        Accesorios = e.DetalleElementos
+                            .Where(d => d.IdTipoDetalleNavigation != null)
+                            .Select(d => d.IdTipoDetalleNavigation.Nombre)
+                            .ToList()
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
