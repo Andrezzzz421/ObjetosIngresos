@@ -66,6 +66,7 @@ public partial class SistemaIngresoContext : DbContext
             entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
             entity.Property(e => e.Serial).HasMaxLength(50).HasColumnName("serial");
             entity.Property(e => e.TipoElemento).HasMaxLength(50).HasColumnName("tipo_elemento");
+            entity.Property(e => e.ActivoParaIngreso).HasDefaultValue(true).HasColumnName("activo_para_ingreso");
             entity.HasOne(d => d.IdMarcaNavigation).WithMany(p => p.Elementos).HasForeignKey(d => d.IdMarca);
             entity.HasOne(d => d.IdUsuarioNavigation).WithMany(p => p.Elementos).HasForeignKey(d => d.IdUsuario);
         });

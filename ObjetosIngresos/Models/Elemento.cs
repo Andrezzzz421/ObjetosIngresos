@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
@@ -16,6 +16,8 @@ public class Elemento
     public string? Serial { get; set; }
 
     public byte[]? FotoArchivo { get; set; }
+
+    public bool ActivoParaIngreso { get; set; } = true;
 
     public virtual ICollection<DetalleElemento> DetalleElementos { get; set; } = new List<DetalleElemento>();
 
