@@ -46,7 +46,9 @@ namespace ObjetosIngresos.Controllers
             var q = query?.Trim().ToLower() ?? "";
 
             // 1. Preparamos la consulta sobre Elementos sin Include() masivos
-            IQueryable<Elemento> queryBase = _db.Elementos.AsNoTracking();
+            // Solo mostramos elementos habilitados por el usuario para llevar o que estén actualmente dentro
+            IQueryable<Elemento> queryBase = _db.Elementos.AsNoTracking()
+                .Where(e => e.ActivoParaIngreso || e.RegistrosMovimientos.Any(m => m.FechaSalida == null));
 
             if (!string.IsNullOrWhiteSpace(q))
             {

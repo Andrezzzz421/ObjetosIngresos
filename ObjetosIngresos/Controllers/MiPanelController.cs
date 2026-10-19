@@ -77,6 +77,7 @@ namespace ObjetosIngresos.Controllers
                         NombreMarca = e.IdMarcaNavigation != null ? e.IdMarcaNavigation.NombreMarca : "Sin marca",
                         TieneFoto = e.FotoArchivo != null,
                         TieneIngresoActivo = e.RegistrosMovimientos.Any(m => m.FechaSalida == null),
+                        ActivoParaIngreso = e.ActivoParaIngreso,
                         Accesorios = e.DetalleElementos
                             .Where(d => d.IdTipoDetalleNavigation != null)
                             .Select(d => d.IdTipoDetalleNavigation.Nombre)
@@ -267,6 +268,49 @@ namespace ObjetosIngresos.Controllers
             await _db.SaveChangesAsync();
 
             return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActivoParaIngreso([FromForm] int idElemento, [FromForm] bool activo)
+        {
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
+            if (idUsuario == null)
+            {
+                return Json(new { success = false, message = "Sesión no válida o expirada." });
+            }
+
+            var elemento = await _db.Elementos
+                .FirstOrDefaultAsync(e => e.IdElemento == idElemento && e.IdUsuario == idUsuario.Value);
+
+            if (elemento == null)
+            {
+                return Json(new { success = false, message = "Equipo no encontrado o no te pertenece." });
+            }
+
+            // Si el equipo se encuentra actualmente dentro de la sede, no se puede desactivar
+            if (!activo)
+            {
+                var tieneMovimientoActivo = await _db.RegistrosMovimientos
+                    .AnyAsync(m => m.IdElemento == idElemento && m.FechaSalida == null);
+
+                if (tieneMovimientoActivo)
+                {
+                    return Json(new { success = false, message = "No puedes desmarcar un equipo mientras se encuentra dentro de la sede." });
+                }
+            }
+
+            elemento.ActivoParaIngreso = activo;
+            await _db.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                activo = elemento.ActivoParaIngreso,
+                message = activo
+                    ? "¡Equipo seleccionado! Aparecerá en el panel de control de ingreso en portería."
+                    : "Equipo desmarcado. No aparecerá en el control de ingreso hasta que lo vuelvas a seleccionar."
+            });
         }
     }
 }

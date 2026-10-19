@@ -91,13 +91,30 @@ namespace ObjetosIngresos.Services
         /// </summary>
         public async Task<RegistrosMovimiento> RegistrarSalidaAsync(int idMovimiento)
         {
-            var movimiento = await _db.RegistrosMovimientos.FindAsync(idMovimiento)
+            var movimiento = await _db.RegistrosMovimientos
+                .Include(m => m.IdElementoNavigation)
+                .FirstOrDefaultAsync(m => m.IdMovimiento == idMovimiento)
                 ?? throw new KeyNotFoundException("Registro de movimiento no encontrado.");
 
             if (movimiento.FechaSalida != null)
                 throw new InvalidOperationException("Este registro ya tiene una salida registrada.");
 
             movimiento.FechaSalida = DateTime.UtcNow;
+
+            // Desmarcar el elemento para que no aparezca en control de ingreso hasta que el usuario lo vuelva a seleccionar en Mi Panel
+            if (movimiento.IdElementoNavigation != null)
+            {
+                movimiento.IdElementoNavigation.ActivoParaIngreso = false;
+            }
+            else
+            {
+                var elemento = await _db.Elementos.FindAsync(movimiento.IdElemento);
+                if (elemento != null)
+                {
+                    elemento.ActivoParaIngreso = false;
+                }
+            }
+
             await _db.SaveChangesAsync();
             return movimiento;
         }

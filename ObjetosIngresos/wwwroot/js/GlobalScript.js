@@ -784,6 +784,94 @@ setTimeout(() => {
     });
 }, 5000);
 
+// Toggle selección diaria de equipo para ingreso
+async function toggleEquipoIngreso(idElemento, activo) {
+    const chk = document.getElementById(`chk-ingreso-${idElemento}`);
+    const seccion = document.getElementById(`seccion-ingreso-${idElemento}`);
+    const icono = document.getElementById(`icono-ingreso-${idElemento}`);
+    const titulo = document.getElementById(`titulo-ingreso-${idElemento}`);
+    const subtitulo = document.getElementById(`subtitulo-ingreso-${idElemento}`);
+    const badge = document.getElementById(`badge-estado-${idElemento}`);
+
+    if (chk) chk.disabled = true;
+
+    try {
+        const tokenElem = document.querySelector('input[name="__RequestVerificationToken"]');
+        const tokenVal = tokenElem ? tokenElem.value : '';
+
+        const resp = await fetch('/MiPanel/ToggleActivoParaIngreso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `idElemento=${encodeURIComponent(idElemento)}&activo=${encodeURIComponent(activo)}&__RequestVerificationToken=${encodeURIComponent(tokenVal)}`
+        });
+
+        const json = await resp.json();
+
+        if (json.success) {
+            const isActivo = json.activo;
+
+            if (seccion) {
+                seccion.className = `border rounded-xl p-3 transition-all duration-200 ${isActivo ? 'bg-indigo-50/70 border-indigo-200 shadow-xs' : 'bg-slate-50 border-slate-200'}`;
+            }
+            if (icono) {
+                icono.className = `w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActivo ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-200 text-slate-500'} transition-colors`;
+            }
+            if (titulo) {
+                titulo.className = `text-xs font-bold ${isActivo ? 'text-indigo-950' : 'text-slate-700'} truncate`;
+                titulo.textContent = isActivo ? 'Habilitado para llevar' : 'No seleccionado';
+            }
+            if (subtitulo) {
+                subtitulo.className = `text-[11px] ${isActivo ? 'text-indigo-700' : 'text-slate-400'} leading-tight mt-0.5`;
+                subtitulo.textContent = isActivo ? 'Aparecerá en portería para tu ingreso' : 'Activa si piensas llevarlo hoy o mañana';
+            }
+            if (badge) {
+                if (isActivo) {
+                    badge.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-indigo-700 bg-white/95 backdrop-blur-sm border border-indigo-200 shadow-sm";
+                    badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dot-pulse"></span>PROGRAMADO';
+                } else {
+                    badge.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-slate-600 bg-white/95 backdrop-blur-sm border border-slate-200";
+                    badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>NO PROGRAMADO';
+                }
+            }
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: isActivo ? 'success' : 'info',
+                    title: json.message,
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            }
+        } else {
+            if (chk) chk.checked = !activo;
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: json.message || 'No se pudo actualizar el estado.',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+                });
+            }
+        }
+    } catch (err) {
+        if (chk) chk.checked = !activo;
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'Ocurrió un error al comunicarse con el servidor.',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+            });
+        }
+    } finally {
+        if (chk) chk.disabled = false;
+    }
+}
+
 //Movimiento/Index
 
 window.token = window.token || (() => document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '');

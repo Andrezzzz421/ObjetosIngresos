@@ -10,6 +10,7 @@ namespace ObjetosIngresos.ViewModel
         public string NombreMarca { get; set; } = "Sin marca";
         public bool TieneFoto { get; set; }
         public bool TieneIngresoActivo { get; set; }
+        public bool ActivoParaIngreso { get; set; } = true;
         public List<string> Accesorios { get; set; } = new();
     }
 

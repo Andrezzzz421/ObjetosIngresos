@@ -38,7 +38,7 @@ namespace ObjetosIngresos.Services
             // 2. Estadísticas y KPIs de Movimientos
             var statsMov = await _db.RegistrosMovimientos
                 .AsNoTracking()
-                .GroupBy(_ => 1)
+                .GroupBy(_ => 1)    
                 .Select(g => new
                 {
                     Total = g.Count(),

@@ -8,6 +8,7 @@
     bool puedeAgregar = cuposUsados < limite;
     int ingresadosActivos = Model.Elementos.Count(e => e.TieneIngresoActivo);
     int fueraDeSede = cuposUsados - ingresadosActivos;
+    int listosParaLlevar = Model.Elementos.Count(e => e.ActivoParaIngreso && !e.TieneIngresoActivo);
     double porcentajeUso = limite > 0 ? Math.Min(100, ((double)cuposUsados / limite) * 100) : 0;
     string primerNombre = !string.IsNullOrWhiteSpace(Model.Nombres) ? Model.Nombres.Split(' ')[0] : "Usuario";
     string inicial = !string.IsNullOrWhiteSpace(Model.Nombres) ? Model.Nombres.Substring(0, 1).ToUpper() : "U";
@@ -153,7 +154,7 @@
                 <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Listos para ingreso en porteria</span>
+                <span>@listosParaLlevar habilitado@(listosParaLlevar != 1 ? "s" : "") para ingreso</span>
             </div>
         </div>
     </div>
@@ -253,12 +254,20 @@
                                     EN SEDE
                                 </span>
                             }
+                            else if (eq.ActivoParaIngreso)
+                            {
+                                <span id="badge-estado-@eq.IdElemento"
+                                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-indigo-700 bg-white/95 backdrop-blur-sm border border-indigo-200 shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dot-pulse"></span>
+                                    PROGRAMADO
+                                </span>
+                            }
                             else
                             {
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-slate-600"
-                                      style="background:rgba(241,245,249,0.95);border:1px solid #e2e8f0">
+                                <span id="badge-estado-@eq.IdElemento"
+                                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-slate-600 bg-white/95 backdrop-blur-sm border border-slate-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                    FUERA
+                                    NO PROGRAMADO
                                 </span>
                             }
                         </div>
@@ -328,6 +337,63 @@
                             }
                         </div>
 
+                        <!-- Control Diario: Llevar equipo -->
+                        <div class="border-t border-slate-100 pt-3">
+                            @if (tieneIngresoActivo)
+                            {
+                                <div class="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 flex items-center justify-between">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold text-emerald-950 leading-tight">Activo en Sede</p>
+                                            <p class="text-[11px] text-emerald-700 mt-0.5">El equipo ya se encuentra dentro de las instalaciones.</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">En sede</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div id="seccion-ingreso-@eq.IdElemento"
+                                     class="border rounded-xl p-3 transition-all duration-200 @(eq.ActivoParaIngreso ? "bg-indigo-50/70 border-indigo-200 shadow-xs" : "bg-slate-50 border-slate-200")">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div id="icono-ingreso-@eq.IdElemento"
+                                                 class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 @(eq.ActivoParaIngreso ? "bg-indigo-600 text-white shadow-sm" : "bg-slate-200 text-slate-500") transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p id="titulo-ingreso-@eq.IdElemento"
+                                                   class="text-xs font-bold @(eq.ActivoParaIngreso ? "text-indigo-950" : "text-slate-700") truncate">
+                                                    @(eq.ActivoParaIngreso ? "Habilitado para llevar" : "No seleccionado")
+                                                </p>
+                                                <p id="subtitulo-ingreso-@eq.IdElemento"
+                                                   class="text-[11px] @(eq.ActivoParaIngreso ? "text-indigo-700" : "text-slate-400") leading-tight mt-0.5">
+                                                    @(eq.ActivoParaIngreso ? "Aparecerá en portería para tu ingreso" : "Activa si piensas llevarlo hoy o mañana")
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Switch Toggle -->
+                                        <label class="relative inline-flex items-center cursor-pointer shrink-0" title="Seleccionar para llevar hoy o mañana">
+                                            <input type="checkbox"
+                                                   id="chk-ingreso-@eq.IdElemento"
+                                                   class="sr-only peer"
+                                                   @(eq.ActivoParaIngreso ? "checked" : "")
+                                                   onchange="toggleEquipoIngreso(@eq.IdElemento, this.checked)" />
+                                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 shadow-inner"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
                         <!-- Boton accion -->
                         <div class="mt-auto pt-1">
                             @if (tieneIngresoActivo)
@@ -385,17 +451,18 @@
     </div>
 
     <!-- Guia Rapida -->
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+    <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
             <div>
-                <h4 class="font-bold text-slate-900 text-sm">Control de Ingreso y Salida</h4>
-                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Presenta tu documento o el serial de tu equipo en porteria. El personal registrara tu movimiento en tiempo real.
+                <h4 class="font-bold text-slate-900 text-sm">Control de Ingreso y Selección Diaria</h4>
+                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    Cada día activa el interruptor <strong>"Habilitado para llevar"</strong> en el equipo que llevarás a la sede para que el personal de portería pueda registrar tu entrada.
+                    Cuando registren tu salida, el equipo se desmarcará automáticamente para que al día siguiente sólo actives el que vayas a transportar.
                 </p>
             </div>
         </div>
