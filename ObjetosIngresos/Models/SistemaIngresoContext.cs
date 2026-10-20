@@ -27,6 +27,8 @@ public partial class SistemaIngresoContext : DbContext
     public virtual DbSet<TiposDetalle> TiposDetalles { get; set; }
     public virtual DbSet<TiposUsuario> TiposUsuarios { get; set; }
     public virtual DbSet<Usuario> Usuarios { get; set; }
+    
+    public virtual DbSet<Movimiento_Novedad> Movimiento_Novedades { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
