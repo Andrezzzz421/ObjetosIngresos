@@ -171,7 +171,28 @@ public partial class SistemaIngresoContext : DbContext
             entity.Ignore(e => e.codigo_expiracion);
             entity.HasOne(d => d.IdSedePrincipalNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdSedePrincipal);
             entity.HasOne(d => d.IdTipoUsuarioNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdTipoUsuario);
-        }); 
+        });
+
+        modelBuilder.Entity<Movimiento_Novedad>(entity =>
+        {
+            entity.HasKey(e => e.id_novedad).HasName("PK_Movimiento_Novedades");
+            entity.ToTable("movimiento_novedades");
+            entity.Property(e => e.id_novedad).HasColumnName("id_novedad");
+            entity.Property(e => e.id_movimiento).HasColumnName("id_movimiento");
+            entity.Property(e => e.id_usuario_registra).HasColumnName("id_usuario_registra");
+            entity.Property(e => e.titulo).HasMaxLength(100).HasColumnName("titulo");
+            entity.Property(e => e.descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.fecha_creacion).HasColumnName("fecha_creacion");
+
+            entity.HasOne(d => d.Movimiento)
+                .WithMany()
+                .HasForeignKey(d => d.id_movimiento);
+
+            entity.HasOne(d => d.UsuarioRegistra)
+                .WithMany()
+                .HasForeignKey(d => d.id_usuario_registra);
+        });
+
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         { 
             var tableName = entity.GetTableName();
@@ -188,6 +209,7 @@ public partial class SistemaIngresoContext : DbContext
     {
         if (text == "Regionale") return "regionales"; // Excepción rápida por pluralización
         if (text == "CentrosFormacion") return "centros_formacion";
+        if (text == "Movimiento_Novedades" || text == "Movimiento_Novedad" || text == "movimiento_novedades") return "movimiento_novedades";
 
         return string.Concat(text.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
     }

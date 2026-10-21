@@ -88,8 +88,15 @@ namespace ObjetosIngresos.Services
 
         /// <summary>
         /// Registra la salida (Check-Out) en el movimiento activo de un elemento.
+        /// Si se indica que el equipo queda en custodia o se reporta alguna novedad/observación,
+        /// se crea automáticamente un registro en la tabla Movimiento_Novedades vinculado al id_movimiento.
         /// </summary>
-        public async Task<RegistrosMovimiento> RegistrarSalidaAsync(int idMovimiento)
+        public async Task<RegistrosMovimiento> RegistrarSalidaAsync(
+            int idMovimiento,
+            int? idUsuarioRegistra = null,
+            bool dejaEnCustodia = false,
+            string? observaciones = null,
+            string? tituloNovedad = null)
         {
             var movimiento = await _db.RegistrosMovimientos
                 .Include(m => m.IdElementoNavigation)
@@ -100,6 +107,18 @@ namespace ObjetosIngresos.Services
                 throw new InvalidOperationException("Este registro ya tiene una salida registrada.");
 
             movimiento.FechaSalida = DateTime.UtcNow;
+
+            // Actualizar observaciones en el movimiento si se suministraron
+            if (!string.IsNullOrWhiteSpace(observaciones))
+            {
+                movimiento.Observaciones = string.IsNullOrWhiteSpace(movimiento.Observaciones)
+                    ? observaciones.Trim()
+                    : $"{movimiento.Observaciones} | {observaciones.Trim()}";
+            }
+            else if (dejaEnCustodia && string.IsNullOrWhiteSpace(movimiento.Observaciones))
+            {
+                movimiento.Observaciones = "Salida con equipo dejado en custodia temporal.";
+            }
 
             // Desmarcar el elemento para que no aparezca en control de ingreso hasta que el usuario lo vuelva a seleccionar en Mi Panel
             if (movimiento.IdElementoNavigation != null)
@@ -115,8 +134,83 @@ namespace ObjetosIngresos.Services
                 }
             }
 
+            // Integración de Salidas Parciales / Custodia y Novedades en Movimiento_Novedades
+            if (dejaEnCustodia || !string.IsNullOrWhiteSpace(observaciones) || !string.IsNullOrWhiteSpace(tituloNovedad))
+            {
+                // Determinar el id_usuario_registra asegurando integridad con PostgreSQL
+                int resolvedUserId = idUsuarioRegistra ?? 0;
+                if (resolvedUserId <= 0)
+                {
+                    resolvedUserId = movimiento.IdElementoNavigation?.IdUsuario
+                        ?? await _db.Elementos.Where(e => e.IdElemento == movimiento.IdElemento).Select(e => e.IdUsuario).FirstOrDefaultAsync()
+                        ?? await _db.Usuarios.Select(u => u.IdUsuario).FirstOrDefaultAsync();
+                }
+
+                string tituloFinal;
+                if (!string.IsNullOrWhiteSpace(tituloNovedad))
+                {
+                    tituloFinal = tituloNovedad.Trim();
+                }
+                else if (dejaEnCustodia)
+                {
+                    tituloFinal = "Salida sin equipo (Custodia)";
+                }
+                else
+                {
+                    tituloFinal = "Novedad en Salida";
+                }
+
+                if (tituloFinal.Length > 100)
+                {
+                    tituloFinal = tituloFinal.Substring(0, 100);
+                }
+
+                string descripcionFinal;
+                if (dejaEnCustodia)
+                {
+                    if (!string.IsNullOrWhiteSpace(observaciones))
+                    {
+                        descripcionFinal = $"Salida de usuario sin equipo - dejado en custodia. Detalle: {observaciones.Trim()}";
+                    }
+                    else
+                    {
+                        descripcionFinal = "Salida de usuario sin equipo - dejado en custodia";
+                    }
+                }
+                else
+                {
+                    descripcionFinal = observaciones?.Trim() ?? "Salida registrada con novedades u observaciones.";
+                }
+
+                var novedad = new Movimiento_Novedad
+                {
+                    id_movimiento = movimiento.IdMovimiento,
+                    id_usuario_registra = resolvedUserId,
+                    titulo = tituloFinal,
+                    descripcion = descripcionFinal,
+                    fecha_creacion = DateTime.UtcNow
+                };
+
+                _db.Movimiento_Novedades.Add(novedad);
+            }
+
             await _db.SaveChangesAsync();
             return movimiento;
+        }
+
+        /// <summary>
+        /// Obtiene las novedades registradas para una lista de movimientos.
+        /// </summary>
+        public async Task<List<Movimiento_Novedad>> GetNovedadesPorMovimientosAsync(List<int> idsMovimientos)
+        {
+            if (idsMovimientos == null || !idsMovimientos.Any()) return new List<Movimiento_Novedad>();
+
+            return await _db.Movimiento_Novedades
+                .Include(n => n.UsuarioRegistra)
+                .Where(n => idsMovimientos.Contains(n.id_movimiento))
+                .OrderByDescending(n => n.fecha_creacion)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         /// <summary>

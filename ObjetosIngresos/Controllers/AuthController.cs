@@ -146,6 +146,7 @@ namespace ObjetosIngresos.Controllers
             {
                 new Claim(ClaimTypes.Name, usuario.Nombres),
                 new Claim("Documento", usuario.Documento.Trim()),
+                new Claim("IdUsuario", usuario.IdUsuario.ToString()),
                 new Claim(ClaimTypes.Email, usuario.Correo),
                 new Claim(ClaimTypes.NameIdentifier, usuario.FirebaseUid ?? ""),
                 new Claim(ClaimTypes.Role, usuario.IdTipoUsuarioNavigation?.Descripcion ?? "Aprendiz")
