@@ -69,6 +69,16 @@ namespace ObjetosIngresos.Controllers
                 _context.Usuarios.Add(usuario);
                 await _context.SaveChangesAsync();
 
+                var elemento = new Elemento
+                {
+                    IdUsuario = usuario.IdUsuario,
+                    TipoElemento = string.IsNullOrWhiteSpace(model.TipoElemento) ? "Dispositivo" : model.TipoElemento.Trim(),
+                    IdMarca = model.IdMarca,
+                    Serial = model.Serial?.Trim()
+                };
+                _context.Elementos.Add(elemento);
+                await _context.SaveChangesAsync();
+
                 ViewBag.Propietario = $"{usuario.Nombres} {usuario.Apellidos}";
                 ViewBag.Documento = usuario.Documento;
                 ViewBag.Equipo = elemento.TipoElemento;

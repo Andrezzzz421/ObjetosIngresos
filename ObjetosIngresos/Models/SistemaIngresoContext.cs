@@ -29,6 +29,7 @@ public partial class SistemaIngresoContext : DbContext
     
     public virtual DbSet<Movimiento_Novedad> Movimiento_Novedades { get; set; }
     public virtual DbSet<Notificacion> Notificaciones { get; set; }
+    public virtual DbSet<HistorialSistema> HistorialSistema { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
