@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
-
 public partial class SistemaIngresoContext : DbContext
 {
     public SistemaIngresoContext()
@@ -29,8 +28,7 @@ public partial class SistemaIngresoContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
     
     public virtual DbSet<Movimiento_Novedad> Movimiento_Novedades { get; set; }
-    public virtual DbSet<HistorialSistema> HistorialSistema { get; set; }
-    public virtual DbSet<HistorialSistema> HistorialSistemas => HistorialSistema;
+    public virtual DbSet<Notificacion> Notificaciones { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
@@ -175,64 +173,19 @@ public partial class SistemaIngresoContext : DbContext
             entity.HasOne(d => d.IdTipoUsuarioNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdTipoUsuario);
         });
 
-        modelBuilder.Entity<Movimiento_Novedad>(entity =>
+        modelBuilder.Entity<Notificacion>(entity =>
         {
-            entity.HasKey(e => e.id_novedad).HasName("PK_Movimiento_Novedades");
-            entity.ToTable("movimiento_novedades");
-            entity.Property(e => e.id_novedad).HasColumnName("id_novedad");
-            entity.Property(e => e.id_movimiento).HasColumnName("id_movimiento");
-            entity.Property(e => e.id_usuario_registra).HasColumnName("id_usuario_registra");
-            entity.Property(e => e.titulo).HasMaxLength(100).HasColumnName("titulo");
-            entity.Property(e => e.descripcion).HasColumnName("descripcion");
-            entity.Property(e => e.fecha_creacion).HasColumnName("fecha_creacion");
-
-            entity.HasOne(d => d.Movimiento)
-                .WithMany()
-                .HasForeignKey(d => d.id_movimiento);
-
-            entity.HasOne(d => d.UsuarioRegistra)
-                .WithMany()
-                .HasForeignKey(d => d.id_usuario_registra);
+            entity.HasKey(e => e.IdNotificacion).HasName("PK_Notificaciones");
+            entity.ToTable("notificaciones");
+            entity.Property(e => e.IdNotificacion).HasColumnName("id_notificacion");
+            entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+            entity.Property(e => e.Tipo).HasMaxLength(20).HasColumnName("tipo");
+            entity.Property(e => e.Titulo).HasMaxLength(200).HasColumnName("titulo");
+            entity.Property(e => e.Mensaje).HasMaxLength(500).HasColumnName("mensaje");
+            entity.Property(e => e.Leida).HasDefaultValue(false).HasColumnName("leida");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnName("fecha_creacion");
+            entity.HasOne(d => d.IdUsuarioNavigation).WithMany().HasForeignKey(d => d.IdUsuario).OnDelete(DeleteBehavior.Cascade);
         });
-
-        modelBuilder.Entity<HistorialSistema>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK_HistorialSistema");
-            entity.ToTable("HistorialSistema");
-
-            entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.TipoEvento).HasMaxLength(50).HasColumnName("TipoEvento");
-            entity.Property(e => e.IdMovimiento).HasColumnName("IdMovimiento");
-            entity.Property(e => e.IdPersona).HasColumnName("IdPersona");
-            entity.Property(e => e.IdEquipo).HasColumnName("IdEquipo");
-            entity.Property(e => e.IdUsuarioRegistra).HasColumnName("IdUsuarioRegistra");
-            entity.Property(e => e.FechaEvento).HasColumnName("FechaEvento");
-            entity.Property(e => e.FechaRegistro).HasColumnName("FechaRegistro");
-            entity.Property(e => e.Descripcion).HasColumnName("Descripcion");
-            entity.Property(e => e.DatosAnteriores).HasColumnName("DatosAnteriores");
-            entity.Property(e => e.DatosNuevos).HasColumnName("DatosNuevos");
-
-            entity.HasOne(d => d.Movimiento)
-                .WithMany()
-                .HasForeignKey(d => d.IdMovimiento)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(d => d.Persona)
-                .WithMany()
-                .HasForeignKey(d => d.IdPersona)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(d => d.Equipo)
-                .WithMany()
-                .HasForeignKey(d => d.IdEquipo)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(d => d.UsuarioRegistra)
-                .WithMany()
-                .HasForeignKey(d => d.IdUsuarioRegistra)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         { 
             var tableName = entity.GetTableName();

@@ -231,6 +231,12 @@ namespace ObjetosIngresos.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
+            var stats = await _authService.ObtenerEstadisticasUsuarioAsync(usuario.IdUsuario);
+            ViewBag.TotalEquipos = stats.totalEquipos;
+            ViewBag.EquiposEnSede = stats.equiposEnSede;
+            ViewBag.TotalMovimientos = stats.totalMovimientos;
+            ViewBag.UltimoIngreso = stats.ultimoIngreso ?? "Sin registros";
+
             return View("~/Views/Usuarios/Perfil.cshtml", usuario);
         }
 

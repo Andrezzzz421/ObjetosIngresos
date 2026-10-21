@@ -86,53 +86,27 @@ namespace ObjetosIngresos.Services
                 await _db.SaveChangesAsync();
             }
 
-            // Registro automático de auditoría: Entrada
-            if (_historialService != null)
+            // Notificar al propietario del equipo
+            var elemNotif = await _db.Elementos.AsNoTracking()
+                .FirstOrDefaultAsync(e => e.IdElemento == idElemento);
+
+            if (elemNotif?.IdUsuario != null)
             {
-                try
-                {
-                    var elemento = await _db.Elementos
-                        .Include(e => e.IdUsuarioNavigation)
-                        .FirstOrDefaultAsync(e => e.IdElemento == idElemento);
+                var sedeNombre = await _db.Sedes.AsNoTracking()
+                    .Where(s => s.IdSede == idSede)
+                    .Select(s => s.NombreSede)
+                    .FirstOrDefaultAsync() ?? "Sede";
 
-                    var sede = await _db.Sedes.FindAsync(idSede);
-                    var nombresDetalles = detallesElemento
-                        .Where(d => detallesPresentes == null || detallesPresentes.Contains(d.IdTipoDetalle))
-                        .Select(d => d.IdTipoDetalleNavigation?.Nombre ?? "Accesorio")
-                        .ToList();
-
-                    var descAccesorios = nombresDetalles.Any()
-                        ? $" con accesorios: {string.Join(", ", nombresDetalles)}."
-                        : " sin accesorios vinculados.";
-
-                    var desc = $"Entrada registrada en sede {sede?.NombreSede ?? idSede.ToString()}{descAccesorios}";
-
-                    await _historialService.RegistrarEventoAsync(new HistorialEventoDto
-                    {
-                        TipoEvento = "Entrada",
-                        IdMovimiento = movimiento.IdMovimiento,
-                        IdEquipo = idElemento,
-                        IdPersona = elemento?.IdUsuario,
-                        IdUsuarioRegistra = idUsuarioRegistra,
-                        FechaEvento = movimiento.FechaEntrada ?? DateTime.UtcNow,
-                        Descripcion = desc,
-                        DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            idMovimiento = movimiento.IdMovimiento,
-                            idElemento,
-                            idSede,
-                            detallesPresentes
-                        })
-                    });
-                }
-                catch
-                {
-                    // No interrumpir el movimiento si la auditoría falla
-                }
+                await Controllers.NotificacionesController.CrearAsync(_db,
+                    elemNotif.IdUsuario.Value,
+                    "entrada",
+                    "✅ Equipo ingresado a sede",
+                    $"Tu {elemNotif.TipoElemento} fue registrado en {sedeNombre} el {DateTime.UtcNow.AddHours(-5):dd/MM/yyyy HH:mm}.");
             }
 
             return movimiento;
         }
+
 
         /// <summary>
         /// Registra la salida (Check-Out) en el movimiento activo de un elemento.
@@ -245,79 +219,26 @@ namespace ObjetosIngresos.Services
 
             await _db.SaveChangesAsync();
 
-            // Registro automático de auditoría en HistorialSistema
-            if (_historialService != null)
+            // Notificar al propietario
+            var idUsuario = movimiento.IdElementoNavigation?.IdUsuario
+                ?? await _db.Elementos.AsNoTracking()
+                    .Where(e => e.IdElemento == movimiento.IdElemento)
+                    .Select(e => e.IdUsuario)
+                    .FirstOrDefaultAsync();
+
+            if (idUsuario != null)
             {
-                try
-                {
-                    int? idPersona = movimiento.IdElementoNavigation?.IdUsuario
-                        ?? await _db.Elementos.Where(e => e.IdElemento == movimiento.IdElemento).Select(e => (int?)e.IdUsuario).FirstOrDefaultAsync();
+                var tipoEquipo = movimiento.IdElementoNavigation?.TipoElemento
+                    ?? await _db.Elementos.AsNoTracking()
+                        .Where(e => e.IdElemento == movimiento.IdElemento)
+                        .Select(e => e.TipoElemento)
+                        .FirstOrDefaultAsync() ?? "Equipo";
 
-                    if (dejaEnCustodia)
-                    {
-                        // Evento: SalidaPersona (Salida sin equipo / Custodia)
-                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
-                        {
-                            TipoEvento = "SalidaPersona",
-                            IdMovimiento = movimiento.IdMovimiento,
-                            IdEquipo = movimiento.IdElemento,
-                            IdPersona = idPersona,
-                            IdUsuarioRegistra = resolvedUserId,
-                            FechaEvento = movimiento.FechaSalida ?? DateTime.UtcNow,
-                            Descripcion = $"Salida sin equipo (Custodia): El usuario se retira de la sede dejando el equipo en custodia temporal. {(string.IsNullOrWhiteSpace(observaciones) ? "" : "Detalle: " + observaciones.Trim())}",
-                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
-                            {
-                                idMovimiento = movimiento.IdMovimiento,
-                                dejaEnCustodia = true,
-                                observaciones
-                            })
-                        });
-                    }
-                    else
-                    {
-                        // Evento: SalidaEquipo (Salida normal con equipo / Cierre de movimiento)
-                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
-                        {
-                            TipoEvento = "SalidaEquipo",
-                            IdMovimiento = movimiento.IdMovimiento,
-                            IdEquipo = movimiento.IdElemento,
-                            IdPersona = idPersona,
-                            IdUsuarioRegistra = resolvedUserId,
-                            FechaEvento = movimiento.FechaSalida ?? DateTime.UtcNow,
-                            Descripcion = $"Salida con equipo (Check-Out): Usuario se retira portando el equipo. {(string.IsNullOrWhiteSpace(observaciones) ? "" : "Observaciones: " + observaciones.Trim())}",
-                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
-                            {
-                                idMovimiento = movimiento.IdMovimiento,
-                                dejaEnCustodia = false,
-                                observaciones
-                            })
-                        });
-                    }
-
-                    // Si se creó una novedad adicional, registrar también el evento Novedad
-                    if (novedadCreada != null)
-                    {
-                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
-                        {
-                            TipoEvento = "Novedad",
-                            IdMovimiento = movimiento.IdMovimiento,
-                            IdEquipo = movimiento.IdElemento,
-                            IdPersona = idPersona,
-                            IdUsuarioRegistra = resolvedUserId,
-                            FechaEvento = novedadCreada.fecha_creacion,
-                            Descripcion = $"Novedad vinculada: {novedadCreada.titulo} - {novedadCreada.descripcion}",
-                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
-                            {
-                                novedadCreada.titulo,
-                                novedadCreada.descripcion
-                            })
-                        });
-                    }
-                }
-                catch
-                {
-                    // No interrumpir el movimiento si la auditoría falla
-                }
+                await Controllers.NotificacionesController.CrearAsync(_db,
+                    idUsuario.Value,
+                    "salida",
+                    "🚪 Equipo retirado de sede",
+                    $"Tu {tipoEquipo} fue retirado el {DateTime.UtcNow.AddHours(-5):dd/MM/yyyy HH:mm}. Ya puedes desmarcarlo en Mi Panel.");
             }
 
             return movimiento;
