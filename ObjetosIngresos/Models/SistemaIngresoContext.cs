@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 
 namespace ObjetosIngresos.Models;
-
 public partial class SistemaIngresoContext : DbContext
 {
     public SistemaIngresoContext()
@@ -29,6 +28,7 @@ public partial class SistemaIngresoContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
     
     public virtual DbSet<Movimiento_Novedad> Movimiento_Novedades { get; set; }
+    public virtual DbSet<Notificacion> Notificaciones { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
@@ -171,7 +171,21 @@ public partial class SistemaIngresoContext : DbContext
             entity.Ignore(e => e.codigo_expiracion);
             entity.HasOne(d => d.IdSedePrincipalNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdSedePrincipal);
             entity.HasOne(d => d.IdTipoUsuarioNavigation).WithMany(p => p.Usuarios).HasForeignKey(d => d.IdTipoUsuario);
-        }); 
+        });
+
+        modelBuilder.Entity<Notificacion>(entity =>
+        {
+            entity.HasKey(e => e.IdNotificacion).HasName("PK_Notificaciones");
+            entity.ToTable("notificaciones");
+            entity.Property(e => e.IdNotificacion).HasColumnName("id_notificacion");
+            entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+            entity.Property(e => e.Tipo).HasMaxLength(20).HasColumnName("tipo");
+            entity.Property(e => e.Titulo).HasMaxLength(200).HasColumnName("titulo");
+            entity.Property(e => e.Mensaje).HasMaxLength(500).HasColumnName("mensaje");
+            entity.Property(e => e.Leida).HasDefaultValue(false).HasColumnName("leida");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnName("fecha_creacion");
+            entity.HasOne(d => d.IdUsuarioNavigation).WithMany().HasForeignKey(d => d.IdUsuario).OnDelete(DeleteBehavior.Cascade);
+        });
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         { 
             var tableName = entity.GetTableName();

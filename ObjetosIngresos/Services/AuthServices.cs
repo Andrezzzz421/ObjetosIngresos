@@ -161,5 +161,40 @@ namespace ObjetosIngresos.Services
                 .Include(u => u.IdSedePrincipalNavigation)
                 .FirstOrDefaultAsync(u => u.Documento == documento);
         }
+
+        public async Task<(int totalEquipos, int equiposEnSede, int totalMovimientos, string? ultimoIngreso)> ObtenerEstadisticasUsuarioAsync(int idUsuario)
+        {
+            var equipos = await _db.Elementos
+                .AsNoTracking()
+                .Where(e => e.IdUsuario == idUsuario)
+                .Select(e => e.IdElemento)
+                .ToListAsync();
+
+            int totalEquipos = equipos.Count;
+            int equiposEnSede = 0;
+            int totalMovimientos = 0;
+            string? ultimoIngreso = null;
+
+            if (equipos.Any())
+            {
+                var movs = await _db.RegistrosMovimientos
+                    .AsNoTracking()
+                    .Where(m => equipos.Contains(m.IdElemento))
+                    .OrderByDescending(m => m.FechaEntrada)
+                    .Select(m => new { m.FechaEntrada, m.FechaSalida })
+                    .ToListAsync();
+
+                totalMovimientos = movs.Count;
+                equiposEnSede = movs.Count(m => m.FechaSalida == null);
+
+                var ult = movs.FirstOrDefault(m => m.FechaEntrada != null);
+                if (ult?.FechaEntrada != null)
+                {
+                    ultimoIngreso = ult.FechaEntrada.Value.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt");
+                }
+            }
+
+            return (totalEquipos, equiposEnSede, totalMovimientos, ultimoIngreso);
+        }
     }
 }

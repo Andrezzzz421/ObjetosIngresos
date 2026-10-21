@@ -1,21 +1,23 @@
 @using ObjetosIngresos.ViewModel
 @model PreRegistroViewModel
 @{
-    ViewData["Title"] = "Registro";
+    ViewData["Title"] = "Pre-Registro de Ingreso";
     Layout = "_Layout";
 }
 
-<div class="min-h-full flex items-center justify-center py-6 px-4">
-    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-8 sm:p-12">
+<div class="min-h-full flex items-center justify-center py-8 px-4">
+    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6 sm:p-10 transition-colors">
+        
+        <!-- Header -->
         <div class="mb-8 text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 shadow-sm">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 shadow-sm ring-4 ring-indigo-50/50">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">Registro</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Pre-Registro de Visitante</h2>
             <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">
-                Registra tus datos personales para agilizar tu acceso en portería.
+                Registra tus datos y los de tu equipo con anticipación para un ingreso ágil y sin demoras en portería.
             </p>
         </div>
 
@@ -23,12 +25,12 @@
         {
             <div class="mb-6 rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
                 <div class="font-semibold mb-1 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Por favor revisa los siguientes campos:
                 </div>
-                <ul class="list-disc list-inside space-y-1 ml-6">
+                <ul class="list-disc list-inside space-y-1 ml-6 text-xs">
                     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                     {
                         <li>@error.ErrorMessage</li>
@@ -40,48 +42,103 @@
         <form asp-action="Registrar" asp-controller="PreRegistro" method="post" class="space-y-6">
             @Html.AntiForgeryToken()
 
-            <div class="border-b border-slate-100 pb-4">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-4">1. Datos Personales</h3>
+            <!-- Paso 1: Datos Personales -->
+            <div class="bg-slate-50/60 rounded-2xl p-5 border border-slate-100">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600">Datos del Visitante</h3>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="sm:col-span-2">
                         <label asp-for="Documento" class="block text-xs font-semibold text-slate-700 mb-1">Número de Documento *</label>
                         <input asp-for="Documento" required placeholder="Ej. 1065558901"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
                         <span asp-validation-for="Documento" class="text-xs text-red-600 mt-1 block"></span>
                     </div>
 
                     <div>
                         <label asp-for="Nombres" class="block text-xs font-semibold text-slate-700 mb-1">Nombres *</label>
                         <input asp-for="Nombres" required placeholder="Ej. Carlos Alberto"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
                         <span asp-validation-for="Nombres" class="text-xs text-red-600 mt-1 block"></span>
                     </div>
 
                     <div>
                         <label asp-for="Apellidos" class="block text-xs font-semibold text-slate-700 mb-1">Apellidos *</label>
                         <input asp-for="Apellidos" required placeholder="Ej. Pérez Gómez"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
                         <span asp-validation-for="Apellidos" class="text-xs text-red-600 mt-1 block"></span>
                     </div>
 
                     <div class="sm:col-span-2">
                         <label asp-for="Correo" class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico *</label>
                         <input asp-for="Correo" type="email" required placeholder="Ej. carlos.perez@correo.com"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
                         <span asp-validation-for="Correo" class="text-xs text-red-600 mt-1 block"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Paso 2: Datos del Equipo -->
+            <div class="bg-slate-50/60 rounded-2xl p-5 border border-slate-100">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600">Datos del Equipo a Ingresar</h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label asp-for="TipoElemento" class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Equipo / Elemento *</label>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            <button type="button" onclick="selectTipo('Portátil')" class="tipo-chip text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors">💻 Portátil</button>
+                            <button type="button" onclick="selectTipo('Tablet')" class="tipo-chip text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors">📱 Tablet</button>
+                            <button type="button" onclick="selectTipo('Cámara')" class="tipo-chip text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors">📷 Cámara</button>
+                            <button type="button" onclick="selectTipo('Herramienta')" class="tipo-chip text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors">🔧 Herramienta</button>
+                        </div>
+                        <input asp-for="TipoElemento" id="inputTipoElemento" required placeholder="Ej. Portátil, Proyector, Cámara..."
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
+                        <span asp-validation-for="TipoElemento" class="text-xs text-red-600 mt-1 block"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="IdMarca" class="block text-xs font-semibold text-slate-700 mb-1">Marca del Equipo</label>
+                        <select asp-for="IdMarca" asp-items="ViewBag.Marcas"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                            <option value="">-- Seleccionar marca (opcional) --</option>
+                        </select>
+                        <span asp-validation-for="IdMarca" class="text-xs text-red-600 mt-1 block"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Serial" class="block text-xs font-semibold text-slate-700 mb-1">Número de Serial / Identificador</label>
+                        <input asp-for="Serial" placeholder="Ej. CNU1234567 / S/N"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400" />
+                        <span asp-validation-for="Serial" class="text-xs text-red-600 mt-1 block"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <a asp-controller="Auth" asp-action="Login" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
                     &larr; Volver al Inicio de Sesión
                 </a>
                 <button type="submit"
-                        class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Completar Registro
+                        class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md hover:shadow-indigo-500/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Completar Pre-Registro y Generar Pase
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    function selectTipo(tipo) {
+        const input = document.getElementById('inputTipoElemento');
+        if (input) {
+            input.value = tipo;
+            input.focus();
+        }
+    }
+</script>

@@ -312,5 +312,95 @@ namespace ObjetosIngresos.Controllers
                     : "Equipo desmarcado. No aparecerá en el control de ingreso hasta que lo vuelvas a seleccionar."
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> EditarEquipo(int id)
+        {
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
+            if (idUsuario == null) return RedirectToAction("Login", "Auth");
+
+            var elemento = await _db.Elementos
+                .Include(e => e.DetalleElementos)
+                .FirstOrDefaultAsync(e => e.IdElemento == id && e.IdUsuario == idUsuario.Value);
+
+            if (elemento == null)
+            {
+                TempData["Error"] = "Equipo no encontrado o no te pertenece.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await CargarViewBagsAsync();
+            ViewBag.IdElemento = elemento.IdElemento;
+            ViewBag.TipoElemento = elemento.TipoElemento;
+            ViewBag.IdMarca = elemento.IdMarca;
+            ViewBag.Serial = elemento.Serial;
+            ViewBag.TieneFoto = elemento.FotoArchivo != null;
+            ViewBag.Accesorios = elemento.DetalleElementos.Select(d => d.IdTipoDetalle).ToList();
+
+            return View("~/Views/MiPanel/EditarEquipo.cshtml");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarEquipo(
+            int idElemento, string tipoElemento, int? idMarca, string? serial,
+            IFormFile? foto, List<int>? accesorios)
+        {
+            var idUsuario = await ObtenerIdUsuarioSesionAsync();
+            if (idUsuario == null) return RedirectToAction("Login", "Auth");
+
+            var elemento = await _db.Elementos
+                .Include(e => e.DetalleElementos)
+                .FirstOrDefaultAsync(e => e.IdElemento == idElemento && e.IdUsuario == idUsuario.Value);
+
+            if (elemento == null)
+            {
+                TempData["Error"] = "Equipo no encontrado o no te pertenece.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (string.IsNullOrWhiteSpace(tipoElemento))
+            {
+                TempData["Error"] = "El tipo de equipo es obligatorio.";
+                return RedirectToAction(nameof(EditarEquipo), new { id = idElemento });
+            }
+
+            elemento.TipoElemento = tipoElemento.Trim();
+            elemento.IdMarca = idMarca > 0 ? idMarca : null;
+            elemento.Serial = string.IsNullOrWhiteSpace(serial) ? null : serial.Trim();
+
+            if (foto != null && foto.Length > 0 && foto.ContentType.StartsWith("image/"))
+            {
+                elemento.FotoArchivo = await Helpers.APHelpers.ToBytes(foto);
+            }
+
+            // Actualizar accesorios
+            _db.DetalleElementos.RemoveRange(elemento.DetalleElementos);
+
+            if (accesorios != null && accesorios.Any())
+            {
+                foreach (var idTd in accesorios.Distinct())
+                {
+                    _db.DetalleElementos.Add(new Models.DetalleElemento
+                    {
+                        IdElemento = idElemento,
+                        IdTipoDetalle = idTd
+                    });
+                }
+            }
+
+            try
+            {
+                await _db.SaveChangesAsync();
+                TempData["Exito"] = "¡Equipo actualizado correctamente!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.InnerException?.Message ?? ex.Message;
+                TempData["Error"] = "Error al guardar: " + msg;
+                return RedirectToAction(nameof(EditarEquipo), new { id = idElemento });
+            }
+        }
     }
 }

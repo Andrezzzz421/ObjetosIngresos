@@ -66,8 +66,11 @@ namespace ObjetosIngresos.Controllers
                 await _context.SaveChangesAsync();
 
                 ViewBag.Propietario = $"{usuario.Nombres} {usuario.Apellidos}";
+                ViewBag.Documento = usuario.Documento;
                 ViewBag.Equipo = elemento.TipoElemento;
-                ViewBag.Serial = elemento.Serial ?? "Sin serial";
+                ViewBag.Serial = string.IsNullOrWhiteSpace(elemento.Serial) ? "Sin serial" : elemento.Serial;
+                ViewBag.IdElemento = elemento.IdElemento;
+                ViewBag.FechaRegistro = DateTime.Now.ToString("dd/MM/yyyy hh:mm tt");
 
                 return View("~/Views/PreRegistro/Exito.cshtml");
             }

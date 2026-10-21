@@ -179,6 +179,34 @@ namespace ObjetosIngresos.Services
                 Sede = u.Sede ?? "—"
             }).ToList();
 
+            // 9. Histórico de flujos de los últimos 7 días (para gráficas)
+            var hace7DiasUtc = todayStartUtc.AddDays(-6);
+            var movsSemana = await _db.RegistrosMovimientos
+                .AsNoTracking()
+                .Where(m => (m.FechaEntrada != null && m.FechaEntrada >= hace7DiasUtc) || 
+                            (m.FechaSalida != null && m.FechaSalida >= hace7DiasUtc))
+                .Select(m => new { m.FechaEntrada, m.FechaSalida })
+                .ToListAsync();
+
+            var ultimos7Dias = new List<AdminMovimientoDiaDto>();
+            for (int i = 6; i >= 0; i--)
+            {
+                var diaLocal = colombiaNow.Date.AddDays(-i);
+                var diaInicioUtc = diaLocal.AddHours(5);
+                var diaFinUtc = diaInicioUtc.AddDays(1);
+
+                int entradasDia = movsSemana.Count(m => m.FechaEntrada >= diaInicioUtc && m.FechaEntrada < diaFinUtc);
+                int salidasDia = movsSemana.Count(m => m.FechaSalida >= diaInicioUtc && m.FechaSalida < diaFinUtc);
+
+                ultimos7Dias.Add(new AdminMovimientoDiaDto
+                {
+                    Fecha = diaLocal.ToString("ddd dd", new CultureInfo("es-CO")),
+                    Entradas = entradasDia,
+                    Salidas = salidasDia
+                });
+            }
+            viewModel.MovimientosUltimos7Dias = ultimos7Dias;
+
             return viewModel;
         }
     }

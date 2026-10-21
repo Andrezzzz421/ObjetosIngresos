@@ -1,45 +1,106 @@
 @{
-    ViewData["Title"] = "Registro Exitoso";
+    ViewData["Title"] = "Pase de Pre-Registro Exitoso";
     Layout = "_Layout";
+
+    var doc = ViewBag.Documento?.ToString() ?? "0000";
+    var eqId = ViewBag.IdElemento?.ToString() ?? "0";
+    var qrData = $"SGI-REGISTRO|DOC:{doc}|EQ:{eqId}|EQUIPO:{ViewBag.Equipo}|SN:{ViewBag.Serial}";
+    var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data={Uri.EscapeDataString(qrData)}";
+    var codigoTicket = $"PRE-{doc.Substring(Math.Max(0, doc.Length - 4))}-{eqId}";
 }
 
-<div class="min-h-full flex items-center justify-center py-10 px-4">
-    <div class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-8 sm:p-12 text-center">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 mb-6 shadow-sm ring-8 ring-emerald-50/50">
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+<div class="min-h-full flex items-center justify-center py-8 px-4">
+    <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6 sm:p-10 text-center transition-colors print:shadow-none print:border-none print:p-0">
+        
+        <!-- Header de éxito -->
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-emerald-500 mb-4 shadow-sm ring-8 ring-emerald-50/50">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
         </div>
 
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">¡Pre-Registro Exitoso!</h2>
-        <p class="text-slate-500 text-sm mt-3 leading-relaxed">
-            Tu información y la de tu equipo han sido vinculadas correctamente en el sistema de inventario y control de ingresos.
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">¡Pre-Registro Confirmado!</h2>
+        <p class="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
+            Tu equipo ha quedado pre-registrado. Muestra este comprobante o tu número de documento al ingresar por portería.
         </p>
 
-        <div class="my-6 p-5 bg-slate-50 rounded-2xl border border-slate-100 text-left space-y-2">
-            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider">Resumen del Pre-Registro</div>
-            <div class="flex justify-between text-sm py-1 border-b border-slate-200/60">
-                <span class="text-slate-500">Visitante:</span>
-                <span class="font-semibold text-slate-800">@ViewBag.Propietario</span>
+        <!-- Ticket Digital Imprimible -->
+        <div id="ticketPase" class="my-6 p-6 bg-slate-50 rounded-3xl border border-slate-200/80 text-left relative overflow-hidden">
+            <!-- Banda superior institucional -->
+            <div class="flex items-center justify-between pb-4 border-b border-dashed border-slate-300 mb-4">
+                <div>
+                    <span class="text-[10px] font-extrabold tracking-widest uppercase text-indigo-600">SENA • Control de Ingreso</span>
+                    <h3 class="text-base font-bold text-slate-900">Pase Digital de Ingreso</h3>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 block uppercase">Código</span>
+                    <span class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">@codigoTicket</span>
+                </div>
             </div>
-            <div class="flex justify-between text-sm py-1 border-b border-slate-200/60">
-                <span class="text-slate-500">Equipo:</span>
-                <span class="font-semibold text-slate-800">@ViewBag.Equipo</span>
-            </div>
-            <div class="flex justify-between text-sm py-1">
-                <span class="text-slate-500">Serial:</span>
-                <span class="font-mono text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">@ViewBag.Serial</span>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                <!-- Información -->
+                <div class="sm:col-span-2 space-y-2 text-xs">
+                    <div>
+                        <span class="text-slate-400 text-[11px] block">Visitante / Propietario</span>
+                        <span class="font-bold text-slate-800 text-sm">@ViewBag.Propietario</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-[11px] block">Documento de Identidad</span>
+                        <span class="font-semibold text-slate-700 font-mono">@ViewBag.Documento</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-[11px] block">Equipo Registrado</span>
+                        <span class="font-semibold text-slate-700">@ViewBag.Equipo</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-[11px] block">Serial</span>
+                        <span class="font-mono font-semibold text-indigo-600">@ViewBag.Serial</span>
+                    </div>
+                    <div class="pt-1 text-[11px] text-slate-400">
+                        <span>Generado: @ViewBag.FechaRegistro</span>
+                    </div>
+                </div>
+
+                <!-- Código QR Interactivo -->
+                <div class="flex flex-col items-center justify-center sm:border-l sm:border-dashed sm:border-slate-300 sm:pl-4">
+                    <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+                        <img src="@qrUrl" alt="QR Verificación" class="w-28 h-28 object-contain rounded-lg" />
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1.5 font-medium">Escaneo en Portería</span>
+                </div>
             </div>
         </div>
 
-        <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 text-left flex items-start gap-3 mb-6">
+        <!-- Acciones rápidas (Imprimir, Copiar) -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-6 print:hidden">
+            <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Imprimir o Guardar PDF
+            </button>
+            <button type="button" onclick="copiarCodigo('@codigoTicket')" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all" id="btnCopiar">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span id="txtCopiar">Copiar Código</span>
+            </button>
+        </div>
+
+        <!-- Indicación de Portería -->
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 text-left flex items-start gap-3 mb-6 print:hidden">
             <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Al presentarte en la portería del SENA, indícale al personal de seguridad tu <strong>número de documento</strong> para registrar tu ingreso físico de forma inmediata.</span>
+            <div>
+                <p class="font-semibold">Instrucciones de Llegada a la Sede:</p>
+                <p class="mt-0.5 text-slate-600">Preséntate en la portería con tu documento de identidad físico. El personal de seguridad escaneará tu código QR o digitará tu documento para darte ingreso oficial.</p>
+            </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <!-- Botones de Navegación -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center print:hidden">
             <a asp-action="Index" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
                 Registrar otro equipo
             </a>
@@ -49,3 +110,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    function copiarCodigo(texto) {
+        navigator.clipboard.writeText(texto).then(() => {
+            const txt = document.getElementById('txtCopiar');
+            if (txt) {
+                txt.textContent = '¡Copiado!';
+                setTimeout(() => { txt.textContent = 'Copiar Código'; }, 2000);
+            }
+        });
+    }
+</script>

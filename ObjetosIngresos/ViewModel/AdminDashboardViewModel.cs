@@ -13,6 +13,14 @@ namespace ObjetosIngresos.ViewModel
         public List<AdminRolDto> RolesUsuarios { get; set; } = new();
         public List<AdminSedeDto> SedesActivas { get; set; } = new();
         public List<AdminUsuarioDto> UltimosUsuarios { get; set; } = new();
+        public List<AdminMovimientoDiaDto> MovimientosUltimos7Dias { get; set; } = new();
+    }
+
+    public class AdminMovimientoDiaDto
+    {
+        public string Fecha { get; set; } = string.Empty;
+        public int Entradas { get; set; }
+        public int Salidas { get; set; }
     }
 
     public class AdminKpiDto

@@ -83,8 +83,27 @@ namespace ObjetosIngresos.Services
                 await _db.SaveChangesAsync();
             }
 
+            // Notificar al propietario del equipo
+            var elemNotif = await _db.Elementos.AsNoTracking()
+                .FirstOrDefaultAsync(e => e.IdElemento == idElemento);
+
+            if (elemNotif?.IdUsuario != null)
+            {
+                var sedeNombre = await _db.Sedes.AsNoTracking()
+                    .Where(s => s.IdSede == idSede)
+                    .Select(s => s.NombreSede)
+                    .FirstOrDefaultAsync() ?? "Sede";
+
+                await Controllers.NotificacionesController.CrearAsync(_db,
+                    elemNotif.IdUsuario.Value,
+                    "entrada",
+                    "✅ Equipo ingresado a sede",
+                    $"Tu {elemNotif.TipoElemento} fue registrado en {sedeNombre} el {DateTime.UtcNow.AddHours(-5):dd/MM/yyyy HH:mm}.");
+            }
+
             return movimiento;
         }
+
 
         /// <summary>
         /// Registra la salida (Check-Out) en el movimiento activo de un elemento.
@@ -116,6 +135,29 @@ namespace ObjetosIngresos.Services
             }
 
             await _db.SaveChangesAsync();
+
+            // Notificar al propietario
+            var idUsuario = movimiento.IdElementoNavigation?.IdUsuario
+                ?? await _db.Elementos.AsNoTracking()
+                    .Where(e => e.IdElemento == movimiento.IdElemento)
+                    .Select(e => e.IdUsuario)
+                    .FirstOrDefaultAsync();
+
+            if (idUsuario != null)
+            {
+                var tipoEquipo = movimiento.IdElementoNavigation?.TipoElemento
+                    ?? await _db.Elementos.AsNoTracking()
+                        .Where(e => e.IdElemento == movimiento.IdElemento)
+                        .Select(e => e.TipoElemento)
+                        .FirstOrDefaultAsync() ?? "Equipo";
+
+                await Controllers.NotificacionesController.CrearAsync(_db,
+                    idUsuario.Value,
+                    "salida",
+                    "🚪 Equipo retirado de sede",
+                    $"Tu {tipoEquipo} fue retirado el {DateTime.UtcNow.AddHours(-5):dd/MM/yyyy HH:mm}. Ya puedes desmarcarlo en Mi Panel.");
+            }
+
             return movimiento;
         }
 

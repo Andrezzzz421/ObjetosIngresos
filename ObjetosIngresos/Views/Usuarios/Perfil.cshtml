@@ -1,115 +1,197 @@
 @model ObjetosIngresos.Models.Usuario
 
 @{
-    ViewData["Title"] = "Mi Perfil";
+    ViewData["Title"] = "Mi Perfil Institucional";
+    var totalEquipos = ViewBag.TotalEquipos ?? 0;
+    var equiposEnSede = ViewBag.EquiposEnSede ?? 0;
+    var totalMovimientos = ViewBag.TotalMovimientos ?? 0;
+    var ultimoIngreso = ViewBag.UltimoIngreso?.ToString() ?? "Sin registros";
+
+    var rol = Model.IdTipoUsuarioNavigation?.Descripcion ?? "Usuario";
+    var rolBadgeClass = rol.ToLower().Contains("admin") 
+        ? "bg-purple-50 text-purple-700 border-purple-200"
+        : rol.ToLower().Contains("instructor")
+        ? "bg-blue-50 text-blue-700 border-blue-200"
+        : "bg-emerald-50 text-emerald-700 border-emerald-200";
 }
 
-<div class="max-w-4xl mx-auto px-4 py-12">
-    <!-- Panel del Perfil Principal -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-8">
+<div class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+    
+    <!-- 1. Tarjeta Hero de Perfil -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 transition-colors">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
 
-            <!-- Datos del Usuario -->
-            <div class="flex flex-col md:flex-row items-center gap-6">
-                <div class="relative">
-                    <div class="w-24 h-24 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-200 ring-4 ring-white">
+            <!-- Avatar y Nombres -->
+            <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+                <div class="relative shrink-0">
+                    <div class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center text-3xl font-extrabold shadow-lg shadow-indigo-500/20 ring-4 ring-white">
                         @(string.IsNullOrEmpty(Model?.Nombres) ? "U" : Model.Nombres.Substring(0, 1))
                     </div>
-                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full" title="Usuario activo"></div>
                 </div>
 
-                <div class="text-center md:text-left flex-grow">
-                    <h2 class="text-3xl font-bold text-slate-800">
+                <div>
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1.5">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border @rolBadgeClass">
+                            @rol
+                        </span>
+                        @if (!string.IsNullOrEmpty(Model?.Ficha))
+                        {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                                Ficha: @Model.Ficha
+                            </span>
+                        }
+                    </div>
+
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                         @(Model?.Nombres ?? "Usuario") @(Model?.Apellidos ?? "")
                     </h2>
-                    <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
-                            @Model.IdTipoUsuarioNavigation?.Descripcion
-                        </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-50 text-slate-600 border border-slate-100">
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            @Model.IdSedePrincipalNavigation?.NombreSede
-                        </span>
-                    </div>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5 flex items-center justify-center sm:justify-start gap-1.5">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        @(Model?.IdSedePrincipalNavigation?.NombreSede ?? "Sede Principal No Asignada")
+                    </p>
                 </div>
             </div>
 
-            <!-- Botón de Cambio de Contraseña -->
-            <div class="w-full md:w-auto">
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto">
+                <a asp-controller="MiPanel" asp-action="Index"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white text-xs font-bold rounded-xl border border-indigo-200 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Mis Equipos
+                </a>
+
                 <a asp-controller="Auth" asp-action="NuevaPassword" asp-route-email="@Model.Correo"
-                   class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold rounded-2xl shadow-lg shadow-slate-200 hover:shadow-indigo-100 transition-all group">
-                    <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                     </svg>
-                    <span>Cambiar Contraseña</span>
+                    Cambiar Contraseña
                 </a>
             </div>
-
         </div>
     </div>
 
-    <!-- Información Detallada -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Información Detallada</h3>
+    <!-- 2. Tarjetas de Estadísticas / KPIs Personales -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- KPI: Total Equipos -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5 transition-colors">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <span class="text-[11px] font-semibold text-slate-400 block uppercase">Equipos Vinculados</span>
+                <span class="text-xl font-extrabold text-slate-900">@totalEquipos</span>
+            </div>
         </div>
 
-        <table class="w-full text-left border-collapse">
-            <tbody class="divide-y divide-slate-100">
-                <tr class="group hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm font-semibold text-slate-500 w-1/3">Nombre Completo</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@(Model?.Nombres) @(Model?.Apellidos)</td>
-                </tr>
-                <tr class="group hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Documento de Identidad</td>
-                    <td class="px-8 py-5 text-sm font-mono font-bold text-indigo-600">@Model.Documento</td>
-                </tr>
-                <tr class="group hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Ficha o Dependencia</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">
-                        <span class="px-2 py-1 bg-slate-100 rounded text-slate-600">@Model.Ficha</span>
-                    </td>
-                </tr>
-                <tr class="group hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Sede Principal</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@Model.IdSedePrincipalNavigation?.NombreSede</td>
-                </tr>
-                <tr class="group hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 text-sm font-semibold text-slate-500">Rol del Usuario</td>
-                    <td class="px-8 py-5 text-sm font-bold text-slate-800">@Model.IdTipoUsuarioNavigation?.Descripcion</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- KPI: Equipos En Sede -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5 transition-colors">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <div>
+                <span class="text-[11px] font-semibold text-slate-400 block uppercase">En Sede Ahora</span>
+                <span class="text-xl font-extrabold text-emerald-600">@equiposEnSede</span>
+            </div>
+        </div>
+
+        <!-- KPI: Total Movimientos -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5 transition-colors">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            </div>
+            <div>
+                <span class="text-[11px] font-semibold text-slate-400 block uppercase">Total Movimientos</span>
+                <span class="text-xl font-extrabold text-slate-900">@totalMovimientos</span>
+            </div>
+        </div>
+
+        <!-- KPI: Último Ingreso -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center gap-3.5 transition-colors">
+            <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="truncate">
+                <span class="text-[11px] font-semibold text-slate-400 block uppercase">Último Ingreso</span>
+                <span class="text-xs font-bold text-slate-800 truncate block" title="@ultimoIngreso">@ultimoIngreso</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Volver -->
-    <div class="mt-8 text-center">
-        <a asp-controller="Home" asp-action="Index" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors group decoration-none">
-            <svg class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 3. Información Detallada del Usuario -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden transition-colors">
+        <div class="px-6 sm:px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Ficha Técnica de Usuario
+            </h3>
+            <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                Cuenta Verificada
+            </span>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Nombre Completo</span>
+                <span class="sm:col-span-2 text-sm font-bold text-slate-800">@(Model?.Nombres) @(Model?.Apellidos)</span>
+            </div>
+
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Documento de Identidad</span>
+                <span class="sm:col-span-2 text-sm font-mono font-bold text-indigo-600">@Model.Documento</span>
+            </div>
+
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Correo Electrónico</span>
+                <span class="sm:col-span-2 text-sm font-medium text-slate-700">@Model.Correo</span>
+            </div>
+
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Ficha o Dependencia</span>
+                <span class="sm:col-span-2 text-sm font-semibold text-slate-800">
+                    @(string.IsNullOrEmpty(Model.Ficha) ? "No especificada" : Model.Ficha)
+                </span>
+            </div>
+
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Sede Principal Asignada</span>
+                <span class="sm:col-span-2 text-sm font-semibold text-slate-800">
+                    @(Model.IdSedePrincipalNavigation?.NombreSede ?? "Sin sede asignada")
+                </span>
+            </div>
+
+            <div class="px-6 sm:px-8 py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 hover:bg-slate-50/60 transition-colors">
+                <span class="text-xs font-semibold text-slate-500">Rol en la Plataforma</span>
+                <span class="sm:col-span-2 text-sm font-bold text-slate-800">
+                    @rol
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volver al Inicio -->
+    <div class="text-center pt-2">
+        <a asp-controller="Home" asp-action="Index" class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors group">
+            <svg class="w-4 h-4 mr-1.5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             Volver al Panel Principal
         </a>
     </div>
 </div>
-
-<div id="toastError" class="fixed bottom-5 right-5 z-[110] hidden transform transition-all duration-300 translate-y-10 opacity-0">
-    <div class="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 max-w-sm">
-        <div class="bg-red-500 p-2 rounded-lg">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-        </div>
-        <div>
-            <p class="font-bold text-sm">¡Ups! Algo salió mal</p>
-            <p id="toastMessage" class="text-xs text-slate-400">No se pudo procesar la solicitud.</p>
-        </div>
-        <button onclick="hideToast()" class="text-slate-500 hover:text-white transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-    </div>
-</div>
-
-@section Scripts {
-    <script type="module" src="~/js/auth-login-v2.js?v=@DateTime.Now.Ticks"></script>
-}
