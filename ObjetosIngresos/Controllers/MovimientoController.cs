@@ -150,7 +150,8 @@ namespace ObjetosIngresos.Controllers
                         .ToList();
                 }
 
-                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede, listaDetalles);
+                var idUsuarioActual = await ObtenerIdUsuarioSesionAsync();
+                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede, listaDetalles, idUsuarioActual);
                 string? fechaFormateada = null;
 
                 if (movimiento.FechaEntrada.HasValue)

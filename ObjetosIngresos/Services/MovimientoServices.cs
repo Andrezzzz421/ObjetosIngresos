@@ -7,10 +7,12 @@ namespace ObjetosIngresos.Services
     public class MovimientoServices
     {
         private readonly SistemaIngresoContext _db;
+        private readonly IHistorialService? _historialService;
 
-        public MovimientoServices(SistemaIngresoContext db)
+        public MovimientoServices(SistemaIngresoContext db, IHistorialService? historialService = null)
         {
             _db = db;
+            _historialService = historialService;
         }
 
         /// <summary>
@@ -43,7 +45,7 @@ namespace ObjetosIngresos.Services
                 .ToListAsync();
         }
          
-        public async Task<RegistrosMovimiento> RegistrarEntradaAsync(int idElemento, int idSede, List<int>? detallesPresentes = null)
+        public async Task<RegistrosMovimiento> RegistrarEntradaAsync(int idElemento, int idSede, List<int>? detallesPresentes = null, int? idUsuarioRegistra = null)
         {
             // Verificar que no haya un movimiento activo sin salida
             var activo = await _db.RegistrosMovimientos
@@ -65,6 +67,7 @@ namespace ObjetosIngresos.Services
 
             // Vincular los accesorios/objetos del elemento a este movimiento
             var detallesElemento = await _db.DetalleElementos
+                .Include(d => d.IdTipoDetalleNavigation)
                 .Where(d => d.IdElemento == idElemento)
                 .ToListAsync();
 
@@ -81,6 +84,51 @@ namespace ObjetosIngresos.Services
                     });
                 }
                 await _db.SaveChangesAsync();
+            }
+
+            // Registro automático de auditoría: Entrada
+            if (_historialService != null)
+            {
+                try
+                {
+                    var elemento = await _db.Elementos
+                        .Include(e => e.IdUsuarioNavigation)
+                        .FirstOrDefaultAsync(e => e.IdElemento == idElemento);
+
+                    var sede = await _db.Sedes.FindAsync(idSede);
+                    var nombresDetalles = detallesElemento
+                        .Where(d => detallesPresentes == null || detallesPresentes.Contains(d.IdTipoDetalle))
+                        .Select(d => d.IdTipoDetalleNavigation?.Nombre ?? "Accesorio")
+                        .ToList();
+
+                    var descAccesorios = nombresDetalles.Any()
+                        ? $" con accesorios: {string.Join(", ", nombresDetalles)}."
+                        : " sin accesorios vinculados.";
+
+                    var desc = $"Entrada registrada en sede {sede?.NombreSede ?? idSede.ToString()}{descAccesorios}";
+
+                    await _historialService.RegistrarEventoAsync(new HistorialEventoDto
+                    {
+                        TipoEvento = "Entrada",
+                        IdMovimiento = movimiento.IdMovimiento,
+                        IdEquipo = idElemento,
+                        IdPersona = elemento?.IdUsuario,
+                        IdUsuarioRegistra = idUsuarioRegistra,
+                        FechaEvento = movimiento.FechaEntrada ?? DateTime.UtcNow,
+                        Descripcion = desc,
+                        DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            idMovimiento = movimiento.IdMovimiento,
+                            idElemento,
+                            idSede,
+                            detallesPresentes
+                        })
+                    });
+                }
+                catch
+                {
+                    // No interrumpir el movimiento si la auditoría falla
+                }
             }
 
             return movimiento;
@@ -134,18 +182,19 @@ namespace ObjetosIngresos.Services
                 }
             }
 
+            // Determinar el id_usuario_registra asegurando integridad con PostgreSQL
+            int resolvedUserId = idUsuarioRegistra ?? 0;
+            if (resolvedUserId <= 0)
+            {
+                resolvedUserId = movimiento.IdElementoNavigation?.IdUsuario
+                    ?? await _db.Elementos.Where(e => e.IdElemento == movimiento.IdElemento).Select(e => e.IdUsuario).FirstOrDefaultAsync()
+                    ?? await _db.Usuarios.Select(u => u.IdUsuario).FirstOrDefaultAsync();
+            }
+
             // Integración de Salidas Parciales / Custodia y Novedades en Movimiento_Novedades
+            Movimiento_Novedad? novedadCreada = null;
             if (dejaEnCustodia || !string.IsNullOrWhiteSpace(observaciones) || !string.IsNullOrWhiteSpace(tituloNovedad))
             {
-                // Determinar el id_usuario_registra asegurando integridad con PostgreSQL
-                int resolvedUserId = idUsuarioRegistra ?? 0;
-                if (resolvedUserId <= 0)
-                {
-                    resolvedUserId = movimiento.IdElementoNavigation?.IdUsuario
-                        ?? await _db.Elementos.Where(e => e.IdElemento == movimiento.IdElemento).Select(e => e.IdUsuario).FirstOrDefaultAsync()
-                        ?? await _db.Usuarios.Select(u => u.IdUsuario).FirstOrDefaultAsync();
-                }
-
                 string tituloFinal;
                 if (!string.IsNullOrWhiteSpace(tituloNovedad))
                 {
@@ -182,7 +231,7 @@ namespace ObjetosIngresos.Services
                     descripcionFinal = observaciones?.Trim() ?? "Salida registrada con novedades u observaciones.";
                 }
 
-                var novedad = new Movimiento_Novedad
+                novedadCreada = new Movimiento_Novedad
                 {
                     id_movimiento = movimiento.IdMovimiento,
                     id_usuario_registra = resolvedUserId,
@@ -191,10 +240,86 @@ namespace ObjetosIngresos.Services
                     fecha_creacion = DateTime.UtcNow
                 };
 
-                _db.Movimiento_Novedades.Add(novedad);
+                _db.Movimiento_Novedades.Add(novedadCreada);
             }
 
             await _db.SaveChangesAsync();
+
+            // Registro automático de auditoría en HistorialSistema
+            if (_historialService != null)
+            {
+                try
+                {
+                    int? idPersona = movimiento.IdElementoNavigation?.IdUsuario
+                        ?? await _db.Elementos.Where(e => e.IdElemento == movimiento.IdElemento).Select(e => (int?)e.IdUsuario).FirstOrDefaultAsync();
+
+                    if (dejaEnCustodia)
+                    {
+                        // Evento: SalidaPersona (Salida sin equipo / Custodia)
+                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
+                        {
+                            TipoEvento = "SalidaPersona",
+                            IdMovimiento = movimiento.IdMovimiento,
+                            IdEquipo = movimiento.IdElemento,
+                            IdPersona = idPersona,
+                            IdUsuarioRegistra = resolvedUserId,
+                            FechaEvento = movimiento.FechaSalida ?? DateTime.UtcNow,
+                            Descripcion = $"Salida sin equipo (Custodia): El usuario se retira de la sede dejando el equipo en custodia temporal. {(string.IsNullOrWhiteSpace(observaciones) ? "" : "Detalle: " + observaciones.Trim())}",
+                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                idMovimiento = movimiento.IdMovimiento,
+                                dejaEnCustodia = true,
+                                observaciones
+                            })
+                        });
+                    }
+                    else
+                    {
+                        // Evento: SalidaEquipo (Salida normal con equipo / Cierre de movimiento)
+                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
+                        {
+                            TipoEvento = "SalidaEquipo",
+                            IdMovimiento = movimiento.IdMovimiento,
+                            IdEquipo = movimiento.IdElemento,
+                            IdPersona = idPersona,
+                            IdUsuarioRegistra = resolvedUserId,
+                            FechaEvento = movimiento.FechaSalida ?? DateTime.UtcNow,
+                            Descripcion = $"Salida con equipo (Check-Out): Usuario se retira portando el equipo. {(string.IsNullOrWhiteSpace(observaciones) ? "" : "Observaciones: " + observaciones.Trim())}",
+                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                idMovimiento = movimiento.IdMovimiento,
+                                dejaEnCustodia = false,
+                                observaciones
+                            })
+                        });
+                    }
+
+                    // Si se creó una novedad adicional, registrar también el evento Novedad
+                    if (novedadCreada != null)
+                    {
+                        await _historialService.RegistrarEventoAsync(new HistorialEventoDto
+                        {
+                            TipoEvento = "Novedad",
+                            IdMovimiento = movimiento.IdMovimiento,
+                            IdEquipo = movimiento.IdElemento,
+                            IdPersona = idPersona,
+                            IdUsuarioRegistra = resolvedUserId,
+                            FechaEvento = novedadCreada.fecha_creacion,
+                            Descripcion = $"Novedad vinculada: {novedadCreada.titulo} - {novedadCreada.descripcion}",
+                            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                novedadCreada.titulo,
+                                novedadCreada.descripcion
+                            })
+                        });
+                    }
+                }
+                catch
+                {
+                    // No interrumpir el movimiento si la auditoría falla
+                }
+            }
+
             return movimiento;
         }
 
@@ -255,6 +380,26 @@ namespace ObjetosIngresos.Services
 
             _db.RegistrosMovimientos.Remove(movimiento);
             await _db.SaveChangesAsync();
+
+            // Registro automático de auditoría: Anulación
+            if (_historialService != null)
+            {
+                try
+                {
+                    await _historialService.RegistrarEventoAsync(new HistorialEventoDto
+                    {
+                        TipoEvento = "Anulacion",
+                        IdMovimiento = id,
+                        IdEquipo = movimiento.IdElemento,
+                        FechaEvento = DateTime.UtcNow,
+                        Descripcion = $"Anulación de registro de movimiento #{id}."
+                    });
+                }
+                catch
+                {
+                }
+            }
+
             return true;
         }
     }

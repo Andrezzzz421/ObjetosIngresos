@@ -31,6 +31,7 @@ builder.Services.AddScoped<CatalogoServices>();
 builder.Services.AddScoped<ElementoServices>();
 builder.Services.AddScoped<MovimientoServices>();
 builder.Services.AddScoped<AdminServices>();
+builder.Services.AddScoped<IHistorialService, HistorialService>();
 builder.Services.AddMemoryCache();
 //builder.Services.AddResponseCompression(options => { options.EnableForHttps = true; });
 

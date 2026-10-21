@@ -29,6 +29,8 @@ public partial class SistemaIngresoContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
     
     public virtual DbSet<Movimiento_Novedad> Movimiento_Novedades { get; set; }
+    public virtual DbSet<HistorialSistema> HistorialSistema { get; set; }
+    public virtual DbSet<HistorialSistema> HistorialSistemas => HistorialSistema;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
@@ -193,6 +195,44 @@ public partial class SistemaIngresoContext : DbContext
                 .HasForeignKey(d => d.id_usuario_registra);
         });
 
+        modelBuilder.Entity<HistorialSistema>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_HistorialSistema");
+            entity.ToTable("HistorialSistema");
+
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.TipoEvento).HasMaxLength(50).HasColumnName("TipoEvento");
+            entity.Property(e => e.IdMovimiento).HasColumnName("IdMovimiento");
+            entity.Property(e => e.IdPersona).HasColumnName("IdPersona");
+            entity.Property(e => e.IdEquipo).HasColumnName("IdEquipo");
+            entity.Property(e => e.IdUsuarioRegistra).HasColumnName("IdUsuarioRegistra");
+            entity.Property(e => e.FechaEvento).HasColumnName("FechaEvento");
+            entity.Property(e => e.FechaRegistro).HasColumnName("FechaRegistro");
+            entity.Property(e => e.Descripcion).HasColumnName("Descripcion");
+            entity.Property(e => e.DatosAnteriores).HasColumnName("DatosAnteriores");
+            entity.Property(e => e.DatosNuevos).HasColumnName("DatosNuevos");
+
+            entity.HasOne(d => d.Movimiento)
+                .WithMany()
+                .HasForeignKey(d => d.IdMovimiento)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.Persona)
+                .WithMany()
+                .HasForeignKey(d => d.IdPersona)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.Equipo)
+                .WithMany()
+                .HasForeignKey(d => d.IdEquipo)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.UsuarioRegistra)
+                .WithMany()
+                .HasForeignKey(d => d.IdUsuarioRegistra)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         { 
             var tableName = entity.GetTableName();
@@ -210,6 +250,7 @@ public partial class SistemaIngresoContext : DbContext
         if (text == "Regionale") return "regionales"; // Excepción rápida por pluralización
         if (text == "CentrosFormacion") return "centros_formacion";
         if (text == "Movimiento_Novedades" || text == "Movimiento_Novedad" || text == "movimiento_novedades") return "movimiento_novedades";
+        if (text == "HistorialSistema" || text == "HistorialSistemas") return "HistorialSistema";
 
         return string.Concat(text.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
     }
