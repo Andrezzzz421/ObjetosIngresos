@@ -1147,48 +1147,214 @@ async function hacerCheckIn(idElemento, btn) {
     }
 }
 
-// ──────── Check-Out ────────
+// ──────── Check-Out con Integración de Salidas Parciales / Custodia y Novedades ────────
 async function hacerCheckOut(idMovimiento, btn) {
-    const confirm = await Swal.fire({
-        title: '¿Registrar salida?',
-        text: 'Se registrará la hora exacta de salida del equipo.',
-        icon: 'question',
+    const el = (elementosActuales || []).find(x => x.idMovimientoActivo === idMovimiento);
+
+    const { value: formValues, isConfirmed } = await Swal.fire({
+        title: 'Registrar Salida (Check-Out)',
+        html: `
+            <div class="text-left mb-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800 text-sm">${el ? el.tipoElemento + ' ' + el.marca : 'Equipo'}</span>
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full text-[10px]">Activo</span>
+                </div>
+                <p class="text-slate-500">Serial: <span class="font-mono text-slate-700 font-semibold">${el?.serial || 'N/A'}</span></p>
+                <p class="text-slate-500">Propietario: <span class="text-slate-800 font-semibold">${el?.propietario || 'N/A'}</span> (Doc: ${el?.documento || 'N/A'})</p>
+                <p class="text-slate-500">Entrada registrada: <span class="text-slate-700 font-medium">${el?.fechaEntrada || 'N/A'}</span></p>
+            </div>
+
+            <div class="text-left space-y-3">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Condición de salida del equipo:
+                </label>
+
+                <div class="grid grid-cols-1 gap-2.5">
+                    <!-- Opción: Salida normal con equipo -->
+                    <label class="relative flex items-start gap-3 p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/30 cursor-pointer transition-all" id="lbl-tipo-normal">
+                        <input type="radio" name="swal-tipo-salida" value="normal" checked
+                               class="mt-1 w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500" />
+                        <div class="flex-grow text-left">
+                            <p class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <span>🚶💻</span> Salida normal (sale con su equipo)
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">El usuario se retira de la sede portando el equipo registrado.</p>
+                        </div>
+                    </label>
+
+                    <!-- Opción: Salida sin equipo / En custodia -->
+                    <label class="relative flex items-start gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all" id="lbl-tipo-custodia">
+                        <input type="radio" name="swal-tipo-salida" value="custodia"
+                               class="mt-1 w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500" />
+                        <div class="flex-grow text-left">
+                            <p class="text-xs font-bold text-amber-700 flex items-center gap-1.5">
+                                <span>🏢📦</span> Salida sin equipo (queda en custodia)
+                            </p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">El usuario sale de la sede y el equipo permanece bajo custodia temporal en recepción.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Checkbox opcional de novedad para salida normal -->
+                <div id="contenedor-chk-novedad" class="pt-1">
+                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 hover:text-indigo-600">
+                        <input type="checkbox" id="swal-chk-novedad" class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500" />
+                        <span>¿Deseas reportar alguna novedad o daño en el equipo?</span>
+                    </label>
+                </div>
+
+                <!-- Aviso de custodia -->
+                <div id="alerta-custodia" class="hidden p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-start gap-2">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <strong>Aviso de custodia:</strong> Se registrará una novedad oficial en el sistema vinculada a este movimiento.
+                    </div>
+                </div>
+
+                <!-- Campo de Observaciones / Novedad -->
+                <div id="contenedor-texto-novedad" class="hidden space-y-1">
+                    <label id="lbl-observaciones" class="block text-xs font-bold text-slate-700">
+                        Detalle de la novedad / Observación:
+                    </label>
+                    <textarea id="swal-observaciones" rows="3"
+                              class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                              placeholder="Describe las observaciones o detalles de la custodia..."></textarea>
+                </div>
+            </div>
+        `,
         showCancelButton: true,
-        confirmButtonText: 'Sí, registrar salida',
+        confirmButtonText: 'Confirmar Salida',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#e11d48',
         cancelButtonColor: '#6b7280',
-        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold', cancelButton: 'rounded-xl font-semibold' }
+        customClass: { popup: 'rounded-2xl max-w-lg', confirmButton: 'rounded-xl font-semibold', cancelButton: 'rounded-xl font-semibold' },
+        didOpen: () => {
+            const radioNormal = document.getElementById('lbl-tipo-normal');
+            const radioCustodia = document.getElementById('lbl-tipo-custodia');
+            const inputsRadio = document.querySelectorAll('input[name="swal-tipo-salida"]');
+            const chkNovedad = document.getElementById('swal-chk-novedad');
+            const contenedorChk = document.getElementById('contenedor-chk-novedad');
+            const alertaCustodia = document.getElementById('alerta-custodia');
+            const contenedorTexto = document.getElementById('contenedor-texto-novedad');
+            const txtObservaciones = document.getElementById('swal-observaciones');
+            const lblObservaciones = document.getElementById('lbl-observaciones');
+
+            function actualizarVista() {
+                const esCustodia = document.querySelector('input[name="swal-tipo-salida"]:checked')?.value === 'custodia';
+
+                if (esCustodia) {
+                    radioCustodia?.classList.add('border-2', 'border-amber-500', 'bg-amber-50/40');
+                    radioCustodia?.classList.remove('border-slate-200', 'bg-white');
+                    radioNormal?.classList.remove('border-2', 'border-indigo-600', 'bg-indigo-50/30');
+                    radioNormal?.classList.add('border-slate-200', 'bg-white');
+
+                    contenedorChk?.classList.add('hidden');
+                    alertaCustodia?.classList.remove('hidden');
+                    contenedorTexto?.classList.remove('hidden');
+                    if (lblObservaciones) lblObservaciones.textContent = 'Detalle de la custodia (Obligatorio):';
+                    if (txtObservaciones && (!txtObservaciones.value.trim() || txtObservaciones.value === 'Salida con novedad reportada.')) {
+                        txtObservaciones.value = 'Salida de usuario sin equipo - dejado en custodia temporal en sede.';
+                    }
+                } else {
+                    radioNormal?.classList.add('border-2', 'border-indigo-600', 'bg-indigo-50/30');
+                    radioNormal?.classList.remove('border-slate-200', 'bg-white');
+                    radioCustodia?.classList.remove('border-2', 'border-amber-500', 'bg-amber-50/40');
+                    radioCustodia?.classList.add('border-slate-200', 'bg-white');
+
+                    contenedorChk?.classList.remove('hidden');
+                    alertaCustodia?.classList.add('hidden');
+                    if (lblObservaciones) lblObservaciones.textContent = 'Detalle de la novedad u observación:';
+
+                    if (chkNovedad && chkNovedad.checked) {
+                        contenedorTexto?.classList.remove('hidden');
+                        if (txtObservaciones && txtObservaciones.value.includes('custodia')) {
+                            txtObservaciones.value = '';
+                        }
+                    } else {
+                        contenedorTexto?.classList.add('hidden');
+                    }
+                }
+            }
+
+            inputsRadio.forEach(r => r.addEventListener('change', actualizarVista));
+            chkNovedad?.addEventListener('change', actualizarVista);
+            actualizarVista();
+        },
+        preConfirm: () => {
+            const tipo = document.querySelector('input[name="swal-tipo-salida"]:checked')?.value || 'normal';
+            const chkNovedad = document.getElementById('swal-chk-novedad')?.checked || false;
+            const obs = document.getElementById('swal-observaciones')?.value?.trim() || '';
+
+            if (tipo === 'custodia') {
+                if (!obs) {
+                    Swal.showValidationMessage('Por favor ingresa una observación para registrar la custodia.');
+                    return false;
+                }
+                return {
+                    dejaEnCustodia: true,
+                    registrarNovedad: true,
+                    tituloNovedad: 'Salida sin equipo (Custodia)',
+                    observaciones: obs
+                };
+            } else {
+                return {
+                    dejaEnCustodia: false,
+                    registrarNovedad: chkNovedad && Boolean(obs),
+                    tituloNovedad: (chkNovedad && obs) ? 'Novedad en Salida' : '',
+                    observaciones: obs
+                };
+            }
+        }
     });
 
-    if (!confirm.isConfirmed) return;
+    if (!isConfirmed || !formValues) return;
 
     btn.disabled = true;
     btn.textContent = 'Registrando...';
 
     try {
+        const payload = new URLSearchParams();
+        payload.append('IdMovimiento', idMovimiento);
+        payload.append('DejaEnCustodia', formValues.dejaEnCustodia);
+        payload.append('RegistrarNovedad', formValues.registrarNovedad);
+        payload.append('TituloNovedad', formValues.tituloNovedad || '');
+        payload.append('Observaciones', formValues.observaciones || '');
+        payload.append('__RequestVerificationToken', token());
+
         const resp = await fetch('/Movimiento/CheckOut', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `idMovimiento=${idMovimiento}&__RequestVerificationToken=${encodeURIComponent(token())}`
+            body: payload.toString()
         });
         const json = await resp.json();
 
         if (json.success) {
             Swal.fire({
-                title: '¡Salida registrada!',
-                text: `Fecha: ${json.fechaSalida}`,
+                title: json.enCustodia ? '¡Salida en custodia registrada!' : '¡Salida registrada!',
+                text: `${json.message} Fecha: ${json.fechaSalida}`,
                 icon: 'success',
                 confirmButtonColor: '#4f46e5',
                 customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
             }).then(() => buscar());
         } else {
-            Swal.fire({ title: 'Error', text: json.message, icon: 'error', confirmButtonColor: '#ef4444', customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' } });
+            Swal.fire({
+                title: 'Error',
+                text: json.message,
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+            });
             btn.disabled = false;
             btn.textContent = 'Registrar Salida (Check-Out)';
         }
     } catch (error) {
-        Swal.fire({ title: 'Error de red', text: error.message, icon: 'error', confirmButtonColor: '#ef4444', customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' } });
+        Swal.fire({
+            title: 'Error de red',
+            text: error.message,
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-semibold' }
+        });
         btn.disabled = false;
         btn.textContent = 'Registrar Salida (Check-Out)';
     }
@@ -1222,12 +1388,31 @@ async function verHistorial(idElemento, btn) {
                 }).join(' ');
             }
 
+            let novedadesHtml = '<span class="text-slate-400">—</span>';
+            if (m.novedades && m.novedades.length > 0) {
+                novedadesHtml = m.novedades.map(nov => {
+                    const esCustodia = (nov.titulo || '').toLowerCase().includes('custodia');
+                    const badgeColor = esCustodia
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                    return `
+                        <div class="inline-flex flex-col gap-0.5 p-1.5 rounded-lg border ${badgeColor} text-[10px] leading-tight mb-1 max-w-xs">
+                            <span class="font-bold flex items-center gap-1">
+                                ${esCustodia ? '📦' : '📝'} ${nov.titulo}
+                            </span>
+                            <span class="text-slate-600">${nov.descripcion}</span>
+                            <span class="text-[9px] text-slate-400 font-mono">${nov.fecha}</span>
+                        </div>`;
+                }).join('');
+            }
+
             return `
                 <tr class="border-t border-slate-100 text-xs">
                     <td class="py-2 pr-3 text-slate-500">${m.fechaEntrada ?? '—'}</td>
                     <td class="py-2 pr-3 text-slate-500">${m.fechaSalida}</td>
                     <td class="py-2 pr-3 text-slate-500">${m.sede}</td>
                     <td class="py-2 pr-3">${detallesHtml}</td>
+                    <td class="py-2 pr-3">${novedadesHtml}</td>
                     <td class="py-2">
                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${m.estado === 'Activo' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
                             ${m.estado}
@@ -1245,6 +1430,7 @@ async function verHistorial(idElemento, btn) {
                                 <th class="px-3 py-2">Salida</th>
                                 <th class="px-3 py-2">Sede</th>
                                 <th class="px-3 py-2">Accesorios</th>
+                                <th class="px-3 py-2">Novedades / Custodia</th>
                                 <th class="px-3 py-2">Estado</th>
                             </tr>
                         </thead>

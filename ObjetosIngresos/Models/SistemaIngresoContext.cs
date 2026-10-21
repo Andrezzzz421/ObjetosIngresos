@@ -202,6 +202,8 @@ public partial class SistemaIngresoContext : DbContext
     {
         if (text == "Regionale") return "regionales"; // Excepción rápida por pluralización
         if (text == "CentrosFormacion") return "centros_formacion";
+        if (text == "Movimiento_Novedades" || text == "Movimiento_Novedad" || text == "movimiento_novedades") return "movimiento_novedades";
+        if (text == "HistorialSistema" || text == "HistorialSistemas") return "HistorialSistema";
 
         return string.Concat(text.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
     }

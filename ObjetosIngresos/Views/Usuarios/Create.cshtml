@@ -109,7 +109,7 @@
     }
 
     <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
-
+    <script src="~/js/Usuario.js" asp-append-version="true"></script>
     @if (!ViewData.ModelState.IsValid)
     {
         var errores = ViewData.ModelState.Values
@@ -117,6 +117,8 @@
             .Select(e => e.ErrorMessage)
             .ToList();
 
-        <div id="validation-errors-carrier" data-errors="@Json.Serialize(errores)" class="hidden"></div>
+        <div id="validation-errors-carrier"
+             data-errors='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errores))'
+             class="hidden"></div>
     }
 }

@@ -1,0 +1,483 @@
+@model List<ObjetosIngresos.Models.HistorialSistema>
+@{
+    ViewData["Title"] = "Bitácora de Auditoría e Historial";
+    var filtro = ViewBag.Filtro as ObjetosIngresos.Services.HistorialFiltroDto ?? new();
+}
+
+<div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+    <!-- ── Encabezado ── -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-7 h-7 text-indigo-600"></i>
+                Bitácora de Auditoría e Historial
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Trazabilidad integral y registro inmutable de eventos del SENA: Entradas, Salidas, Custodias y Novedades.
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="exportarCsv()"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Exportar a CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Dashboard Stats (KPIs) ── -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Total Eventos</span>
+                <i data-lucide="activity" class="w-4 h-4 text-indigo-500"></i>
+            </div>
+            <p id="kpi-total" class="text-2xl font-extrabold text-slate-900">@(ViewBag.TotalEventos ?? 0)</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Entradas</span>
+                <i data-lucide="log-in" class="w-4 h-4 text-blue-500"></i>
+            </div>
+            <p id="kpi-entradas" class="text-2xl font-extrabold text-blue-700">@(ViewBag.TotalEntradas ?? 0)</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Salidas Equipo</span>
+                <i data-lucide="log-out" class="w-4 h-4 text-emerald-500"></i>
+            </div>
+            <p id="kpi-salidas-equipo" class="text-2xl font-extrabold text-emerald-700">@(ViewBag.TotalSalidasEquipo ?? 0)</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600">En Custodia</span>
+                <i data-lucide="package" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <p id="kpi-salidas-persona" class="text-2xl font-extrabold text-amber-700">@(ViewBag.TotalSalidasPersona ?? 0)</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm col-span-2 sm:col-span-1">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-rose-600">Novedades</span>
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500"></i>
+            </div>
+            <p id="kpi-novedades" class="text-2xl font-extrabold text-rose-700">@(ViewBag.TotalNovedades ?? 0)</p>
+        </div>
+    </div>
+
+    <!-- ── Barra de Filtros ── -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            <!-- Documento -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Documento Aprendiz:</label>
+                <div class="relative">
+                    <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input id="filtro-doc" type="text" placeholder="Ej. 1002345678"
+                           value="@filtro.DocumentoPersona"
+                           class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 placeholder:text-slate-300" />
+                </div>
+            </div>
+
+            <!-- Serial o Equipo -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Serial / Equipo:</label>
+                <div class="relative">
+                    <i data-lucide="laptop" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input id="filtro-serial" type="text" placeholder="Número de serie..."
+                           value="@filtro.SerialEquipo"
+                           class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 placeholder:text-slate-300" />
+                </div>
+            </div>
+
+            <!-- Tipo de Evento -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tipo de Evento:</label>
+                <div class="relative">
+                    <select id="filtro-tipo"
+                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 bg-white">
+                        <option value="Todos">Todos los eventos</option>
+                        <option value="Entrada">Entrada (Check-In)</option>
+                        <option value="SalidaEquipo">Salida con Equipo</option>
+                        <option value="SalidaPersona">Salida sin Equipo (Custodia)</option>
+                        <option value="Novedad">Novedad</option>
+                        <option value="Modificacion">Modificación</option>
+                        <option value="Anulacion">Anulación</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Rango: Fecha Desde -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Desde:</label>
+                <input id="filtro-desde" type="date"
+                       class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+            </div>
+
+            <!-- Rango: Fecha Hasta -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Hasta:</label>
+                <input id="filtro-hasta" type="date"
+                       class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <button onclick="limpiarFiltros()"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
+                Limpiar filtros
+            </button>
+            <button onclick="buscarHistorial()"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2 rounded-xl shadow-md shadow-indigo-600/20 transition-all">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                Aplicar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Tabla de Registros ── -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4 text-indigo-600"></i>
+                Eventos de Auditoría (<span id="contador-tabla">@Model.Count</span>)
+            </h2>
+            <div id="loading-spinner" class="hidden">
+                <div class="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3">Tipo Evento</th>
+                        <th class="px-4 py-3">Fecha / Hora</th>
+                        <th class="px-4 py-3">Aprendiz / Persona</th>
+                        <th class="px-4 py-3">Equipo / Serial</th>
+                        <th class="px-4 py-3">Responsable</th>
+                        <th class="px-4 py-3">Descripción</th>
+                        <th class="px-4 py-3 text-right">Trazabilidad</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-cuerpo" class="divide-y divide-slate-100 text-slate-700">
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            var badgeStyle = ObtenerEstiloBadge(item.TipoEvento);
+                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border @badgeStyle.Clase">
+                                        <span>@badgeStyle.Emoji</span>
+                                        @item.TipoEvento
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-mono text-[11px]">
+                                    @item.FechaEvento.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-bold text-slate-900 leading-tight">
+                                        @(item.Persona != null ? $"{item.Persona.Nombres} {item.Persona.Apellidos}".Trim() : "Desconocido")
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-mono">Doc: @(item.Persona?.Documento ?? "N/A")</p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-800 leading-tight">
+                                        @(item.Equipo?.TipoElemento ?? "Equipo") - @(item.Equipo?.IdMarcaNavigation?.NombreMarca ?? "")
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-mono">S/N: @(item.Equipo?.Serial ?? "N/A")</p>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                                    @(item.UsuarioRegistra != null ? $"{item.UsuarioRegistra.Nombres} {item.UsuarioRegistra.Apellidos}".Trim() : "Sistema")
+                                </td>
+                                <td class="px-4 py-3 max-w-md">
+                                    <p class="line-clamp-2 text-slate-600 text-xs">@item.Descripcion</p>
+                                </td>
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    @if (item.IdMovimiento.HasValue)
+                                    {
+                                        <button onclick="verTrazabilidad(@item.IdMovimiento.Value)"
+                                                class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                            Línea de tiempo
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-400 italic text-[11px]">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="py-12 text-center text-slate-400 italic">
+                                No se encontraron eventos registrados con los criterios seleccionados.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal de Cronología (Timeline UI) ── -->
+<div id="modal-timeline" class="fixed inset-0 z-[200] flex items-center justify-center p-4 hidden">
+    <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onclick="cerrarModalTimeline()"></div>
+    <div class="relative z-10 max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+        <!-- Cabecera del modal -->
+        <div class="p-6 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-start justify-between">
+            <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Trazabilidad de Movimiento</span>
+                <h3 id="modal-titulo-movimiento" class="text-lg font-bold text-white mt-0.5">Movimiento #...</h3>
+                <p id="modal-subtitulo-movimiento" class="text-xs text-slate-300 mt-1">Equipo y propietario</p>
+            </div>
+            <button onclick="cerrarModalTimeline()"
+                    class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Contenedor del timeline scrollable -->
+        <div class="p-6 overflow-y-auto flex-grow space-y-6">
+            <div id="timeline-contenedor" class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                <!-- Los nodos del timeline se inyectan dinámicamente con JavaScript -->
+            </div>
+        </div>
+
+        <!-- Pie del modal -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button onclick="cerrarModalTimeline()"
+                    class="px-5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public (string Clase, string Emoji) ObtenerEstiloBadge(string tipo)
+    {
+        return tipo?.Trim().ToLower() switch
+        {
+            "entrada" => ("bg-blue-50 text-blue-700 border-blue-200", "📥"),
+            "salidaequipo" => ("bg-emerald-50 text-emerald-700 border-emerald-200", "📤"),
+            "salidapersona" => ("bg-amber-50 text-amber-800 border-amber-200", "🏢📦"),
+            "novedad" => ("bg-rose-50 text-rose-700 border-rose-200", "⚠️"),
+            "modificacion" => ("bg-purple-50 text-purple-700 border-purple-200", "✏️"),
+            "anulacion" => ("bg-slate-100 text-slate-700 border-slate-300", "🚫"),
+            _ => ("bg-slate-50 text-slate-600 border-slate-200", "📌")
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+
+        async function buscarHistorial() {
+            const doc = document.getElementById('filtro-doc')?.value || '';
+            const serial = document.getElementById('filtro-serial')?.value || '';
+            const tipo = document.getElementById('filtro-tipo')?.value || '';
+            const desde = document.getElementById('filtro-desde')?.value || '';
+            const hasta = document.getElementById('filtro-hasta')?.value || '';
+
+            const params = new URLSearchParams();
+            if (doc) params.append('DocumentoPersona', doc);
+            if (serial) params.append('SerialEquipo', serial);
+            if (tipo && tipo !== 'Todos') params.append('TipoEvento', tipo);
+            if (desde) params.append('FechaDesde', desde);
+            if (hasta) params.append('FechaHasta', hasta);
+
+            const spinner = document.getElementById('loading-spinner');
+            if (spinner) spinner.classList.remove('hidden');
+
+            try {
+                const resp = await fetch(`/Historial/Buscar?${params.toString()}`);
+                const json = await resp.json();
+
+                if (json.success) {
+                    renderizarTabla(json.data);
+                    actualizarKpis(json.stats);
+                }
+            } catch (err) {
+                console.error("Error al buscar historial:", err);
+            } finally {
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-doc').value = '';
+            document.getElementById('filtro-serial').value = '';
+            document.getElementById('filtro-tipo').value = 'Todos';
+            document.getElementById('filtro-desde').value = '';
+            document.getElementById('filtro-hasta').value = '';
+            buscarHistorial();
+        }
+
+        function exportarCsv() {
+            const doc = document.getElementById('filtro-doc')?.value || '';
+            const serial = document.getElementById('filtro-serial')?.value || '';
+            const tipo = document.getElementById('filtro-tipo')?.value || '';
+            const desde = document.getElementById('filtro-desde')?.value || '';
+            const hasta = document.getElementById('filtro-hasta')?.value || '';
+
+            const params = new URLSearchParams();
+            if (doc) params.append('DocumentoPersona', doc);
+            if (serial) params.append('SerialEquipo', serial);
+            if (tipo && tipo !== 'Todos') params.append('TipoEvento', tipo);
+            if (desde) params.append('FechaDesde', desde);
+            if (hasta) params.append('FechaHasta', hasta);
+
+            window.location.href = `/Historial/ExportarCsv?${params.toString()}`;
+        }
+
+        function renderizarTabla(items) {
+            const tbody = document.getElementById('tabla-cuerpo');
+            const contador = document.getElementById('contador-tabla');
+            if (contador) contador.textContent = items.length;
+
+            if (!items.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 italic">
+                            No se encontraron eventos registrados con los criterios seleccionados.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => {
+                const badge = getBadgeStyleJs(item.tipoEvento);
+                const btnTrazabilidad = item.idMovimiento
+                    ? `<button onclick="verTrazabilidad(${item.idMovimiento})"
+                               class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                           <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                           Línea de tiempo
+                       </button>`
+                    : `<span class="text-slate-400 italic text-[11px]">—</span>`;
+
+                return `
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.clase}">
+                                <span>${badge.emoji}</span>
+                                ${item.tipoEvento}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-mono text-[11px]">
+                            ${item.fechaEvento}
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="font-bold text-slate-900 leading-tight">${item.persona}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">Doc: ${item.documento}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <p class="font-semibold text-slate-800 leading-tight">${item.equipo} - ${item.marca}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">S/N: ${item.serial}</p>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                            ${item.usuarioRegistra}
+                        </td>
+                        <td class="px-4 py-3 max-w-md">
+                            <p class="line-clamp-2 text-slate-600 text-xs">${item.descripcion}</p>
+                        </td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            ${btnTrazabilidad}
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
+        function actualizarKpis(stats) {
+            if (!stats) return;
+            document.getElementById('kpi-total').textContent = stats.total ?? 0;
+            document.getElementById('kpi-entradas').textContent = stats.entradas ?? 0;
+            document.getElementById('kpi-salidas-equipo').textContent = stats.salidasEquipo ?? 0;
+            document.getElementById('kpi-salidas-persona').textContent = stats.salidasPersona ?? 0;
+            document.getElementById('kpi-novedades').textContent = stats.novedades ?? 0;
+        }
+
+        function getBadgeStyleJs(tipo) {
+            switch ((tipo || '').toLowerCase()) {
+                case 'entrada': return { clase: 'bg-blue-50 text-blue-700 border-blue-200', emoji: '📥' };
+                case 'salidaequipo': return { clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', emoji: '📤' };
+                case 'salidapersona': return { clase: 'bg-amber-50 text-amber-800 border-amber-200', emoji: '🏢📦' };
+                case 'novedad': return { clase: 'bg-rose-50 text-rose-700 border-rose-200', emoji: '⚠️' };
+                case 'modificacion': return { clase: 'bg-purple-50 text-purple-700 border-purple-200', emoji: '✏️' };
+                case 'anulacion': return { clase: 'bg-slate-100 text-slate-700 border-slate-300', emoji: '🚫' };
+                default: return { clase: 'bg-slate-50 text-slate-600 border-slate-200', emoji: '📌' };
+            }
+        }
+
+        // ──────── MODAL DE CRONOLOGÍA (TIMELINE UI) ────────
+        async function verTrazabilidad(idMovimiento) {
+            const modal = document.getElementById('modal-timeline');
+            const cont = document.getElementById('timeline-contenedor');
+            const titulo = document.getElementById('modal-titulo-movimiento');
+            const subtitulo = document.getElementById('modal-subtitulo-movimiento');
+
+            titulo.textContent = `Movimiento #${idMovimiento}`;
+            subtitulo.textContent = 'Cargando trazabilidad...';
+            cont.innerHTML = '<div class="py-8 text-center text-slate-400 text-xs">Cargando cronología...</div>';
+            modal.classList.remove('hidden');
+
+            try {
+                const resp = await fetch(`/Historial/Trazabilidad?idMovimiento=${idMovimiento}`);
+                const json = await resp.json();
+
+                if (!json.success || !json.timeline?.length) {
+                    cont.innerHTML = '<div class="py-8 text-center text-slate-400 text-xs italic">No se encontraron eventos para este movimiento.</div>';
+                    return;
+                }
+
+                const m = json.movimiento;
+                subtitulo.textContent = `${m.equipo} (${m.marca} - ${m.serial}) • Propietario: ${m.propietario} (Doc: ${m.documento}) • Sede: ${m.sede}`;
+
+                cont.innerHTML = json.timeline.map((item, idx) => {
+                    return `
+                        <div class="relative group">
+                            <!-- Nodo circular -->
+                            <div class="absolute -left-[31px] top-1 w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center ${item.colorClase.includes('emerald') ? 'bg-emerald-500' : item.colorClase.includes('amber') ? 'bg-amber-500' : item.colorClase.includes('rose') ? 'bg-rose-500' : 'bg-indigo-600'}">
+                                <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                            </div>
+
+                            <!-- Tarjeta de evento -->
+                            <div class="p-4 rounded-2xl border ${item.colorClase} shadow-sm space-y-1.5">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                    <h4 class="font-bold text-sm text-slate-900">${item.titulo}</h4>
+                                    <span class="text-[11px] font-mono font-medium text-slate-500">${item.fechaFormateada}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 leading-relaxed">${item.descripcion}</p>
+                                <div class="pt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500">
+                                    <span class="font-semibold text-slate-600">Registrado por:</span>
+                                    <span class="bg-white/80 px-2 py-0.5 rounded-md border border-slate-200/60 font-medium">${item.usuarioRegistra}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+            } catch (err) {
+                console.error("Error al cargar trazabilidad:", err);
+                cont.innerHTML = '<div class="py-8 text-center text-rose-500 text-xs">Error al cargar la cronología del movimiento.</div>';
+            }
+        }
+
+        function cerrarModalTimeline() {
+            document.getElementById('modal-timeline').classList.add('hidden');
+        }
+    </script>
+}

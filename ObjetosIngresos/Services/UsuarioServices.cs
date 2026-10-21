@@ -15,17 +15,60 @@ namespace ObjetosIngresos.Services
         {
             this.db = db;
         }
-
-        public void Add(Usuario u)
+        public async Task<bool> ExisteDocumento(string documento, int idUsuarioActual = 0)
         {
+            if (string.IsNullOrWhiteSpace(documento)) return false;
+            var docLimpio = documento.Trim();
+
+            return await db.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Documento == docLimpio && u.IdUsuario != idUsuarioActual);
+        }
+        public async Task<bool> ExisteCorreo(string correo, int idUsuarioActual = 0)
+        {
+            if (string.IsNullOrWhiteSpace(correo)) return false;
+            var correoLimpio = correo.Trim().ToLower();
+
+            return await db.Usuarios
+                .AsNoTracking()
+                .AnyAsync(u => u.Correo.ToLower() == correoLimpio && u.IdUsuario != idUsuarioActual);
+        }
+        public async Task Add(Usuario u)
+        {
+            u.Documento = u.Documento?.Trim();
+            u.Correo = u.Correo?.Trim().ToLower();
+
+            if (await ExisteDocumento(u.Documento))
+            {
+                throw new InvalidOperationException($"El número de documento '{u.Documento}' ya se encuentra registrado.");
+            }
+
+            if (await ExisteCorreo(u.Correo))
+            {
+                throw new InvalidOperationException($"El correo electrónico '{u.Correo}' ya se encuentra registrado.");
+            }
+
             db.Usuarios.Add(u);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
 
-        public void Update(Usuario u)
+        public async Task Update(Usuario u)
         {
+            u.Documento = u.Documento?.Trim();
+            u.Correo = u.Correo?.Trim().ToLower();
+
+            if (await ExisteDocumento(u.Documento, u.IdUsuario))
+            {
+                throw new InvalidOperationException($"El número de documento '{u.Documento}' ya pertenece a otro usuario.");
+            }
+
+            if (await ExisteCorreo(u.Correo, u.IdUsuario))
+            {
+                throw new InvalidOperationException($"El correo electrónico '{u.Correo}' ya pertenece a otro usuario.");
+            }
+
             db.Usuarios.Update(u);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
 
         public bool Delete(int id)

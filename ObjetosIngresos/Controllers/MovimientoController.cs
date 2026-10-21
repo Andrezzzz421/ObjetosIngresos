@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Helpers;
 using ObjetosIngresos.Models;
 using ObjetosIngresos.Services;
+using ObjetosIngresos.ViewModel;
+using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
 {
@@ -148,7 +150,8 @@ namespace ObjetosIngresos.Controllers
                         .ToList();
                 }
 
-                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede, listaDetalles);
+                var idUsuarioActual = await ObtenerIdUsuarioSesionAsync();
+                var movimiento = await _srvMovimiento.RegistrarEntradaAsync(idElemento, idSede, listaDetalles, idUsuarioActual);
                 string? fechaFormateada = null;
 
                 if (movimiento.FechaEntrada.HasValue)
@@ -174,17 +177,80 @@ namespace ObjetosIngresos.Controllers
             }
         }
 
+        private async Task<int?> ObtenerIdUsuarioSesionAsync()
+        {
+            var claimId = User.FindFirst("IdUsuario")?.Value;
+            if (int.TryParse(claimId, out int idU)) return idU;
+
+            var doc = User.FindFirst("Documento")?.Value;
+            if (!string.IsNullOrWhiteSpace(doc))
+            {
+                var idPorDoc = await _db.Usuarios
+                    .AsNoTracking()
+                    .Where(u => u.Documento == doc.Trim())
+                    .Select(u => (int?)u.IdUsuario)
+                    .FirstOrDefaultAsync();
+
+                if (idPorDoc.HasValue) return idPorDoc.Value;
+            }
+
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var idPorEmail = await _db.Usuarios
+                    .AsNoTracking()
+                    .Where(u => u.Correo == email.Trim())
+                    .Select(u => (int?)u.IdUsuario)
+                    .FirstOrDefaultAsync();
+
+                if (idPorEmail.HasValue) return idPorEmail.Value;
+            }
+
+            var uid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrWhiteSpace(uid))
+            {
+                var idPorUid = await _db.Usuarios
+                    .AsNoTracking()
+                    .Where(u => u.FirebaseUid == uid.Trim())
+                    .Select(u => (int?)u.IdUsuario)
+                    .FirstOrDefaultAsync();
+
+                if (idPorUid.HasValue) return idPorUid.Value;
+            }
+
+            return null;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckOut([FromForm] int idMovimiento)
+        public async Task<IActionResult> CheckOut([FromForm] SalidaViewModel model)
         {
             try
             {
-                var movimiento = await _srvMovimiento.RegistrarSalidaAsync(idMovimiento);
+                if (model.IdMovimiento <= 0)
+                {
+                    return Json(new { success = false, message = "ID de movimiento inválido." });
+                }
+
+                var idUsuarioActual = await ObtenerIdUsuarioSesionAsync();
+
+                var movimiento = await _srvMovimiento.RegistrarSalidaAsync(
+                    model.IdMovimiento,
+                    idUsuarioActual,
+                    model.DejaEnCustodia,
+                    model.Observaciones,
+                    model.TituloNovedad
+                );
+
+                string mensaje = model.DejaEnCustodia
+                    ? "✅ Salida registrada. El equipo quedó en custodia temporal con su novedad guardada."
+                    : "✅ Salida registrada correctamente.";
+
                 return Json(new
                 {
                     success = true,
-                    message = "✅ Salida registrada correctamente.",
+                    message = mensaje,
+                    enCustodia = model.DejaEnCustodia,
                     fechaSalida = movimiento.FechaSalida?.AddHours(-5).ToString("dd/MM/yyyy hh:mm:ss tt")
                 });
             }
@@ -198,7 +264,7 @@ namespace ObjetosIngresos.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error al registrar la salida: " + ex.ToString() });
+                return Json(new { success = false, message = "Error al registrar la salida: " + ex.Message });
             }
         }
 
@@ -206,6 +272,8 @@ namespace ObjetosIngresos.Controllers
         public async Task<IActionResult> Historial(int idElemento)
         {
             var historial = await _srvMovimiento.GetHistorialAsync(idElemento);
+            var idsMovimientos = historial.Select(m => m.IdMovimiento).ToList();
+            var novedades = await _srvMovimiento.GetNovedadesPorMovimientosAsync(idsMovimientos);
 
             var resultado = historial.Select(m => new
             {
@@ -213,7 +281,20 @@ namespace ObjetosIngresos.Controllers
                 fechaEntrada = m.FechaEntrada?.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt"),
                 fechaSalida = m.FechaSalida?.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt") ?? "—",
                 sede = m.IdSedeNavigation?.NombreSede ?? "N/A",
+                observaciones = m.Observaciones,
                 estado = m.FechaSalida == null ? "Activo" : "Finalizado",
+                novedades = novedades
+                    .Where(n => n.id_movimiento == m.IdMovimiento)
+                    .Select(n => new
+                    {
+                        idNovedad = n.id_novedad,
+                        titulo = n.titulo,
+                        descripcion = n.descripcion,
+                        usuarioRegistra = n.UsuarioRegistra != null
+                            ? $"{n.UsuarioRegistra.Nombres} {n.UsuarioRegistra.Apellidos}".Trim()
+                            : "Personal de recepción",
+                        fecha = n.fecha_creacion.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+                    }).ToList(),
                 detalles = m.MovimientoDetalles.Select(md => new
                 {
                     nombre = md.IdTipoDetalleNavigation != null ? md.IdTipoDetalleNavigation.Nombre : "Accesorio",

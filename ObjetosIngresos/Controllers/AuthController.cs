@@ -146,6 +146,7 @@ namespace ObjetosIngresos.Controllers
             {
                 new Claim(ClaimTypes.Name, usuario.Nombres),
                 new Claim("Documento", usuario.Documento.Trim()),
+                new Claim("IdUsuario", usuario.IdUsuario.ToString()),
                 new Claim(ClaimTypes.Email, usuario.Correo),
                 new Claim(ClaimTypes.NameIdentifier, usuario.FirebaseUid ?? ""),
                 new Claim(ClaimTypes.Role, usuario.IdTipoUsuarioNavigation?.Descripcion ?? "Aprendiz")
@@ -185,16 +186,23 @@ namespace ObjetosIngresos.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> VincularPrimerIngreso([FromForm] string documento)
         {
-            if (string.IsNullOrEmpty(documento)) return BadRequest("El documento es requerido.");
+            if (string.IsNullOrWhiteSpace(documento))
+            {
+                return BadRequest("El número de documento es requerido.");
+            }
 
             try
             {
                 await _authService.VincularPrimerIngresoAsync(documento);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al procesar el primer ingreso: " + ex.Message);
             }
         }
 

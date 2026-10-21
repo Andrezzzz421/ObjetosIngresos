@@ -44,31 +44,58 @@ namespace ObjetosIngresos.Services
 
         public async Task VincularPrimerIngresoAsync(string documento)
         {
+            if (string.IsNullOrWhiteSpace(documento))
+                throw new ArgumentException("El documento no puede estar vacío.");
+
             var limpio = documento.Trim();
             var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.Documento == limpio)
-                ?? throw new Exception("El usuario no pertenece a la institución.");
+                ?? throw new KeyNotFoundException("El usuario no pertenece a la institución.");
 
             if (!string.IsNullOrEmpty(usuario.FirebaseUid))
-                throw new Exception("Este usuario ya se encuentra vinculado.");
+                throw new InvalidOperationException("Este usuario ya se encuentra vinculado.");
+
+            string passwordInicial = limpio.Length < 6 ? limpio.PadRight(6, '0') : limpio;
+            string emailLimpio = usuario.Correo.Trim().ToLower();
+
+            string firebaseUid = string.Empty;
 
             try
             {
                 var args = new UserRecordArgs
                 {
-                    Email = usuario.Correo.Trim(),
-                    Password = limpio,
-                    DisplayName = $"{usuario.Nombres} {usuario.Apellidos}"
+                    Email = emailLimpio,
+                    Password = passwordInicial,
+                    DisplayName = $"{usuario.Nombres} {usuario.Apellidos}".Trim()
                 };
 
                 UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
-                usuario.FirebaseUid = userRecord.Uid;
-                await _db.SaveChangesAsync();
+                firebaseUid = userRecord.Uid;
             }
             catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
             {
-                var userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(usuario.Correo.Trim());
-                usuario.FirebaseUid = userRecord.Uid;
+                UserRecord userExistente = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(emailLimpio);
+                firebaseUid = userExistente.Uid;
+
+                var updateArgs = new UserRecordArgs
+                {
+                    Uid = firebaseUid,
+                    Password = passwordInicial
+                };
+                await FirebaseAuth.DefaultInstance.UpdateUserAsync(updateArgs);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error de comunicación con Firebase Auth: {ex.Message}");
+            }
+
+            try
+            {
+                usuario.FirebaseUid = firebaseUid;
                 await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error guardando el UID en la base de datos: {ex.InnerException?.Message ?? ex.Message}");
             }
         }
 
