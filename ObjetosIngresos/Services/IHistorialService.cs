@@ -42,8 +42,40 @@ namespace ObjetosIngresos.Services
         public string? DatosNuevos { get; set; }
     }
 
+    public class HistorialMovimientoItemDto
+    {
+        public int IdMovimiento { get; set; }
+        public DateTime? FechaEntrada { get; set; }
+        public string FechaEntradaTexto { get; set; } = string.Empty;
+        public DateTime? FechaSalida { get; set; }
+        public string FechaSalidaTexto { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
+
+        public string Persona { get; set; } = string.Empty;
+        public string Documento { get; set; } = string.Empty;
+        public string? Ficha { get; set; }
+        public string Rol { get; set; } = string.Empty;
+        public bool EsIndependiente { get; set; }
+        public string CondicionTexto { get; set; } = string.Empty;
+
+        public string Equipo { get; set; } = string.Empty;
+        public string Marca { get; set; } = string.Empty;
+        public string Serial { get; set; } = string.Empty;
+
+        public string Sede { get; set; } = string.Empty;
+        public string? Observaciones { get; set; }
+        public List<string> Accesorios { get; set; } = new();
+        public bool TieneNovedad { get; set; }
+    }
+
     public interface IHistorialService
     {
+        /// <summary>
+        /// Obtiene el historial consolidado de movimientos (Check-in / Check-out) desde RegistrosMovimiento.
+        /// Permite ver cuándo entró y salió el usuario, y si es independiente o no.
+        /// </summary>
+        Task<List<HistorialMovimientoItemDto>> ObtenerMovimientosHistorialAsync(HistorialFiltroDto? filtro = null);
+
         /// <summary>
         /// Registra un evento en la bitácora de auditoría (Insert-only).
         /// Si ocurre algún error en el guardado, se loguea la excepción pero NO se interrumpe

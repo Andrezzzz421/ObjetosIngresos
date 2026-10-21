@@ -25,14 +25,14 @@ namespace ObjetosIngresos.Controllers
         public async Task<IActionResult> Index([FromQuery] HistorialFiltroDto filtro)
         {
             filtro ??= new HistorialFiltroDto();
-            var registros = await _historialService.ObtenerHistorialAsync(filtro);
+            var registros = await _historialService.ObtenerMovimientosHistorialAsync(filtro);
 
             // Estadísticas rápidas para los indicadores visuales
             ViewBag.TotalEventos = registros.Count;
-            ViewBag.TotalEntradas = registros.Count(r => r.TipoEvento.Equals("Entrada", StringComparison.OrdinalIgnoreCase));
-            ViewBag.TotalSalidasEquipo = registros.Count(r => r.TipoEvento.Equals("SalidaEquipo", StringComparison.OrdinalIgnoreCase));
-            ViewBag.TotalSalidasPersona = registros.Count(r => r.TipoEvento.Equals("SalidaPersona", StringComparison.OrdinalIgnoreCase));
-            ViewBag.TotalNovedades = registros.Count(r => r.TipoEvento.Equals("Novedad", StringComparison.OrdinalIgnoreCase));
+            ViewBag.TotalEntradas = registros.Count;
+            ViewBag.TotalSalidasEquipo = registros.Count(r => r.FechaSalida.HasValue);
+            ViewBag.TotalSalidasPersona = registros.Count(r => !r.FechaSalida.HasValue);
+            ViewBag.TotalNovedades = registros.Count(r => r.TieneNovedad);
             ViewBag.Filtro = filtro;
 
             return View(registros);
@@ -42,24 +42,28 @@ namespace ObjetosIngresos.Controllers
         public async Task<IActionResult> Buscar([FromQuery] HistorialFiltroDto filtro)
         {
             filtro ??= new HistorialFiltroDto();
-            var registros = await _historialService.ObtenerHistorialAsync(filtro);
+            var registros = await _historialService.ObtenerMovimientosHistorialAsync(filtro);
 
             var resultado = registros.Select(r => new
             {
-                id = r.Id,
-                tipoEvento = r.TipoEvento,
+                id = r.IdMovimiento,
                 idMovimiento = r.IdMovimiento,
-                fechaEvento = r.FechaEvento.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt"),
-                fechaRegistro = r.FechaRegistro.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt"),
-                descripcion = r.Descripcion,
-                persona = r.Persona != null ? $"{r.Persona.Nombres} {r.Persona.Apellidos}".Trim() : "Desconocido",
-                documento = r.Persona?.Documento ?? "N/A",
-                equipo = r.Equipo?.TipoElemento ?? "Equipo",
-                marca = r.Equipo?.IdMarcaNavigation?.NombreMarca ?? "Sin marca",
-                serial = r.Equipo?.Serial ?? "N/A",
-                usuarioRegistra = r.UsuarioRegistra != null ? $"{r.UsuarioRegistra.Nombres} {r.UsuarioRegistra.Apellidos}".Trim() : "Sistema",
-                datosNuevos = r.DatosNuevos,
-                datosAnteriores = r.DatosAnteriores
+                fechaEntrada = r.FechaEntradaTexto,
+                fechaSalida = r.FechaSalidaTexto,
+                estado = r.Estado,
+                persona = r.Persona,
+                documento = r.Documento,
+                ficha = r.Ficha ?? "N/A",
+                rol = r.Rol,
+                esIndependiente = r.EsIndependiente,
+                condicionTexto = r.CondicionTexto,
+                equipo = r.Equipo,
+                marca = r.Marca,
+                serial = r.Serial,
+                sede = r.Sede,
+                observaciones = r.Observaciones ?? "Sin observaciones",
+                accesorios = r.Accesorios,
+                tieneNovedad = r.TieneNovedad
             });
 
             return Json(new
@@ -69,10 +73,10 @@ namespace ObjetosIngresos.Controllers
                 stats = new
                 {
                     total = registros.Count,
-                    entradas = registros.Count(r => r.TipoEvento.Equals("Entrada", StringComparison.OrdinalIgnoreCase)),
-                    salidasEquipo = registros.Count(r => r.TipoEvento.Equals("SalidaEquipo", StringComparison.OrdinalIgnoreCase)),
-                    salidasPersona = registros.Count(r => r.TipoEvento.Equals("SalidaPersona", StringComparison.OrdinalIgnoreCase)),
-                    novedades = registros.Count(r => r.TipoEvento.Equals("Novedad", StringComparison.OrdinalIgnoreCase))
+                    entradas = registros.Count,
+                    salidasEquipo = registros.Count(r => r.FechaSalida.HasValue),
+                    salidasPersona = registros.Count(r => !r.FechaSalida.HasValue),
+                    novedades = registros.Count(r => r.TieneNovedad)
                 },
                 data = resultado
             });
