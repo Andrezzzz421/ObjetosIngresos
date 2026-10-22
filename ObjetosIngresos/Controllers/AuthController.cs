@@ -224,20 +224,14 @@ namespace ObjetosIngresos.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var usuario = await _authService.GetByDocumentoAsync(documentoCookie.Trim());
-            if (usuario == null)
+            var model = await _authService.ObtenerPerfilViewModelAsync(documentoCookie.Trim());
+            if (model == null)
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return RedirectToAction("Login", "Auth");
             }
 
-            var stats = await _authService.ObtenerEstadisticasUsuarioAsync(usuario.IdUsuario);
-            ViewBag.TotalEquipos = stats.totalEquipos;
-            ViewBag.EquiposEnSede = stats.equiposEnSede;
-            ViewBag.TotalMovimientos = stats.totalMovimientos;
-            ViewBag.UltimoIngreso = stats.ultimoIngreso ?? "Sin registros";
-
-            return View("~/Views/Usuarios/Perfil.cshtml", usuario);
+            return View("~/Views/Usuarios/Perfil.cshtml", model);
         }
 
         [HttpGet]

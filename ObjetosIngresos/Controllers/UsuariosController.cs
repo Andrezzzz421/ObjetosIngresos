@@ -1,4 +1,4 @@
-using FirebaseAdmin.Auth;
+ï»¿using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -71,7 +71,7 @@ namespace ObjetosIngresos.Controllers
             return View(us);
         }
 
-        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
+        [Authorize(Roles = "Administrador")]
         public ActionResult Edit(int id)
         {
             var user = _ser.GetById(id);
@@ -95,7 +95,7 @@ namespace ObjetosIngresos.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
@@ -143,7 +143,7 @@ namespace ObjetosIngresos.Controllers
             bool existe = await _ser.ExisteDocumento(documento, idUsuario);
             if (existe)
             {
-                return Json($"El número de documento '{documento}' ya está registrado.");
+                return Json($"El nï¿½mero de documento '{documento}' ya estï¿½ registrado.");
             }
             return Json(true);
         }
@@ -155,7 +155,7 @@ namespace ObjetosIngresos.Controllers
             bool existe = await _ser.ExisteCorreo(correo, idUsuario);
             if (existe)
             {
-                return Json($"El correo electrónico '{correo}' ya está registrado.");
+                return Json($"El correo electrï¿½nico '{correo}' ya estï¿½ registrado.");
             }
             return Json(true);
         }
