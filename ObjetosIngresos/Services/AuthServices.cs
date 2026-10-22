@@ -1,6 +1,7 @@
 using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
 using ObjetosIngresos.Models;
+using ObjetosIngresos.ViewModel;
 using System.Net;
 using System.Net.Mail;
 
@@ -148,7 +149,64 @@ namespace ObjetosIngresos.Services
 
             await client.SendMailAsync(mailMessage);
         }
-        
+
+        public async Task EnviarCodigoPreRegistroAsync(string correo, string nombres, string codigoGenerado)
+        {
+            var limpio = correo.Trim();
+            var host = _config["SmtpConfig:Host"];
+            var portStr = _config["SmtpConfig:Port"];
+            int port = int.TryParse(portStr, out int p) ? p : 587;
+            var senderEmail = _config["SmtpConfig:SenderEmail"] ?? "no-reply@sgi.local";
+            var senderName = _config["SmtpConfig:SenderName"] ?? "SGI - Sistema de Ingreso";
+            var pass = _config["SmtpConfig:Pass"];
+
+            var asunto = "Tu Código de Verificación de Pre-Registro - SGI";
+            var cuerpoHtml = $@"
+            <div style='font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 32px 16px; margin: 0 auto; max-width: 520px;'>
+                <div style='background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);'>
+                    <div style='background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 28px 24px; text-align: center;'>
+                        <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;'>Verificación de Pre-Registro</h1>
+                        <p style='color: #c7d2fe; margin: 6px 0 0 0; font-size: 13px;'>Sistema de Gestión de Ingresos (SGI)</p>
+                    </div>
+                    <div style='padding: 28px 24px; text-align: center;'>
+                        <p style='color: #1e293b; font-size: 16px; margin: 0 0 12px 0;'>Hola <strong>{nombres}</strong>,</p>
+                        <p style='color: #64748b; font-size: 14px; line-height: 1.5; margin: 0 0 24px 0;'>
+                            Has iniciado tu pre-registro en el sistema. Para confirmar que este correo te pertenece y activar tu cuenta, ingresa el siguiente código de verificación:
+                        </p>
+                        <div style='background-color: #eef2ff; border: 2px dashed #4f46e5; border-radius: 14px; padding: 18px; margin: 0 auto 24px auto; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #4f46e5; font-family: monospace;'>
+                            {codigoGenerado}
+                        </div>
+                        <div style='background-color: #f1f5f9; border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 20px;'>
+                            <p style='color: #334155; font-size: 13px; font-weight: 600; margin: 0 0 4px 0;'>📌 Recuerda:</p>
+                            <p style='color: #64748b; font-size: 12px; margin: 0; line-height: 1.4;'>
+                                Una vez verificado, podrás ingresar con tu documento y registrar tus pertenencias o equipos personales cómodamente desde <strong>Mi Panel</strong>.
+                            </p>
+                        </div>
+                        <p style='color: #94a3b8; font-size: 12px; margin: 0;'>
+                            Este código vencerá en <strong>15 minutos</strong>. Si tú no solicitaste este registro, puedes ignorar este mensaje de forma segura.
+                        </p>
+                    </div>
+                    <div style='background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 16px; text-align: center;'>
+                        <p style='color: #94a3b8; font-size: 11px; margin: 0;'>&copy; {DateTime.UtcNow.Year} - Sistema de Gestión de Ingresos</p>
+                    </div>
+                </div>
+            </div>";
+
+            using var client = new SmtpClient(host, port);
+            client.Credentials = new NetworkCredential(senderEmail, pass);
+            client.EnableSsl = true;
+
+            using var mailMessage = new MailMessage();
+            mailMessage.From = new MailAddress(senderEmail, senderName);
+            mailMessage.To.Add(limpio);
+            mailMessage.Subject = asunto;
+            mailMessage.Body = cuerpoHtml;
+            mailMessage.IsBodyHtml = true;
+            mailMessage.BodyEncoding = System.Text.Encoding.UTF8;
+
+            await client.SendMailAsync(mailMessage);
+        }
+
 
         public async Task<bool> ValidarCodigoRecuperacionAsync(string email, string codigo)
         {
@@ -222,6 +280,162 @@ namespace ObjetosIngresos.Services
             }
 
             return (totalEquipos, equiposEnSede, totalMovimientos, ultimoIngreso);
+        }
+
+        public async Task<PerfilViewModel?> ObtenerPerfilViewModelAsync(string documentoCookie)
+        {
+            if (string.IsNullOrWhiteSpace(documentoCookie)) return null;
+
+            var limpio = documentoCookie.Trim();
+            var usuario = await _db.Usuarios
+                .Include(u => u.IdTipoUsuarioNavigation)
+                .Include(u => u.IdSedePrincipalNavigation)
+                .FirstOrDefaultAsync(u => u.Documento == limpio);
+
+            if (usuario == null) return null;
+
+            var culture = new System.Globalization.CultureInfo("es-ES");
+            var hoy = DateTime.Now;
+
+            var vm = new PerfilViewModel
+            {
+                Usuario = usuario,
+                NombreCompleto = $"{usuario.Nombres} {usuario.Apellidos}".Trim(),
+                TipoUsuarioDescripcion = usuario.IdTipoUsuarioNavigation?.Descripcion ?? "Usuario",
+                CodigoUsuario = $"USR-{usuario.IdUsuario:D5}",
+                Ficha = usuario.Ficha,
+                SedeNombre = usuario.IdSedePrincipalNavigation?.NombreSede ?? "Sin sede asignada",
+                SedeCiudad = usuario.IdSedePrincipalNavigation?.Ciudad ?? ""
+            };
+
+            var equiposDb = await _db.Elementos
+                .AsNoTracking()
+                .Include(e => e.IdMarcaNavigation)
+                .Include(e => e.RegistrosMovimientos)
+                .Where(e => e.IdUsuario == usuario.IdUsuario)
+                .ToListAsync();
+
+            var idsEquipos = equiposDb.Select(e => e.IdElemento).ToList();
+
+            var movsDb = await _db.RegistrosMovimientos
+                .AsNoTracking()
+                .Include(m => m.IdElementoNavigation)
+                    .ThenInclude(el => el.IdMarcaNavigation)
+                .Include(m => m.IdSedeNavigation)
+                .Where(m => idsEquipos.Contains(m.IdElemento))
+                .OrderByDescending(m => m.FechaEntrada)
+                .ToListAsync();
+
+            vm.TotalEquipos = equiposDb.Count;
+            vm.EquiposEnSede = equiposDb.Count(e => e.RegistrosMovimientos.Any(m => m.FechaSalida == null));
+            vm.EquiposFueraDeSede = Math.Max(0, vm.TotalEquipos - vm.EquiposEnSede);
+            vm.TotalMovimientos = movsDb.Count;
+
+            var ultIngreso = movsDb.FirstOrDefault(m => m.FechaEntrada != null);
+            if (ultIngreso?.FechaEntrada != null)
+            {
+                var f = ultIngreso.FechaEntrada.Value.AddHours(-5);
+                string sedeIngreso = ultIngreso.IdSedeNavigation?.NombreSede ?? "Portería principal";
+                string horaStr = f.ToString("HH:mm");
+
+                if (f.Date == hoy.Date)
+                {
+                    vm.UltimoIngresoHora = $"Hoy, {horaStr}";
+                }
+                else if (f.Date == hoy.AddDays(-1).Date)
+                {
+                    vm.UltimoIngresoHora = $"Ayer, {horaStr}";
+                }
+                else
+                {
+                    vm.UltimoIngresoHora = $"{f:dd MMM yyyy}, {horaStr}";
+                }
+
+                vm.UltimoIngresoDetalle = $"{f:dd MMM yyyy} · {sedeIngreso}";
+                vm.EstaEnSede = vm.EquiposEnSede > 0;
+                vm.EstadoEnSedeTexto = vm.EstaEnSede ? $"En sede desde las {horaStr}" : "Fuera de sede";
+            }
+            else
+            {
+                vm.UltimoIngresoHora = "Sin registros";
+                vm.UltimoIngresoDetalle = "No hay movimientos registrados";
+                vm.EstaEnSede = false;
+                vm.EstadoEnSedeTexto = "Fuera de sede";
+            }
+
+            foreach (var eq in equiposDb)
+            {
+                string tipoLower = (eq.TipoElemento ?? "").ToLower();
+                string icono = "laptop";
+                string tipoNombre = eq.TipoElemento ?? "Equipo";
+
+                if (tipoLower.Contains("portatil") || tipoLower.Contains("laptop") || tipoLower.Contains("pc") || tipoLower.Contains("computador"))
+                {
+                    icono = "laptop";
+                    tipoNombre = "Portátil";
+                }
+                else if (tipoLower.Contains("mouse") || tipoLower.Contains("raton"))
+                {
+                    icono = "mouse";
+                    tipoNombre = "Mouse inalámbrico";
+                }
+                else if (tipoLower.Contains("camara") || tipoLower.Contains("camera"))
+                {
+                    icono = "camera";
+                    tipoNombre = "Cámara digital";
+                }
+                else if (tipoLower.Contains("tablet") || tipoLower.Contains("tableta") || tipoLower.Contains("wacom") || tipoLower.Contains("ipad"))
+                {
+                    icono = "tablet";
+                    tipoNombre = "Tableta gráfica";
+                }
+
+                string nombreMarca = eq.IdMarcaNavigation?.NombreMarca ?? "";
+                string nombreMostrar = !string.IsNullOrWhiteSpace(nombreMarca)
+                    ? $"{nombreMarca} {eq.TipoElemento}"
+                    : (eq.TipoElemento ?? "Equipo");
+
+                vm.Equipos.Add(new PerfilEquipoItem
+                {
+                    IdElemento = eq.IdElemento,
+                    Codigo = $"EQ-{eq.IdElemento:D5}",
+                    Nombre = nombreMostrar,
+                    Tipo = tipoNombre,
+                    Marca = !string.IsNullOrWhiteSpace(nombreMarca) ? nombreMarca : "Sin marca",
+                    Serial = !string.IsNullOrWhiteSpace(eq.Serial) ? eq.Serial : "Sin serial",
+                    EnSede = eq.RegistrosMovimientos.Any(m => m.FechaSalida == null),
+                    IconoTipo = icono
+                });
+            }
+
+            foreach (var mov in movsDb.Take(10))
+            {
+                bool esIngreso = mov.FechaSalida == null;
+                var fechaRef = (esIngreso ? mov.FechaEntrada : (mov.FechaSalida ?? mov.FechaEntrada))?.AddHours(-5) ?? DateTime.Now;
+
+                string fechaTxt = fechaRef.Date == hoy.Date ? "Hoy · " + fechaRef.ToString("dd MMM", culture) :
+                                 fechaRef.Date == hoy.AddDays(-1).Date ? "Ayer · " + fechaRef.ToString("dd MMM", culture) :
+                                 fechaRef.ToString("dd MMM yyyy", culture);
+
+                string eqNombre = mov.IdElementoNavigation != null
+                    ? (!string.IsNullOrWhiteSpace(mov.IdElementoNavigation.IdMarcaNavigation?.NombreMarca) 
+                        ? $"{mov.IdElementoNavigation.IdMarcaNavigation.NombreMarca} {mov.IdElementoNavigation.TipoElemento}" 
+                        : mov.IdElementoNavigation.TipoElemento)
+                    : "Equipo";
+
+                vm.MovimientosRecientes.Add(new PerfilMovimientoItem
+                {
+                    IdMovimiento = mov.IdMovimiento,
+                    EsIngreso = esIngreso,
+                    Titulo = esIngreso ? "Ingreso de 1 equipo" : "Salida de 1 equipo",
+                    Ubicacion = mov.IdSedeNavigation?.NombreSede ?? "Portería principal",
+                    DescripcionEquipos = eqNombre,
+                    Hora = fechaRef.ToString("HH:mm"),
+                    Fecha = fechaTxt
+                });
+            }
+
+            return vm;
         }
     }
 }

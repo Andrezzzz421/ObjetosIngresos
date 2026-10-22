@@ -1,0 +1,210 @@
+@using ObjetosIngresos.ViewModel
+@model PreRegistroCodigoViewModel
+@{
+    ViewData["Title"] = "Verificar Código de Pre-Registro";
+    Layout = "_Layout";
+}
+
+<div class="min-h-full flex items-center justify-center py-8 px-4 sm:px-6">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6 sm:p-10 transition-colors">
+        
+        <!-- Header -->
+        <div class="mb-6 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 shadow-sm ring-4 ring-indigo-50/50">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Verifica tu Correo</h2>
+            <p class="text-slate-500 text-sm mt-2 max-w-sm mx-auto">
+                Ingresa el código de 6 dígitos que enviamos a:
+            </p>
+            <p class="font-bold text-slate-800 text-sm mt-1 bg-slate-50 inline-block px-3 py-1 rounded-lg border border-slate-200">
+                @Model.Correo
+            </p>
+        </div>
+
+        <!-- Indicador de Flujo -->
+        <div class="mb-6 flex items-center justify-center gap-3">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-sm">✓</span>
+                <span class="text-xs font-semibold text-slate-500">Tus Datos</span>
+            </div>
+            <div class="w-8 h-0.5 bg-indigo-500"></div>
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-sm ring-2 ring-indigo-200">2</span>
+                <span class="text-xs font-bold text-indigo-700">Validar Código</span>
+            </div>
+        </div>
+
+        @if (TempData["MensajeInfo"] != null)
+        {
+            <div class="mb-5 rounded-2xl bg-indigo-50 border border-indigo-200 p-3.5 text-xs text-indigo-800 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>@TempData["MensajeInfo"]</span>
+            </div>
+        }
+
+        <div id="alertaAjax" class="hidden mb-5 rounded-2xl p-3.5 text-xs"></div>
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="mb-5 rounded-2xl bg-red-50 border border-red-200 p-4 text-xs text-red-700">
+                <div class="font-semibold mb-1 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Atención:
+                </div>
+                <ul class="list-disc list-inside space-y-1 ml-5">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <form asp-action="ValidarCodigo" asp-controller="PreRegistro" method="post" id="formValidarCodigo" class="space-y-6">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Correo" id="hiddenCorreo" />
+
+            <div>
+                <label asp-for="Codigo" class="block text-xs font-semibold text-slate-700 mb-2 text-center uppercase tracking-wider">
+                    Código de Seguridad (6 dígitos)
+                </label>
+                <div class="max-w-xs mx-auto">
+                    <input asp-for="Codigo" id="inputCodigo" maxlength="6" autofocus required inputmode="numeric" pattern="[0-9]{6}"
+                           placeholder="······" autocomplete="one-time-code"
+                           class="w-full text-center tracking-[0.55em] text-3xl font-mono font-extrabold px-4 py-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all placeholder:text-slate-300" />
+                </div>
+                <span asp-validation-for="Codigo" class="text-xs text-red-600 mt-1 block text-center"></span>
+                <p class="text-[11px] text-slate-400 mt-2 text-center">
+                    El código tiene una validez de 15 minutos. Revisa también tu carpeta de spam o correo no deseado.
+                </p>
+            </div>
+
+            <button type="submit" id="btnValidar"
+                    class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md hover:shadow-indigo-500/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <span id="btnValidarText">Confirmar y Finalizar Registro</span>
+                <svg id="btnValidarSpinner" class="hidden w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </button>
+        </form>
+
+        <!-- Reenviar y Regresar -->
+        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <a asp-action="Index" class="text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1 font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Corregir mis datos
+            </a>
+
+            <div class="flex items-center gap-2">
+                <span class="text-slate-400">¿No te llegó el código?</span>
+                <button type="button" id="btnReenviar" onclick="solicitarReenvio()"
+                        class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                    Reenviar código
+                </button>
+                <span id="contadorReenvio" class="hidden text-slate-400 font-mono"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let segundosRestantes = 0;
+    let timerId = null;
+
+    document.getElementById('formValidarCodigo').addEventListener('submit', function () {
+        const btn = document.getElementById('btnValidar');
+        const text = document.getElementById('btnValidarText');
+        const spinner = document.getElementById('btnValidarSpinner');
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        text.textContent = 'Verificando...';
+        spinner.classList.remove('hidden');
+    });
+
+    // Permitir solo números en el input
+    const inputCodigo = document.getElementById('inputCodigo');
+    if (inputCodigo) {
+        inputCodigo.addEventListener('input', function (e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    async function solicitarReenvio() {
+        const correo = document.getElementById('hiddenCorreo').value;
+        const btnReenviar = document.getElementById('btnReenviar');
+        const contadorSpan = document.getElementById('contadorReenvio');
+        const alerta = document.getElementById('alertaAjax');
+
+        btnReenviar.disabled = true;
+        btnReenviar.textContent = 'Reenviando...';
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const formData = new URLSearchParams();
+        formData.append('email', correo);
+        if (token) formData.append('__RequestVerificationToken', token);
+
+        try {
+            const resp = await fetch('/PreRegistro/ReenviarCodigo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData.toString()
+            });
+
+            const data = await resp.json();
+            alerta.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-700', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+
+            if (data.success) {
+                alerta.classList.add('bg-emerald-50', 'border', 'border-emerald-200', 'text-emerald-800');
+                alerta.textContent = data.message || 'Código reenviado correctamente.';
+                iniciarCuentaRegresiva(60);
+            } else {
+                alerta.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+                alerta.textContent = data.message || 'No se pudo reenviar el código.';
+                btnReenviar.disabled = false;
+                btnReenviar.textContent = 'Reenviar código';
+            }
+        } catch (err) {
+            alerta.classList.remove('hidden');
+            alerta.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+            alerta.textContent = 'Error de conexión al reenviar el código.';
+            btnReenviar.disabled = false;
+            btnReenviar.textContent = 'Reenviar código';
+        }
+    }
+
+    function iniciarCuentaRegresiva(segundos) {
+        segundosRestantes = segundos;
+        const btnReenviar = document.getElementById('btnReenviar');
+        const contadorSpan = document.getElementById('contadorReenvio');
+
+        btnReenviar.classList.add('hidden');
+        contadorSpan.classList.remove('hidden');
+        contadorSpan.textContent = `(Espera ${segundosRestantes}s)`;
+
+        if (timerId) clearInterval(timerId);
+        timerId = setInterval(() => {
+            segundosRestantes--;
+            if (segundosRestantes <= 0) {
+                clearInterval(timerId);
+                btnReenviar.classList.remove('hidden');
+                btnReenviar.disabled = false;
+                btnReenviar.textContent = 'Reenviar código';
+                contadorSpan.classList.add('hidden');
+            } else {
+                contadorSpan.textContent = `(Espera ${segundosRestantes}s)`;
+            }
+        }, 1000);
+    }
+</script>
