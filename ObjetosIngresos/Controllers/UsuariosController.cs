@@ -14,11 +14,14 @@ namespace ObjetosIngresos.Controllers
     {
         private readonly SistemaIngresoContext _db;
         private readonly UsuarioServices _ser;
+        private readonly ImportacionServices sser;
 
-        public UsuariosController(SistemaIngresoContext db, UsuarioServices ser)
+        public UsuariosController(SistemaIngresoContext db, UsuarioServices ser,ImportacionServices sr)
         {
             _db = db;
             _ser = ser;
+            sser = sr;
+
         }
 
         private void CargarCombos(Usuario? u = null)
@@ -199,6 +202,44 @@ namespace ObjetosIngresos.Controllers
                 TempData["Error"] = "No se pudo generar el reporte de usuarios.";
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportarExcel(IFormFile archivoExcel)
+        {
+            if (archivoExcel == null || archivoExcel.Length == 0)
+            {
+                TempData["Error"] = "Por favor, selecciona un archivo Excel válido.";
+                return RedirectToAction("Index"); // O la vista donde tengas la tabla de usuarios
+            }
+
+            try
+            {
+                var (registrados, errores) = await sser.ImportarUsuariosDesdeExcel(archivoExcel);
+
+                if (registrados > 0)
+                {
+                    TempData["Success"] = $"Se importaron exitosamente {registrados} usuarios.";
+                }
+
+                if (errores != null && errores.Count > 0)
+                {
+                    // Si hubo errores por filas duplicadas o datos faltantes, los mostramos
+                    TempData["Advertencias"] = string.Join("<br/>", errores);
+                }
+                else if (registrados == 0)
+                {
+                    TempData["Error"] = "No se pudo importar ningún usuario. Revisa el formato del archivo.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Ocurrió un error al procesar el archivo: " + ex.Message;
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }
