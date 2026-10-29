@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Administrador,SuperAdmin")]
     public class MovimientoController : Controller
     {
         private readonly MovimientoServices _srvMovimiento;
