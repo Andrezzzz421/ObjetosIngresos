@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin.Auth;
+using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace ObjetosIngresos.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "SuperAdmin")]
     public class UsuariosController : Controller
     {
         private readonly SistemaIngresoContext _db;
@@ -30,18 +30,14 @@ namespace ObjetosIngresos.Controllers
             ViewBag.TiposUsuarios = new SelectList(_db.TiposUsuarios, "IdTipoUsuario", "Descripcion", u?.IdTipoUsuario);
         }
 
-        [Authorize(Roles = "Administrador,Instructor,Aprendiz")]
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Aprendiz"))
-            {
-                return RedirectToAction("Perfil", "Auth");
-            }
-
             var usuarios = await _ser.GetAllAsync();
             return View(usuarios);
         }
-        [Authorize(Roles = "Administrador,Instructor")]
+
+        [HttpGet]
         public ActionResult Create()
         {
             CargarCombos();
@@ -50,7 +46,6 @@ namespace ObjetosIngresos.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Instructor")]
         public async Task<IActionResult> Create(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
@@ -74,7 +69,7 @@ namespace ObjetosIngresos.Controllers
             return View(us);
         }
 
-        [Authorize(Roles = "Administrador")]
+        [HttpGet]
         public ActionResult Edit(int id)
         {
             var user = _ser.GetById(id);
@@ -83,50 +78,22 @@ namespace ObjetosIngresos.Controllers
                 return Content($"Error: El usuario con ID {id} no existe.");
             }
 
-            if (User.IsInRole("Aprendiz"))
-            {
-                var documentoLogueado = User.FindFirst("Documento")?.Value;
-                if (user.Documento != documentoLogueado)
-                {
-                    return RedirectToAction("AccessDenied", "Auth");
-                }
-            }
-
             CargarCombos(user);
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(Usuario us)
         {
             ModelState.Remove("IdSedePrincipalNavigation");
             ModelState.Remove("IdTipoUsuarioNavigation");
-
-            if (User.IsInRole("Aprendiz"))
-            {
-                var documentoLogueado = User.FindFirst("Documento")?.Value;
-                var usuarioOriginal = _ser.GetById(us.IdUsuario);
-
-                if (usuarioOriginal == null || usuarioOriginal.Documento != documentoLogueado)
-                {
-                    return Forbid();
-                }
-
-                us.IdTipoUsuario = usuarioOriginal.IdTipoUsuario;
-                us.IdSedePrincipal = usuarioOriginal.IdSedePrincipal;
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     await _ser.Update(us);
-
-                    if (User.IsInRole("Aprendiz"))
-                        return RedirectToAction("Perfil", "Auth");
-
                     return RedirectToAction(nameof(Index));
                 }
                 catch (InvalidOperationException ex)
@@ -166,7 +133,6 @@ namespace ObjetosIngresos.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
         public ActionResult Delete(int id)
         {
             bool eliminado = _ser.Delete(id);

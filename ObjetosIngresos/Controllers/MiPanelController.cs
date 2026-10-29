@@ -21,6 +21,15 @@ namespace ObjetosIngresos.Controllers
             _db = db;
         }
 
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            base.OnActionExecuting(context);
+            if (User.IsInRole("Administrador"))
+            {
+                context.Result = RedirectToAction("Index", "Admin");
+            }
+        }
+
         #region Métodos Privados Auxiliares
 
         private async Task<int?> ObtenerIdUsuarioSesionAsync()

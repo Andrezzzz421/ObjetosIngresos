@@ -142,6 +142,15 @@ namespace ObjetosIngresos.Controllers
             var usuario = await _authService.BuscarUsuarioPorIdOEmailAsync(documento);
             if (usuario == null) return BadRequest("Usuario no encontrado o inválido.");
 
+            var descRol = usuario.IdTipoUsuarioNavigation?.Descripcion?.Trim() ?? "Aprendiz";
+            string rolAsignado = descRol;
+            if (descRol.Equals("Super Administrador", StringComparison.OrdinalIgnoreCase) ||
+                descRol.Equals("Super_Admin", StringComparison.OrdinalIgnoreCase) ||
+                descRol.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase))
+            {
+                rolAsignado = "SuperAdmin";
+            }
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Nombres),
@@ -149,7 +158,7 @@ namespace ObjetosIngresos.Controllers
                 new Claim("IdUsuario", usuario.IdUsuario.ToString()),
                 new Claim(ClaimTypes.Email, usuario.Correo),
                 new Claim(ClaimTypes.NameIdentifier, usuario.FirebaseUid ?? ""),
-                new Claim(ClaimTypes.Role, usuario.IdTipoUsuarioNavigation?.Descripcion ?? "Aprendiz")
+                new Claim(ClaimTypes.Role, rolAsignado)
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -160,9 +169,10 @@ namespace ObjetosIngresos.Controllers
             };
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-            string targetUrl = usuario.IdTipoUsuarioNavigation?.Descripcion.Equals("Administrador", StringComparison.OrdinalIgnoreCase) == true
-        ? "/Admin/Index"
-        : "/Auth/Perfil";
+            string targetUrl = (rolAsignado.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ||
+                                rolAsignado.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase))
+                ? "/Admin/Index"
+                : "/Auth/Perfil";
 
             return Ok(new { redirectUrl = targetUrl });
         }

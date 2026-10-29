@@ -5,7 +5,7 @@ using ObjetosIngresos.Services;
 
 namespace ObjetosIngresos.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Administrador,SuperAdmin")]
     public class AdminController : Controller
     {
         private readonly AdminServices _adminServices;

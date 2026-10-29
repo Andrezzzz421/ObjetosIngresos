@@ -127,4 +127,22 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Inicialización: asegurar la existencia del rol SuperAdmin
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaIngresoContext>();
+        if (!db.TiposUsuarios.Any(t => t.Descripcion == "SuperAdmin"))
+        {
+            db.TiposUsuarios.Add(new TiposUsuario { Descripcion = "SuperAdmin" });
+            db.SaveChanges();
+        }
+    }
+    catch
+    {
+        // Continuar si la BD no está disponible temporalmente
+    }
+}
+
 app.Run();

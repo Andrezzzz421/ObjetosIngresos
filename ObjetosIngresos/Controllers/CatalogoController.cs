@@ -7,7 +7,7 @@ using ObjetosIngresos.Services;
 
 namespace ObjetosIngresos.Controllers
 {
-    [Authorize(Roles = "Administrador")] 
+    [Authorize(Roles = "SuperAdmin")] 
     public class CatalogosController : Controller
     {
         private readonly CatalogoServices srv;

@@ -9,10 +9,13 @@
             <i data-lucide="user-plus" class="h-4 w-4 text-indigo-600"></i>
             Últimos Usuarios Registrados
         </h3>
-        <a href="@Url.Action("Index","Usuarios")"
-           class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-            Ver todos →
-        </a>
+        @if (User.IsInRole("SuperAdmin"))
+        {
+            <a href="@Url.Action("Index","Usuarios")"
+               class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                Ver todos →
+            </a>
+        }
     </div>
     <div class="divide-y divide-slate-50">
         @if (!Model.Any())
