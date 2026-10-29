@@ -19,6 +19,9 @@
     </script>
 </head>
 <body class="h-full text-slate-800 antialiased flex flex-col md:flex-row overflow-hidden">
+@{
+    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+}
 
     @if (ViewData["HideNavbar"] == null)
     {
@@ -33,10 +36,10 @@
             <div class="flex items-center gap-2">
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
-                    <button type="button" onclick="abrirDrawerHistorial()" title="Historial de cambios"
-                            class="p-2 rounded-lg bg-slate-800 text-indigo-400 hover:text-white hover:bg-slate-700 transition-colors">
+                    <a asp-controller="Historial" asp-action="Index" title="Historial de movimientos"
+                       class="p-2 rounded-lg bg-slate-800 text-indigo-400 hover:text-white hover:bg-slate-700 transition-colors @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "bg-indigo-600 text-white" : "")">
                         <i data-lucide="history" class="w-5 h-5"></i>
-                    </button>
+                    </a>
                 }
                 <button id="btn-toggle-sidebar" class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none text-slate-400 hover:text-white transition-colors">
                     <i data-lucide="menu" id="icon-menu" class="w-6 h-6"></i>
@@ -58,9 +61,6 @@
             </div>
 
             <nav class="flex-grow p-4 space-y-1 overflow-y-auto">
-                @{
-                    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-                }
                 <ul>
                     <li>
                         <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group @(currentCtrl.Equals("Home", StringComparison.OrdinalIgnoreCase) ? "bg-slate-800 text-white" : "")">
@@ -87,6 +87,12 @@
                                 <a asp-controller="Movimiento" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group @(currentCtrl.Equals("Movimiento", StringComparison.OrdinalIgnoreCase) ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-semibold" : "")">
                                     <i data-lucide="scan-line" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors @(currentCtrl.Equals("Movimiento", StringComparison.OrdinalIgnoreCase) ? "text-white" : "")"></i>
                                     Control de Ingresos
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Historial" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-semibold" : "")">
+                                    <i data-lucide="history" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "text-white" : "")"></i>
+                                    Historial de movimientos
                                 </a>
                             </li>
                             <li>
@@ -131,6 +137,15 @@
                                     </ul>
                                 </li>
                             }
+                        }
+                        else
+                        {
+                            <li>
+                                <a asp-controller="Historial" asp-action="Index" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white font-medium transition-all duration-200 group @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-semibold" : "")">
+                                    <i data-lucide="history" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "text-white" : "")"></i>
+                                    Historial de movimientos
+                                </a>
+                            </li>
                         }
 
                         <li>
@@ -193,6 +208,13 @@
                 <span class="text-xs text-slate-500 font-medium">@nombreUsuario</span>
                 <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">@rolUsuario</span>
 
+                <!-- Acceso directo a Historial de movimientos -->
+                <a asp-controller="Historial" asp-action="Index"
+                   class="p-2 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-all duration-200 @(currentCtrl.Equals("Historial", StringComparison.OrdinalIgnoreCase) ? "text-indigo-600 bg-indigo-50 font-semibold" : "")"
+                   title="Historial de movimientos">
+                    <i data-lucide="history" class="w-5 h-5"></i>
+                </a>
+
                 <!-- Campana de notificaciones -->
                 <div class="relative" id="notif-container">
                     <button id="btn-notif" type="button"
@@ -239,6 +261,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/GlobalScript.js" asp-append-version="true"></script>
     <script src="~/js/excel-exporter.js" asp-append-version="true"></script>
+    <script src="~/js/CargarExcel.js" asp-append-version="true"></script>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

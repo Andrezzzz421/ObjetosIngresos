@@ -1,6 +1,6 @@
-@model List<ObjetosIngresos.Models.HistorialSistema>
+@model List<ObjetosIngresos.Services.HistorialMovimientoItemDto>
 @{
-    ViewData["Title"] = "Bitácora de Auditoría e Historial";
+    ViewData["Title"] = "Historial de Movimientos";
     var filtro = ViewBag.Filtro as ObjetosIngresos.Services.HistorialFiltroDto ?? new();
 }
 
@@ -10,11 +10,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="shield-check" class="w-7 h-7 text-indigo-600"></i>
-                Bitácora de Auditoría e Historial
+                <i data-lucide="history" class="w-7 h-7 text-indigo-600"></i>
+                Historial de Movimientos (Ingresos y Salidas)
             </h1>
             <p class="text-sm text-slate-500 mt-1">
-                Trazabilidad integral y registro inmutable de eventos del SENA: Entradas, Salidas, Custodias y Novedades.
+                Registro cronológico de entradas y salidas de usuarios, equipos y verificación de condición (Aprendiz SENA o Independiente).
             </p>
         </div>
         <div class="flex items-center gap-2">
@@ -30,7 +30,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider">Total Eventos</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider">Total Movimientos</span>
                 <i data-lucide="activity" class="w-4 h-4 text-indigo-500"></i>
             </div>
             <p id="kpi-total" class="text-2xl font-extrabold text-slate-900">@(ViewBag.TotalEventos ?? 0)</p>
@@ -44,14 +44,14 @@
         </div>
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Salidas Equipo</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Salidas Realizadas</span>
                 <i data-lucide="log-out" class="w-4 h-4 text-emerald-500"></i>
             </div>
             <p id="kpi-salidas-equipo" class="text-2xl font-extrabold text-emerald-700">@(ViewBag.TotalSalidasEquipo ?? 0)</p>
         </div>
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600">En Custodia</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600">En Sede / Custodia</span>
                 <i data-lucide="package" class="w-4 h-4 text-amber-500"></i>
             </div>
             <p id="kpi-salidas-persona" class="text-2xl font-extrabold text-amber-700">@(ViewBag.TotalSalidasPersona ?? 0)</p>
@@ -70,7 +70,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
             <!-- Documento -->
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Documento Aprendiz:</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Documento Aprendiz / Persona:</label>
                 <div class="relative">
                     <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
                     <input id="filtro-doc" type="text" placeholder="Ej. 1002345678"
@@ -90,19 +90,17 @@
                 </div>
             </div>
 
-            <!-- Tipo de Evento -->
+            <!-- Estado del Movimiento -->
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tipo de Evento:</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Estado del Movimiento:</label>
                 <div class="relative">
                     <select id="filtro-tipo"
                             class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 bg-white">
-                        <option value="Todos">Todos los eventos</option>
-                        <option value="Entrada">Entrada (Check-In)</option>
-                        <option value="SalidaEquipo">Salida con Equipo</option>
-                        <option value="SalidaPersona">Salida sin Equipo (Custodia)</option>
-                        <option value="Novedad">Novedad</option>
-                        <option value="Modificacion">Modificación</option>
-                        <option value="Anulacion">Anulación</option>
+                        <option value="Todos">Todos los movimientos</option>
+                        <option value="Salida">Salida realizada</option>
+                        <option value="Entrada">En sede (Dentro / Activo)</option>
+                        <option value="Custodia">En custodia</option>
+                        <option value="Novedad">Con observaciones / novedad</option>
                     </select>
                 </div>
             </div>
@@ -135,12 +133,12 @@
         </div>
     </div>
 
-    <!-- ── Tabla de Registros ── -->
+    <!-- ── Tabla de Movimientos ── -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <i data-lucide="list" class="w-4 h-4 text-indigo-600"></i>
-                Eventos de Auditoría (<span id="contador-tabla">@Model.Count</span>)
+                Registro de Movimientos (<span id="contador-tabla">@Model.Count</span>)
             </h2>
             <div id="loading-spinner" class="hidden">
                 <div class="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -151,12 +149,13 @@
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
                     <tr>
-                        <th class="px-4 py-3">Tipo Evento</th>
-                        <th class="px-4 py-3">Fecha / Hora</th>
-                        <th class="px-4 py-3">Aprendiz / Persona</th>
+                        <th class="px-4 py-3">Movimiento</th>
+                        <th class="px-4 py-3">Hora Entrada</th>
+                        <th class="px-4 py-3">Hora Salida</th>
+                        <th class="px-4 py-3">Usuario / Aprendiz</th>
+                        <th class="px-4 py-3 text-center">¿Independiente?</th>
                         <th class="px-4 py-3">Equipo / Serial</th>
-                        <th class="px-4 py-3">Responsable</th>
-                        <th class="px-4 py-3">Descripción</th>
+                        <th class="px-4 py-3">Sede / Obs</th>
                         <th class="px-4 py-3 text-right">Trazabilidad</th>
                     </tr>
                 </thead>
@@ -165,48 +164,97 @@
                     {
                         foreach (var item in Model)
                         {
-                            var badgeStyle = ObtenerEstiloBadge(item.TipoEvento);
+                            var badgeStyle = ObtenerEstiloEstado(item.Estado);
                             <tr class="hover:bg-slate-50/70 transition-colors">
+                                <!-- Movimiento y Estado -->
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border @badgeStyle.Clase">
-                                        <span>@badgeStyle.Emoji</span>
-                                        @item.TipoEvento
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-900 font-mono text-[11px]">#@item.IdMovimiento</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border @badgeStyle.Clase">
+                                            <span>@badgeStyle.Emoji</span>
+                                            @item.Estado
+                                        </span>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-mono text-[11px]">
-                                    @item.FechaEvento.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+
+                                <!-- Hora Entrada -->
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-700 font-mono text-[11px]">
+                                    <div class="flex items-center gap-1.5">
+                                        <i data-lucide="log-in" class="w-3.5 h-3.5 text-blue-500"></i>
+                                        <span>@item.FechaEntradaTexto</span>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3">
-                                    <p class="font-bold text-slate-900 leading-tight">
-                                        @(item.Persona != null ? $"{item.Persona.Nombres} {item.Persona.Apellidos}".Trim() : "Desconocido")
-                                    </p>
-                                    <p class="text-[10px] text-slate-400 font-mono">Doc: @(item.Persona?.Documento ?? "N/A")</p>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-800 leading-tight">
-                                        @(item.Equipo?.TipoElemento ?? "Equipo") - @(item.Equipo?.IdMarcaNavigation?.NombreMarca ?? "")
-                                    </p>
-                                    <p class="text-[10px] text-slate-400 font-mono">S/N: @(item.Equipo?.Serial ?? "N/A")</p>
-                                </td>
-                                <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                                    @(item.UsuarioRegistra != null ? $"{item.UsuarioRegistra.Nombres} {item.UsuarioRegistra.Apellidos}".Trim() : "Sistema")
-                                </td>
-                                <td class="px-4 py-3 max-w-md">
-                                    <p class="line-clamp-2 text-slate-600 text-xs">@item.Descripcion</p>
-                                </td>
-                                <td class="px-4 py-3 text-right whitespace-nowrap">
-                                    @if (item.IdMovimiento.HasValue)
+
+                                <!-- Hora Salida -->
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-700 font-mono text-[11px]">
+                                    @if (item.FechaSalida.HasValue)
                                     {
-                                        <button onclick="verTrazabilidad(@item.IdMovimiento.Value)"
-                                                class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
-                                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                            Línea de tiempo
-                                        </button>
+                                        <div class="flex items-center gap-1.5">
+                                            <i data-lucide="log-out" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                            <span>@item.FechaSalidaTexto</span>
+                                        </div>
                                     }
                                     else
                                     {
-                                        <span class="text-slate-400 italic text-[11px]">—</span>
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                            <i data-lucide="clock" class="w-3 h-3 text-amber-600"></i>
+                                            En sede
+                                        </span>
                                     }
+                                </td>
+
+                                <!-- Usuario / Aprendiz -->
+                                <td class="px-4 py-3">
+                                    <p class="font-bold text-slate-900 leading-tight">@item.Persona</p>
+                                    <p class="text-[10px] text-slate-400 font-mono">Doc: @item.Documento</p>
+                                </td>
+
+                                <!-- ¿Es Independiente? -->
+                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                    @if (item.EsIndependiente)
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Sí (Independiente)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="@item.CondicionTexto">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                            No (@item.CondicionTexto)
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- Equipo / Serial -->
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-800 leading-tight">
+                                        @item.Equipo - @item.Marca
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-mono">S/N: @item.Serial</p>
+                                </td>
+
+                                <!-- Sede / Observaciones -->
+                                <td class="px-4 py-3 max-w-xs">
+                                    <p class="text-[11px] font-medium text-slate-800 truncate">@item.Sede</p>
+                                    @if (!string.IsNullOrWhiteSpace(item.Observaciones))
+                                    {
+                                        <p class="text-[10px] text-slate-500 italic truncate" title="@item.Observaciones">@item.Observaciones</p>
+                                    }
+                                    @if (item.Accesorios != null && item.Accesorios.Any())
+                                    {
+                                        <p class="text-[9px] text-indigo-600 font-medium truncate">Accesorios: @string.Join(", ", item.Accesorios)</p>
+                                    }
+                                </td>
+
+                                <!-- Trazabilidad -->
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    <button onclick="verTrazabilidad(@item.IdMovimiento)"
+                                            class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                        Línea de tiempo
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -214,8 +262,8 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400 italic">
-                                No se encontraron eventos registrados con los criterios seleccionados.
+                            <td colspan="8" class="py-12 text-center text-slate-400 italic">
+                                No se encontraron movimientos registrados con los criterios seleccionados.
                             </td>
                         </tr>
                     }
@@ -260,16 +308,13 @@
 </div>
 
 @functions {
-    public (string Clase, string Emoji) ObtenerEstiloBadge(string tipo)
+    public (string Clase, string Emoji) ObtenerEstiloEstado(string estado)
     {
-        return tipo?.Trim().ToLower() switch
+        return estado?.Trim().ToLower() switch
         {
-            "entrada" => ("bg-blue-50 text-blue-700 border-blue-200", "📥"),
-            "salidaequipo" => ("bg-emerald-50 text-emerald-700 border-emerald-200", "📤"),
-            "salidapersona" => ("bg-amber-50 text-amber-800 border-amber-200", "🏢📦"),
-            "novedad" => ("bg-rose-50 text-rose-700 border-rose-200", "⚠️"),
-            "modificacion" => ("bg-purple-50 text-purple-700 border-purple-200", "✏️"),
-            "anulacion" => ("bg-slate-100 text-slate-700 border-slate-300", "🚫"),
+            var e when e.Contains("salida") && !e.Contains("custodia") => ("bg-emerald-50 text-emerald-700 border-emerald-200", "📤"),
+            var e when e.Contains("custodia") => ("bg-amber-50 text-amber-800 border-amber-200", "🏢📦"),
+            var e when e.Contains("sede") || e.Contains("activo") => ("bg-blue-50 text-blue-700 border-blue-200", "📥"),
             _ => ("bg-slate-50 text-slate-600 border-slate-200", "📌")
         };
     }
@@ -349,50 +394,86 @@
             if (!items.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-400 italic">
-                            No se encontraron eventos registrados con los criterios seleccionados.
+                        <td colspan="8" class="py-12 text-center text-slate-400 italic">
+                            No se encontraron movimientos registrados con los criterios seleccionados.
                         </td>
                     </tr>`;
                 return;
             }
 
             tbody.innerHTML = items.map(item => {
-                const badge = getBadgeStyleJs(item.tipoEvento);
-                const btnTrazabilidad = item.idMovimiento
-                    ? `<button onclick="verTrazabilidad(${item.idMovimiento})"
-                               class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
-                           <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                           Línea de tiempo
-                       </button>`
-                    : `<span class="text-slate-400 italic text-[11px]">—</span>`;
+                const badge = getBadgeStyleJs(item.estado);
+
+                const badgeIndependiente = item.esIndependiente
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                           Sí (Independiente)
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="${item.condicionTexto}">
+                           <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                           No (${item.condicionTexto})
+                       </span>`;
+
+                const salidaHtml = item.fechaSalida && !item.fechaSalida.includes('En sede')
+                    ? `<div class="flex items-center gap-1.5">
+                           <i data-lucide="log-out" class="w-3.5 h-3.5 text-emerald-500"></i>
+                           <span>${item.fechaSalida}</span>
+                       </div>`
+                    : `<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                           <i data-lucide="clock" class="w-3 h-3 text-amber-600"></i>
+                           En sede
+                       </span>`;
+
+                const accesoriosHtml = item.accesorios && item.accesorios.length
+                    ? `<p class="text-[9px] text-indigo-600 font-medium truncate">Accesorios: ${item.accesorios.join(', ')}</p>`
+                    : '';
+
+                const obsHtml = item.observaciones && item.observaciones !== 'Sin observaciones'
+                    ? `<p class="text-[10px] text-slate-500 italic truncate" title="${item.observaciones}">${item.observaciones}</p>`
+                    : '';
 
                 return `
                     <tr class="hover:bg-slate-50/70 transition-colors">
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${badge.clase}">
-                                <span>${badge.emoji}</span>
-                                ${item.tipoEvento}
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-900 font-mono text-[11px]">#${item.idMovimiento}</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge.clase}">
+                                    <span>${badge.emoji}</span>
+                                    ${item.estado}
+                                </span>
+                            </div>
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-slate-500 font-mono text-[11px]">
-                            ${item.fechaEvento}
+                        <td class="px-4 py-3 whitespace-nowrap text-slate-700 font-mono text-[11px]">
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="log-in" class="w-3.5 h-3.5 text-blue-500"></i>
+                                <span>${item.fechaEntrada}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-slate-700 font-mono text-[11px]">
+                            ${salidaHtml}
                         </td>
                         <td class="px-4 py-3">
                             <p class="font-bold text-slate-900 leading-tight">${item.persona}</p>
                             <p class="text-[10px] text-slate-400 font-mono">Doc: ${item.documento}</p>
                         </td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            ${badgeIndependiente}
+                        </td>
                         <td class="px-4 py-3">
                             <p class="font-semibold text-slate-800 leading-tight">${item.equipo} - ${item.marca}</p>
                             <p class="text-[10px] text-slate-400 font-mono">S/N: ${item.serial}</p>
                         </td>
-                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                            ${item.usuarioRegistra}
-                        </td>
-                        <td class="px-4 py-3 max-w-md">
-                            <p class="line-clamp-2 text-slate-600 text-xs">${item.descripcion}</p>
+                        <td class="px-4 py-3 max-w-xs">
+                            <p class="text-[11px] font-medium text-slate-800 truncate">${item.sede}</p>
+                            ${obsHtml}
+                            ${accesoriosHtml}
                         </td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">
-                            ${btnTrazabilidad}
+                            <button onclick="verTrazabilidad(${item.idMovimiento})"
+                                    class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                Línea de tiempo
+                            </button>
                         </td>
                     </tr>`;
             }).join('');
@@ -411,15 +492,16 @@
             document.getElementById('kpi-novedades').textContent = stats.novedades ?? 0;
         }
 
-        function getBadgeStyleJs(tipo) {
-            switch ((tipo || '').toLowerCase()) {
-                case 'entrada': return { clase: 'bg-blue-50 text-blue-700 border-blue-200', emoji: '📥' };
-                case 'salidaequipo': return { clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', emoji: '📤' };
-                case 'salidapersona': return { clase: 'bg-amber-50 text-amber-800 border-amber-200', emoji: '🏢📦' };
-                case 'novedad': return { clase: 'bg-rose-50 text-rose-700 border-rose-200', emoji: '⚠️' };
-                case 'modificacion': return { clase: 'bg-purple-50 text-purple-700 border-purple-200', emoji: '✏️' };
-                case 'anulacion': return { clase: 'bg-slate-100 text-slate-700 border-slate-300', emoji: '🚫' };
-                default: return { clase: 'bg-slate-50 text-slate-600 border-slate-200', emoji: '📌' };
+        function getBadgeStyleJs(estado) {
+            const est = (estado || '').toLowerCase();
+            if (est.includes('salida') && !est.includes('custodia')) {
+                return { clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', emoji: '📤' };
+            } else if (est.includes('custodia')) {
+                return { clase: 'bg-amber-50 text-amber-800 border-amber-200', emoji: '🏢📦' };
+            } else if (est.includes('sede') || est.includes('activo')) {
+                return { clase: 'bg-blue-50 text-blue-700 border-blue-200', emoji: '📥' };
+            } else {
+                return { clase: 'bg-slate-50 text-slate-600 border-slate-200', emoji: '📌' };
             }
         }
 

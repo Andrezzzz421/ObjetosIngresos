@@ -5,13 +5,24 @@
     Layout = "_Layout";
 }
 
-@if (TempData["Success"] != null || TempData["Error"] != null)
+@if (TempData["Success"] != null || TempData["Error"] != null || TempData["Advertencias"] != null)
 {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const isError = @(TempData["Error"] != null ? "true" : "false");
+            const advertencias = '@Html.Raw(TempData["Advertencias"])';
+
             if (typeof window.showIndexToast === 'function') {
-                window.showIndexToast(isError, isError ? 'Ups...' : '¡Hecho!', isError ? '@TempData["Error"]' : '@TempData["Success"]');
+                if (advertencias) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Importación Completada con Advertencias',
+                        html: advertencias,
+                        confirmButtonColor: '#4f46e5'
+                    });
+                } else {
+                    window.showIndexToast(isError, isError ? 'Ups...' : '¡Hecho!', isError ? '@TempData["Error"]' : '@TempData["Success"]');
+                }
             }
         });
     </script>
@@ -24,7 +35,18 @@
             <p class="text-slate-500 mt-1">Administra el personal, aprendices y sus accesos al sistema.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Botón Importar Excel -->
+            <button type="button"
+                    onclick="abrirModalImportar()"
+                    class="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold py-3 px-5 rounded-xl shadow-sm transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Importar Excel
+            </button>
+
+            <!-- Botón Exportar Excel -->
             <button id="btnExportarUsuarios" type="button"
                     onclick="exportarModuloAExcel('@Url.Action("ExportarExcel", "Usuarios")', 'btnExportarUsuarios')"
                     class="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold py-3 px-5 rounded-xl shadow-sm transition-all active:scale-95">
@@ -34,6 +56,7 @@
                 Exportar Excel
             </button>
 
+            <!-- Botón Nuevo Usuario -->
             <a asp-action="Create" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -42,6 +65,8 @@
             </a>
         </div>
     </div>
+
+    <!-- Buscador -->
     <div class="mb-6 max-w-md relative">
         <label for="buscarDocumento" class="sr-only">Buscar por documento</label>
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -55,6 +80,7 @@
                class="block w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all text-sm" />
     </div>
 
+    <!-- Tabla -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -70,11 +96,11 @@
                 <tbody id="tablaUsuarios" class="divide-y divide-slate-100">
                     @foreach (var item in Model)
                     {
-                        <tr class="hover:bg-slate-50 transition-colors group fila-usuario" data-documento="@item.Documento.ToString().Trim()">
+                        <tr class="hover:bg-slate-50 transition-colors group fila-usuario" data-documento="@item.Documento?.ToString().Trim()">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm uppercase">
-                                        @(item.Nombres.Substring(0, 1))@(item.Apellidos.Substring(0, 1))
+                                        @(string.IsNullOrEmpty(item.Nombres) ? "U" : item.Nombres.Substring(0, 1))@(string.IsNullOrEmpty(item.Apellidos) ? "" : item.Apellidos.Substring(0, 1))
                                     </div>
                                     <div>
                                         <div class="font-bold text-slate-800">@item.Nombres @item.Apellidos</div>
@@ -135,6 +161,46 @@
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
             <span id="contadorUsuarios" class="text-sm text-slate-500 font-medium">Mostrando @Model.Count() usuarios registrados</span>
         </div>
+    </div>
+</div>
+
+<!-- Modal de Carga de Excel -->
+<div id="modalImportarExcel" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 max-w-md w-full p-6 space-y-6 transform transition-all scale-95" id="modalContenido">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-bold text-slate-800">Cargar Usuarios desde Excel</h3>
+            <button type="button" onclick="cerrarModalImportar()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <form asp-action="ImportarExcel" asp-controller="Usuarios" method="post" enctype="multipart/form-data" id="formImportarExcel" onsubmit="procesarEnvioImportacion(event)">
+            @Html.AntiForgeryToken()
+            <div class="space-y-4">
+                <p class="text-sm text-slate-500">Selecciona un libro de Excel (.xlsx) con los encabezados: <strong>Documento, Nombres, Apellidos, Correo, Ficha, IdTipoUsuario, IdSedePrincipal</strong>.</p>
+
+                <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-400 transition-colors bg-slate-50/50">
+                    <svg class="mx-auto h-12 w-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div class="mt-4 flex text-sm text-slate-600 justify-center">
+                        <label for="archivoExcel" class="relative cursor-pointer bg-white rounded-md font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500">
+                            <span>Subir un archivo</span>
+                            <input id="archivoExcel" name="archivoExcel" type="file" accept=".xlsx, .xls" class="sr-only" required onchange="actualizarNombreArchivo(this)">
+                        </label>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1" id="nombreArchivoSeleccionado">XLSX o XLS hasta 10MB</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="cerrarModalImportar()" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-all">Cancelar</button>
+                    <button type="submit" id="btnSubmitImportar" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-100 transition-all">
+                        <span id="txtSubmitImportar">Iniciar Carga</span>
+                        <div id="spinnerImportar" class="hidden animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 

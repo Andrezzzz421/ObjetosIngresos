@@ -63,6 +63,171 @@ namespace ObjetosIngresos.Services
         }
 
         /// <summary>
+        /// Obtiene el historial consolidado de movimientos (Check-in / Check-out) desde RegistrosMovimiento.
+        /// Muestra el registro completo de entrada y salida, con identificación de aprendiz / independiente.
+        /// </summary>
+        public async Task<List<HistorialMovimientoItemDto>> ObtenerMovimientosHistorialAsync(HistorialFiltroDto? filtro = null)
+        {
+            try
+            {
+                var query = _db.RegistrosMovimientos
+                    .Include(m => m.IdElementoNavigation)
+                        .ThenInclude(e => e.IdMarcaNavigation)
+                    .Include(m => m.IdElementoNavigation)
+                        .ThenInclude(e => e.IdUsuarioNavigation)
+                            .ThenInclude(u => u!.IdTipoUsuarioNavigation)
+                    .Include(m => m.IdSedeNavigation)
+                    .Include(m => m.MovimientoDetalles)
+                        .ThenInclude(d => d.IdTipoDetalleNavigation)
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                if (filtro != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(filtro.DocumentoPersona))
+                    {
+                        var doc = filtro.DocumentoPersona.Trim().ToLower();
+                        query = query.Where(m => m.IdElementoNavigation != null &&
+                                                 m.IdElementoNavigation.IdUsuarioNavigation != null &&
+                                                 m.IdElementoNavigation.IdUsuarioNavigation.Documento != null &&
+                                                 m.IdElementoNavigation.IdUsuarioNavigation.Documento.ToLower().Contains(doc));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(filtro.SerialEquipo))
+                    {
+                        var s = filtro.SerialEquipo.Trim().ToLower();
+                        query = query.Where(m => m.IdElementoNavigation != null &&
+                                                 m.IdElementoNavigation.Serial != null &&
+                                                 m.IdElementoNavigation.Serial.ToLower().Contains(s));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(filtro.TipoEvento) && filtro.TipoEvento != "Todos")
+                    {
+                        var tipo = filtro.TipoEvento.Trim().ToLower();
+                        if (tipo == "entrada" || tipo == "ensede" || tipo == "pendiente")
+                        {
+                            query = query.Where(m => m.FechaSalida == null);
+                        }
+                        else if (tipo == "salida" || tipo == "salidaequipo")
+                        {
+                            query = query.Where(m => m.FechaSalida != null);
+                        }
+                        else if (tipo == "custodia" || tipo == "salidapersona")
+                        {
+                            query = query.Where(m => m.Observaciones != null && m.Observaciones.ToLower().Contains("custodia"));
+                        }
+                        else if (tipo == "novedad")
+                        {
+                            query = query.Where(m => m.Observaciones != null && m.Observaciones.Trim() != "");
+                        }
+                    }
+
+                    if (filtro.FechaDesde.HasValue)
+                    {
+                        var desdeUtc = DateTime.SpecifyKind(filtro.FechaDesde.Value.Date.AddHours(5), DateTimeKind.Utc);
+                        query = query.Where(m => m.FechaEntrada >= desdeUtc);
+                    }
+
+                    if (filtro.FechaHasta.HasValue)
+                    {
+                        var hastaUtc = DateTime.SpecifyKind(filtro.FechaHasta.Value.Date.AddHours(29), DateTimeKind.Utc); // Fin del día UTC-5
+                        query = query.Where(m => m.FechaEntrada <= hastaUtc);
+                    }
+                }
+
+                var limite = filtro?.Take > 0 ? filtro.Take : 300;
+                var listaDb = await query.OrderByDescending(m => m.IdMovimiento)
+                    .Take(limite)
+                    .ToListAsync();
+
+                var resultado = new List<HistorialMovimientoItemDto>();
+
+                foreach (var mov in listaDb)
+                {
+                    var elem = mov.IdElementoNavigation;
+                    var user = elem?.IdUsuarioNavigation;
+                    var rolDesc = user?.IdTipoUsuarioNavigation?.Descripcion ?? "";
+                    var rolDescLower = rolDesc.ToLower();
+
+                    bool esIndependiente = false;
+                    string condicion = "Aprendiz SENA";
+
+                    if (user == null)
+                    {
+                        esIndependiente = true;
+                        condicion = "Independiente";
+                    }
+                    else if (rolDescLower.Contains("aprendiz"))
+                    {
+                        esIndependiente = false;
+                        condicion = !string.IsNullOrWhiteSpace(user.Ficha) ? $"Aprendiz (Ficha: {user.Ficha})" : "Aprendiz SENA";
+                    }
+                    else if (rolDescLower.Contains("independiente") || rolDescLower.Contains("visitante") || rolDescLower.Contains("guest") || string.IsNullOrWhiteSpace(user.Ficha))
+                    {
+                        esIndependiente = true;
+                        condicion = string.IsNullOrWhiteSpace(rolDesc) ? "Independiente" : rolDesc;
+                    }
+                    else
+                    {
+                        esIndependiente = false;
+                        condicion = rolDesc;
+                    }
+
+                    string estado = "Salida realizada";
+                    bool esCustodia = mov.Observaciones != null && mov.Observaciones.ToLower().Contains("custodia");
+
+                    if (mov.FechaSalida.HasValue)
+                    {
+                        estado = esCustodia ? "Salida (Custodia)" : "Salida realizada";
+                    }
+                    else
+                    {
+                        estado = esCustodia ? "En custodia" : "En sede (Activo)";
+                    }
+
+                    var detallesAccesorios = mov.MovimientoDetalles
+                        .Where(d => d.Presente)
+                        .Select(d => d.IdTipoDetalleNavigation?.Nombre ?? "Accesorio")
+                        .ToList();
+
+                    resultado.Add(new HistorialMovimientoItemDto
+                    {
+                        IdMovimiento = mov.IdMovimiento,
+                        FechaEntrada = mov.FechaEntrada,
+                        FechaEntradaTexto = mov.FechaEntrada.HasValue
+                            ? mov.FechaEntrada.Value.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+                            : "—",
+                        FechaSalida = mov.FechaSalida,
+                        FechaSalidaTexto = mov.FechaSalida.HasValue
+                            ? mov.FechaSalida.Value.AddHours(-5).ToString("dd/MM/yyyy hh:mm tt")
+                            : "En sede (Dentro)",
+                        Estado = estado,
+                        Persona = user != null ? $"{user.Nombres} {user.Apellidos}".Trim() : "Independiente / Sin asignar",
+                        Documento = user?.Documento ?? "N/A",
+                        Ficha = user?.Ficha,
+                        Rol = string.IsNullOrWhiteSpace(rolDesc) ? (esIndependiente ? "Independiente" : "Aprendiz") : rolDesc,
+                        EsIndependiente = esIndependiente,
+                        CondicionTexto = condicion,
+                        Equipo = elem?.TipoElemento ?? "Equipo",
+                        Marca = elem?.IdMarcaNavigation?.NombreMarca ?? "Sin marca",
+                        Serial = elem?.Serial ?? "N/A",
+                        Sede = mov.IdSedeNavigation?.NombreSede ?? "Sede SENA",
+                        Observaciones = mov.Observaciones,
+                        Accesorios = detallesAccesorios,
+                        TieneNovedad = !string.IsNullOrWhiteSpace(mov.Observaciones)
+                    });
+                }
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al consultar movimientos en RegistrosMovimiento: {Mensaje}", ex.Message);
+                return new List<HistorialMovimientoItemDto>();
+            }
+        }
+
+        /// <summary>
         /// Consulta los eventos de auditoría con filtros opcionales.
         /// </summary>
         public async Task<List<HistorialSistema>> ObtenerHistorialAsync(HistorialFiltroDto? filtro = null)
@@ -254,27 +419,31 @@ namespace ObjetosIngresos.Services
         /// </summary>
         public async Task<byte[]> ExportarCsvAsync(HistorialFiltroDto? filtro = null)
         {
-            var registros = await ObtenerHistorialAsync(filtro);
+            var movimientos = await ObtenerMovimientosHistorialAsync(filtro);
             var sb = new StringBuilder();
 
             // Encabezados CSV con formato estándar Excel (punto y coma como delimitador habitual en español)
-            sb.AppendLine("ID;Tipo Evento;Fecha Evento (Colombia);Fecha Registro (UTC);Aprendiz / Persona;Documento;Equipo;Marca;Serial;Usuario Registra;Descripción");
+            sb.AppendLine("ID Movimiento;Fecha Entrada;Fecha Salida;Estado;Persona / Propietario;Documento;Ficha;¿Es Independiente?;Condición / Rol;Equipo;Marca;Serial;Sede;Accesorios;Observaciones");
 
-            foreach (var reg in registros)
+            foreach (var m in movimientos)
             {
-                var id = reg.Id.ToString();
-                var tipo = EscapeCsv(reg.TipoEvento);
-                var fechaEv = EscapeCsv(reg.FechaEvento.AddHours(-5).ToString("dd/MM/yyyy hh:mm:ss tt"));
-                var fechaReg = EscapeCsv(reg.FechaRegistro.ToString("yyyy-MM-dd HH:mm:ss"));
-                var persona = EscapeCsv(reg.Persona != null ? $"{reg.Persona.Nombres} {reg.Persona.Apellidos}".Trim() : "N/A");
-                var documento = EscapeCsv(reg.Persona?.Documento ?? "N/A");
-                var equipo = EscapeCsv(reg.Equipo?.TipoElemento ?? "N/A");
-                var marca = EscapeCsv(reg.Equipo?.IdMarcaNavigation?.NombreMarca ?? "N/A");
-                var serial = EscapeCsv(reg.Equipo?.Serial ?? "N/A");
-                var registra = EscapeCsv(reg.UsuarioRegistra != null ? $"{reg.UsuarioRegistra.Nombres} {reg.UsuarioRegistra.Apellidos}".Trim() : "Sistema");
-                var desc = EscapeCsv(reg.Descripcion);
+                var id = m.IdMovimiento.ToString();
+                var entrada = EscapeCsv(m.FechaEntradaTexto);
+                var salida = EscapeCsv(m.FechaSalidaTexto);
+                var estado = EscapeCsv(m.Estado);
+                var persona = EscapeCsv(m.Persona);
+                var doc = EscapeCsv(m.Documento);
+                var ficha = EscapeCsv(m.Ficha ?? "N/A");
+                var esIndep = EscapeCsv(m.EsIndependiente ? "SÍ" : "NO");
+                var condicion = EscapeCsv(m.CondicionTexto);
+                var equipo = EscapeCsv(m.Equipo);
+                var marca = EscapeCsv(m.Marca);
+                var serial = EscapeCsv(m.Serial);
+                var sede = EscapeCsv(m.Sede);
+                var accesorios = EscapeCsv(string.Join(", ", m.Accesorios));
+                var obs = EscapeCsv(m.Observaciones ?? "Ninguna");
 
-                sb.AppendLine($"{id};{tipo};{fechaEv};{fechaReg};{persona};{documento};{equipo};{marca};{serial};{registra};{desc}");
+                sb.AppendLine($"{id};{entrada};{salida};{estado};{persona};{doc};{ficha};{esIndep};{condicion};{equipo};{marca};{serial};{sede};{accesorios};{obs}");
             }
 
             // Prefijo BOM (Byte Order Mark) UTF-8 para garantizar que Excel abra tildes y caracteres especiales correctamente
